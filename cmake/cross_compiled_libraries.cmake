@@ -39,7 +39,7 @@ ExternalProject_Add(solo5_repo
 	GIT_TAG vfpga # branch name is also ok
 	CONFIGURE_COMMAND CC=gcc ./configure.sh
 	UPDATE_COMMAND ""
-	BUILD_COMMAND make
+  BUILD_COMMAND make DISABLE_FPGA=${SOLO5_DISABLE_FPGA}
 	INSTALL_COMMAND ""
 )
 
