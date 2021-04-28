@@ -24,11 +24,13 @@
 
 class Solo5_manager {
 public:
-  using Nic_ptr = std::unique_ptr<hw::Nic>;
-  using Blk_ptr = std::unique_ptr<hw::Block_device>;
+  using Nic_ptr  = std::unique_ptr<hw::Nic>;
+  using Blk_ptr  = std::unique_ptr<hw::Block_device>;
+  using FPGA_ptr = std::unique_ptr<hw::FPGA>;
 
   static void register_net(delegate<Nic_ptr()>);
   static void register_blk(delegate<Blk_ptr()>);
+  static void register_fpga(delegate<FPGA_ptr()>);
 
   static void init();
 }; //< class Solo5_manager

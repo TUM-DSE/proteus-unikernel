@@ -26,9 +26,11 @@
 using namespace hw;
 using Nic_ptr = std::unique_ptr<hw::Nic>;
 using Blk_ptr = std::unique_ptr<hw::Block_device>;
+using FPGA_ptr = std::unique_ptr<hw::FPGA>;
 
 static std::vector<delegate<Nic_ptr()>> nics;
 static std::vector<delegate<Blk_ptr()>> blks;
+static std::vector<delegate<FPGA_ptr()>> fpgas;
 
 void Solo5_manager::register_net(delegate<Nic_ptr()> func)
 {
@@ -38,6 +40,10 @@ void Solo5_manager::register_blk(delegate<Blk_ptr()> func)
 {
   blks.push_back(func);
 }
+void Solo5_manager::register_fpga(delegate<FPGA_ptr()> func)
+{
+  fpgas.push_back(func);
+}
 
 void Solo5_manager::init() {
   INFO("Solo5", "Looking for solo5 devices");
@@ -46,4 +52,7 @@ void Solo5_manager::init() {
     hw::Devices::register_device<hw::Nic> (nic());
   for (auto blk : blks)
     hw::Devices::register_device<hw::Block_device> (blk());
+
+  for (auto fpga : fpgas)
+    hw::Devices::register_device<hw::FPGA> (fpga());
 }

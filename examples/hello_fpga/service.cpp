@@ -21,6 +21,10 @@
 #include <string>
 #include <cassert>
 
+#include <vector>
+
+#include <hw/fpga.hpp>
+
 int main(int argc, char** argv)
 {
   std::cout <<  "test" << std::endl;
@@ -29,10 +33,18 @@ int main(int argc, char** argv)
   for (int i = 0; i < argc; i++)
     printf("Arg %i: %s\n", i, argv[i]);
 
-  assert(std::string(argv[0]) == "test_main");
-  assert(std::string(argv[1]) == "booted");
-  assert(std::string(argv[2]) == "with");
-  assert(std::string(argv[3]) == "vmrunner");
+  std::vector<uint8_t> dummy_bs = {0xde, 0xad, 0xbe, 0xef};
+
+  auto& fpga = hw::Devices::fpga(0);
+
+  printf("FPGA is obtained.\n");
+
+  // printf("FPGA is obtained.\n");
+
+  printf("device name: %s \n", fpga.device_name().c_str());
+  printf("driver name: %s \n", fpga.driver_name());
+
+  fpga.init(dummy_bs.data(), dummy_bs.size());
 
   // We want to veirify this "exit status" on the back-end
   return 200;

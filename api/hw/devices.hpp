@@ -21,6 +21,7 @@
 #include <common>
 #include "nic.hpp"
 #include "block_device.hpp"
+#include "fpga.hpp"
 
 namespace hw {
 
@@ -45,6 +46,9 @@ namespace hw {
 
     static Block_device& drive(const int N)
     { return get<Block_device>(N); }
+
+    static FPGA& fpga(const int N)
+    { return get<FPGA>(N); }
 
     // Nic helpers
     inline static int nic_index(const MAC::Addr& mac);
@@ -170,6 +174,7 @@ namespace hw {
 
     print_devices(devices<hw::Block_device>());
     print_devices(devices<hw::Nic>());
+    print_devices(devices<hw::FPGA>());
 
     INFO2("|");
     INFO2("o");
@@ -186,11 +191,14 @@ namespace hw {
   {
     deactivate_type(devices<hw::Block_device>());
     deactivate_type(devices<hw::Nic>());
+    deactivate_type(devices<hw::FPGA>());
   }
   inline void Devices::flush_all()
   {
     for (auto& dev : devices<hw::Nic>())
         dev->flush();
+
+    // TODO: should we flush FPGA?
   }
 
 } //< namespace hw

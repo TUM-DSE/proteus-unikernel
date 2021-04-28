@@ -88,5 +88,10 @@ if(WITH_SOLO5)
 
   add_library(solo5net STATIC solo5net.cpp)
   add_dependencies(solo5net PrecompiledLibraries)
-  install(TARGETS solo5net solo5blk DESTINATION includeos/${ARCH}/drivers)
+
+  # TODO: FPGA_ENABLE option should be added
+  add_library(solo5fpga STATIC solo5fpga.cpp)
+  add_dependencies(solo5fpga PrecompiledLibraries)
+
+  install(TARGETS solo5net solo5blk solo5fpga DESTINATION includeos/${ARCH}/drivers)
 endif(WITH_SOLO5)
