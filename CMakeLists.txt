@@ -237,6 +237,11 @@ if(libmicroLB)
   add_subdirectory(lib/microLB)
 endif()
 
+option(libfunkycl "Build and install Funky OpenCL lib" ON)
+if(libfunkycl)
+  add_subdirectory(lib/funkycl)
+endif()
+
 
 option(libprotobuf "Build and install Google's protobuf runtime library" ON)
 if(libprotobuf)
