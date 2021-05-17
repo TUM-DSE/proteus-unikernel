@@ -23,23 +23,36 @@
 
 #include <vector>
 
+
+#define CL_TARGET_OPENCL_VERSION 120
 // #include <hw/fpga.hpp>
-#include <funkycl_lib/funkycl.hpp>
+#include <CL/opencl.h>
 
 int main()
 {
-  // std::vector<uint8_t> dummy_bs = {0xde, 0xad, 0xbe, 0xef};
-  // auto& fpga = hw::Devices::fpga(0);
-  // printf("FPGA is obtained.\n");
-  // printf("device name: %s \n", fpga.device_name().c_str());
-  // printf("driver name: %s \n", fpga.driver_name());
-  // fpga.init(dummy_bs.data(), dummy_bs.size());
-  //
+  cl_int status;
+  
+  // get number of platforms
+  cl_uint num_platforms;
+  status = clGetPlatformIDs(0, NULL, &num_platforms);
 
-  std::cout << "test" << std::endl;
-  int res = hello_funkycl();
-  std::cout << res << std::endl;
+  // get a list of all platform ids
+  std::vector<cl_platform_id> pids(num_platforms);
+  status = clGetPlatformIDs(num_platforms, pids.data(), NULL);
 
-  // We want to veirify this "exit status" on the back-end
+  // get the name
+  for (auto it = pids.begin(); it != pids.end(); it++)
+  {
+    // get platform name size
+    size_t psize;
+    status = clGetPlatformInfo(*it, CL_PLATFORM_NAME, 0, NULL, &psize);
+
+    // get platform name
+    std::vector<char> pname(psize);
+    status = clGetPlatformInfo(*it, CL_PLATFORM_NAME, psize, (void *)pname.data(), NULL);
+
+    std::cout << "Platform name: " << pname.data() << std::endl;
+  }
+
   return 0;
 }
