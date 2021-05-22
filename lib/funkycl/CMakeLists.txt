@@ -10,11 +10,12 @@ include_directories(${INCLUDEOS_ROOT}/src/include)
 include_directories(${INCLUDEOS_ROOT}/api)
 # include_directories(${INCLUDEOS_ROOT}/lib/funkycl/include/funkycl_lib)
 include_directories(${INCLUDEOS_ROOT}/lib/funkycl/include)
+include_directories(${INCLUDEOS_ROOT}/lib/funkycl/)
 
 set(LIBRARY_NAME "funkycl_lib")
 
 set(FUNKYCL_OBJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/object")
-set(FUNKYCL_API_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+set(FUNKYCL_API_DIR "${CMAKE_CURRENT_SOURCE_DIR}/api")
 
 file(GLOB FUNKYCL_OBJECT_FILES
   "${FUNKYCL_OBJECT_DIR}/*.h"
