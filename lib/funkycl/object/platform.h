@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "object.h"
+#include "device.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
@@ -15,8 +16,12 @@ public:
   platform();
   ~platform();
 
-  static std::shared_ptr<platform>
-  get_shared_platform();
+  static std::shared_ptr<platform> get_shared_platform();
+
+private:
+  // device* device;
+  // One platform has one device object (vFPGA). Two or more vFPGAs will be attachable?  
+  std::unique_ptr<device> m_device;
 
 };
 

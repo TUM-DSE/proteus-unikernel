@@ -1,14 +1,12 @@
 #include "platform.h"
-// #include "device.h"
+#include "device.h"
 
 namespace funkycl
 {
 
 
-platform::platform()
-{
-  // TODO: create cl_device objects
-}
+platform::platform() : m_device(std::make_unique<funkycl::device>(this))
+{}
 
 platform::~platform()
 {

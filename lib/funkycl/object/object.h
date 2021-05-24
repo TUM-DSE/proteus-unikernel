@@ -1,6 +1,7 @@
 #ifndef __OBJECT_H
 #define __OBJECT_H
 
+#include "config.h"
 #include <CL/cl.h>
 
 /**
@@ -21,6 +22,14 @@
 namespace funkycl {
 
 class platform;
+class device;
+class context;
+class cmd_queue;
+class mem;
+class program;
+class kernel;
+class event;
+class sampler;
 
 template  <typename FUNKY_OBJ, typename CL_OBJ>
 class cl_object_base
@@ -31,7 +40,7 @@ class cl_object_base
 };
 
 template <typename CL_OBJ>
-typename CL_OBJ::funky_obj_type* funky_obj(CL_OBJ* cl_obj)
+typename CL_OBJ::funky_obj_type* cl_to_funkycl(CL_OBJ* cl_obj)
 {
   return static_cast<typename CL_OBJ::cl_obj_type*>(cl_obj);
 }
@@ -39,10 +48,15 @@ typename CL_OBJ::funky_obj_type* funky_obj(CL_OBJ* cl_obj)
 }  // funkycl
 
 
-struct _cl_platform_id : public funkycl::cl_object_base<funkycl::platform, _cl_platform_id> {};
-
-// struct _cl_platform_id : public funkycl::platform {};
-// using _cl_platform_id = funkycl::platform;
+struct _cl_platform_id  : public funkycl::cl_object_base<funkycl::platform, _cl_platform_id> {};
+struct _cl_device_id    : public funkycl::cl_object_base<funkycl::device, _cl_device_id> {};
+struct _cl_context      : public funkycl::cl_object_base<funkycl::context, _cl_context> {};
+struct _cl_command_queue: public funkycl::cl_object_base<funkycl::cmd_queue, _cl_command_queue> {};
+struct _cl_mem          : public funkycl::cl_object_base<funkycl::mem, _cl_mem> {};
+struct _cl_program      : public funkycl::cl_object_base<funkycl::program, _cl_program> {};
+struct _cl_kernel       : public funkycl::cl_object_base<funkycl::kernel, _cl_kernel> {};
+struct _cl_event        : public funkycl::cl_object_base<funkycl::event, _cl_event> {};
+struct _cl_sampler      : public funkycl::cl_object_base<funkycl::sampler, _cl_sampler> {};
 
 // using _cl_device_id     = funkycl::device;    
 // using _cl_context       = funkycl::context;
