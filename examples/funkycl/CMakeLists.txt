@@ -22,7 +22,7 @@ if ("$ENV{PLATFORM}" STREQUAL "x86_solo5")
 endif()
 
 set(LIBRARIES
-  libfunkycl_lib.a
+  libfunkycl.a
   )
 
 # include service build script

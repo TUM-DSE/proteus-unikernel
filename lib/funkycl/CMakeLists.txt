@@ -14,7 +14,7 @@ include_directories(${INCLUDEOS_ROOT}/mod/GSL/)
 include_directories(${INCLUDEOS_ROOT}/lib/funkycl/include)
 include_directories(${INCLUDEOS_ROOT}/lib/funkycl/)
 
-set(LIBRARY_NAME "funkycl_lib")
+set(LIBRARY_NAME "funkycl")
 
 set(FUNKYCL_OBJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/object")
 set(FUNKYCL_API_DIR "${CMAKE_CURRENT_SOURCE_DIR}/api")
