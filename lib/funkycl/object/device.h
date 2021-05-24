@@ -16,12 +16,12 @@ namespace funkycl {
 class device : public _cl_device_id
 {
 public:
-  device(funkycl::platform* pltf);
+  device(platform* pltf);
   ~device();
 
 
 private:
-  platform* platform;
+  platform* m_platform;
   hw::FPGA* vfpga; // = hw::Devices::fpga(0);
 
 };

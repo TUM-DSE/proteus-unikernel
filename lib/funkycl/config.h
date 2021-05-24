@@ -6,5 +6,7 @@
 #endif
 
 #include <stdio.h>
+#include <memory>
+#include <vector>
 
 #endif // __CONFIG_H

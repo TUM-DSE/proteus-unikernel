@@ -39,11 +39,37 @@ class cl_object_base
     typedef CL_OBJ cl_obj_type;
 };
 
-template <typename CL_OBJ>
-typename CL_OBJ::funky_obj_type* cl_to_funkycl(CL_OBJ* cl_obj)
+namespace detail {
+
+template <typename CLTYPE>
+struct cl_object_traits;
+
+template <typename CLTYPE>
+struct cl_object_traits<CLTYPE*>
 {
-  return static_cast<typename CL_OBJ::cl_obj_type*>(cl_obj);
+  using funky_obj_type = typename CLTYPE::funky_obj_type;
+
+  static funky_obj_type*
+  get_funky_obj(CLTYPE* cl)
+  {
+    return static_cast<funky_obj_type*>(cl);
+  }
+};
+
 }
+
+template <typename CLTYPE>
+typename detail::cl_object_traits<CLTYPE>::funky_obj_type*
+cl_to_funkycl(CLTYPE c)
+{
+  return detail::cl_object_traits<CLTYPE>::get_funky_obj(c);
+}
+
+// template <typename CL_OBJ>
+// typename CL_OBJ::funky_obj_type* cl_to_funkycl(CL_OBJ* cl_obj)
+// {
+//   return static_cast<typename CL_OBJ::cl_obj_type*>(cl_obj);
+// }
 
 }  // funkycl
 
@@ -57,16 +83,6 @@ struct _cl_program      : public funkycl::cl_object_base<funkycl::program, _cl_p
 struct _cl_kernel       : public funkycl::cl_object_base<funkycl::kernel, _cl_kernel> {};
 struct _cl_event        : public funkycl::cl_object_base<funkycl::event, _cl_event> {};
 struct _cl_sampler      : public funkycl::cl_object_base<funkycl::sampler, _cl_sampler> {};
-
-// using _cl_device_id     = funkycl::device;    
-// using _cl_context       = funkycl::context;
-// using _cl_command_queue = funkycl::cmd_queue;
-// using _cl_mem           = funkycl::mem;
-// using _cl_program       = funkycl::program;
-// using _cl_kernel        = funkycl::kernel;
-// using _cl_event         = funkycl::event;
-// using _cl_sampler       = funkycl::sampler;
- 
 
 
 #endif // __OBJECT_H

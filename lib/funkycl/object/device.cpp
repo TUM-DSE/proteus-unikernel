@@ -1,13 +1,12 @@
-#include "platform.h"
 #include "device.h"
 
 namespace funkycl
 {
 
 
-device::device(funkycl::platform* pltf) 
+device::device(platform* pltf) 
 {
-  platform = pltf;
+  m_platform = pltf;
   vfpga = &hw::Devices::fpga(0);
 }
 
