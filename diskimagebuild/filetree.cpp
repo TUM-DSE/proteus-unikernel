@@ -8,6 +8,9 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+// for GCC 10.2+ ?
+#include <stdexcept>
+
 File::File(const char* path)
 {
   this->name = std::string(path);

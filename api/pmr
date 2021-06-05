@@ -1,14 +1,17 @@
 #pragma once
 
-#if __has_include(<memory_resource>)
-#include <memory_resource>
-#else
+// TODO: Here is commented out because this causes errors with GCC 10.2.
+// Check if this is safe
+// 
+// #if __has_include(<memory_resource>)
+// #include <memory_resource>
+// #else
 #include <experimental/memory_resource>
 #include <experimental/vector>
 namespace std {
   namespace pmr = std::experimental::pmr;
 }
-#endif
+// #endif
 
 namespace os::mem {
   using buffer  = std::pmr::vector<uint8_t>;
