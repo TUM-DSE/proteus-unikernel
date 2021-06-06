@@ -1,11 +1,14 @@
 #!/bin/bash
 BUILD_DIR=$1
-USER_UKVM_BIN=$2
+USER_TAP_IF=$2
+USER_UKVM_BIN=$3
+
 
 UKVM_BIN=${INCLUDEOS_PREFIX}/includeos/x86_64/lib/ukvm-bin
+TAP_IF=tap100
 
 if [ -z ${BUILD_DIR} ]; then
-  echo "Usage: ./execute.sh <build_dir> [<path to ukvm-bin>]"
+  echo "Usage: ./execute.sh <build_dir> [<tap interface>] [<path to ukvm-bin>]"
   exit -1
 fi
 
@@ -26,14 +29,20 @@ if [ -z ${INCLUDEOS_PREFIX} ]; then
   exit -1
 fi
 
-
 if [ ! -z ${USER_UKVM_BIN} ]; then
   echo "INFO: ${USER_UKVM_BIN} is used as the monitor."
   UKVM_BIN=${USER_UKVM_BIN}
 fi
 
+if [ ! -z ${USER_TAP_IF} ]; then
+  echo "INFO: ${USER_TAP_IF} is used as a tap interface."
+  TAP_IF=${USER_TAP_IF}
+fi
+
+
 if [ -e ${UKVM_BIN} -a ! -x ${UKVM_BIN} ]; then
   chmod a+x ${UKVM_BIN}
 fi
 
-sudo -E ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN}
+# sudo -E ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN}
+${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN}
