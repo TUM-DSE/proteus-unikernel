@@ -28,7 +28,7 @@
 namespace hw {
 
 /**
- * This class is an abstract interface for block devices
+ * This class is an abstract interface for FPGA devices
  */
 class FPGA {
 public:
@@ -69,15 +69,16 @@ public:
   /**
    * obtain & initialize the FPGA region 
    *
-   * @param bitstream
+   * @param bs
    *   A pointer to bitstream data 
    *
-   * @param count
+   * @param bs_len
    *   Byte size of bitstream
    *
    * @return 0 (success) or -1 (failed) 
    */
-  virtual int init(uint8_t* bitstream, size_t count) = 0;
+  virtual int init(void* bs, size_t bs_len, void* wr_queue, size_t wr_len, 
+      void* rd_queue, size_t rd_len) = 0;
 
   /**
    * Method to deactivate the block device

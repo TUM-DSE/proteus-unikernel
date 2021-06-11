@@ -12,6 +12,7 @@ include_directories(${INCLUDEOS_ROOT}/mod/GSL/)
 
 # include_directories(${INCLUDEOS_ROOT}/lib/funkycl/include/funkycl_lib)
 include_directories(${INCLUDEOS_ROOT}/lib/funkycl/include)
+include_directories(${INCLUDEOS_ROOT}/lib/funkycl/common)
 include_directories(${INCLUDEOS_ROOT}/lib/funkycl/)
 
 set(LIBRARY_NAME "funkycl")

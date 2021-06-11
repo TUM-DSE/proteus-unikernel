@@ -45,7 +45,7 @@ public:
     return "Solo5FPGA";
   }
 
-  int init(uint8_t*, size_t) override; // stays
+  int init(void*, size_t, void*, size_t, void*, size_t) override; // stays
 
   void deactivate() override; // stays
 

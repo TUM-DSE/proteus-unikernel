@@ -10,25 +10,33 @@
 #include "object.h"
 #include "platform.h"
 
+#include <buffer.hpp>
+
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
 
 class device : public _cl_device_id
 {
+private:
+  platform* m_platform;
+  // hw::FPGA* vfpga; // = hw::Devices::fpga(0);
+
+  // TODO: FunkyCL command class
+  std::unique_ptr<buffer::Reader<int>> response_q;
+  std::unique_ptr<buffer::Writer<int>> request_q;
+
 public:
   device(platform* pltf);
   ~device();
 
-
-private:
-  platform* m_platform;
-  hw::FPGA* vfpga; // = hw::Devices::fpga(0);
-
+  // TODO: add a method to invoke hypercalls with vfpga 
+  
 };
 
 // device* get_device();
+//
 
-// TODO: add a method to invoke hypercalls with vfpga 
+
 
 } // namespace funkycl
 

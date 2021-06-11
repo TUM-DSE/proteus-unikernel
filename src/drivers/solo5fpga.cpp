@@ -22,14 +22,22 @@ Solo5FPGA::Solo5FPGA()
 }
 
 
-int Solo5FPGA::init(uint8_t* bitstream, size_t count) {
+int Solo5FPGA::init(void* bs, size_t bs_len,
+    void* wr_queue, size_t wr_len, void* rd_queue, size_t rd_len) {
   solo5_result_t res;
 
   // INFO("Solo5FPGA", "Entering init()... \n");
 
-  // auto* data = (uint8_t*) buffer->data();
+  struct solo5_fpgainit fpgainit;
+  fpgainit.bs           = bs;
+  fpgainit.bs_len       = bs_len;
+  fpgainit.wr_queue     = wr_queue;
+  fpgainit.wr_queue_len = wr_len;
+  fpgainit.rd_queue     = rd_queue;
+  fpgainit.rd_queue_len = rd_len;
 
-  res = solo5_fpga_init();
+  // res = solo5_fpga_info();
+  res = solo5_fpga_init(&fpgainit);
 
   if (res != SOLO5_R_OK) {
     return -1;
