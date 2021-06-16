@@ -20,16 +20,44 @@
 #include <cstdio>
 #include <string>
 #include <cassert>
-
 #include <vector>
 
+// for VFS
+#include <memdisk>
+#include <fstream>
 
 #define CL_TARGET_OPENCL_VERSION 120
-// #include <hw/fpga.hpp>
 #include <CL/opencl.h>
 
 int main()
 {
+  // Init the memdisk
+  // auto disk = fs::memdisk().fs().stat("/");
+
+  // mount it under "/"
+  // fs::mount("/", disk, "my memdisk");
+
+  // Retreive the HTML page from the disk
+  // auto file = disk.fs().read_file("/index.html");
+
+
+  auto& disk = fs::memdisk();
+  // auto disk = fs::shared_memdisk();
+  disk.init_fs([] (fs::error_t err, auto&) {
+    assert(!err);
+  });
+
+  // auto ents = disk.fs().ls("/vadd.xclbin");
+  // std::cout  << ents << std::endl;
+  std::string xclbin_name("/vadd.xclbin");
+  auto file = disk.fs().read_file(xclbin_name);
+
+  // Expects(file.is_valid());
+  std::vector<unsigned char> bs(reinterpret_cast<unsigned char*>(file.data()), 
+      reinterpret_cast<unsigned char*>(file.data() + file.size()));
+
+  std::cout << "bs file size: " << bs.size() << std::endl;
+
   cl_int status;
   
   // get number of platforms

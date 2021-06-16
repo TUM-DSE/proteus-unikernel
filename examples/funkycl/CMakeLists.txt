@@ -27,3 +27,6 @@ set(LIBRARIES
 
 # include service build script
 include($ENV{INCLUDEOS_PREFIX}/includeos/post.service.cmake)
+
+# mount a bitstream file in VFS by using memdisk
+diskbuilder(disk)
