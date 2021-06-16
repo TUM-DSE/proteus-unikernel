@@ -18,6 +18,8 @@ public:
 
   static std::shared_ptr<platform> get_shared_platform();
 
+  device* get_device();
+
 private:
   // device* device;
   // One platform has one device object (vFPGA). Two or more vFPGAs will be attachable?  

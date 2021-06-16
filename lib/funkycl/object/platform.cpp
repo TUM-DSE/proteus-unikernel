@@ -20,6 +20,13 @@ platform::get_shared_platform()
   return global_platform;
 }
 
+device* 
+platform::get_device()
+{
+  return m_device.get();
+}
+
+
 platform* get_global_platform()
 {
   return platform::get_shared_platform().get();

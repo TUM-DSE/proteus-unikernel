@@ -30,6 +30,7 @@ public:
   ~device();
 
   // TODO: add a method to invoke hypercalls with vfpga 
+  void init_vfpga_backend(std::vector<unsigned char>& bitstream);
   
 };
 

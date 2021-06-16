@@ -31,33 +31,6 @@
 
 int main()
 {
-  // Init the memdisk
-  // auto disk = fs::memdisk().fs().stat("/");
-
-  // mount it under "/"
-  // fs::mount("/", disk, "my memdisk");
-
-  // Retreive the HTML page from the disk
-  // auto file = disk.fs().read_file("/index.html");
-
-
-  auto& disk = fs::memdisk();
-  // auto disk = fs::shared_memdisk();
-  disk.init_fs([] (fs::error_t err, auto&) {
-    assert(!err);
-  });
-
-  // auto ents = disk.fs().ls("/vadd.xclbin");
-  // std::cout  << ents << std::endl;
-  std::string xclbin_name("/vadd.xclbin");
-  auto file = disk.fs().read_file(xclbin_name);
-
-  // Expects(file.is_valid());
-  std::vector<unsigned char> bs(reinterpret_cast<unsigned char*>(file.data()), 
-      reinterpret_cast<unsigned char*>(file.data() + file.size()));
-
-  std::cout << "bs file size: " << bs.size() << std::endl;
-
   cl_int status;
   
   // get number of platforms
@@ -67,6 +40,8 @@ int main()
   // get a list of all platform ids
   std::vector<cl_platform_id> pids(num_platforms);
   status = clGetPlatformIDs(num_platforms, pids.data(), NULL);
+
+  cl_device_id device_id;
 
   // get the name
   for (auto it = pids.begin(); it != pids.end(); it++)
@@ -80,7 +55,37 @@ int main()
     status = clGetPlatformInfo(*it, CL_PLATFORM_NAME, psize, (void *)pname.data(), NULL);
 
     std::cout << "Platform name: " << pname.data() << std::endl;
+
+    // get device
+    status = clGetDeviceIDs(NULL, CL_DEVICE_TYPE_ACCELERATOR, 1, &device_id, NULL);
   }
+
+  // create a context: no properties, one device
+  cl_context context;
+  context = clCreateContext(0, 1, &device_id, NULL, NULL, &status);
+
+  // read bitstream file using memdisk
+  auto& disk = fs::memdisk();
+  disk.init_fs([] (fs::error_t err, auto&) {
+    assert(!err);
+  });
+
+  std::string xclbin_name("/vadd.xclbin");
+  auto file = disk.fs().read_file(xclbin_name);
+
+  // Expects(file.is_valid());
+  std::vector<unsigned char> bs(reinterpret_cast<unsigned char*>(file.data()), 
+      reinterpret_cast<unsigned char*>(file.data() + file.size()));
+
+  std::cout << "bs file size: " << bs.size() << std::endl;
+
+  size_t bs_size = bs.size();
+  cl_int bs_status;
+  auto bs_ptr = bs.data();
+
+  // create a compute program
+  cl_program program;
+  program = clCreateProgramWithBinary(0, 1, &device_id, &bs_size, (const unsigned char**)&bs_ptr, &bs_status, &status);
 
   return 0;
 }

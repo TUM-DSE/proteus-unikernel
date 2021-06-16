@@ -8,7 +8,7 @@ namespace funkycl {
 static cl_int
 clReleaseCommandQueue(cl_command_queue cmd_queue)
 {
-  // if (funkycl::cl_to_funkycl(cmd_queue)->release()) // release() is not implemented
+  // if (cl_to_funkycl(cmd_queue)->release()) // release() is not implemented
   delete cl_to_funkycl(cmd_queue);
 
   return CL_SUCCESS;
