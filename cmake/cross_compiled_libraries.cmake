@@ -34,9 +34,9 @@ ExternalProject_Add(solo5_repo
 	BUILD_IN_SOURCE 1
   # GIT_REPOSITORY https://github.com/solo5/solo5.git
   # GIT_TAG 285b80aa4da12b628838a78dc79793f4d669ae1b
-  # GIT_REPOSITORY https://github.com/AtsushiKoshiba/funky-solo5.git
   GIT_REPOSITORY git@github.com:AtsushiKoshiba/funky-solo5.git
-	GIT_TAG vfpga # branch name is also ok
+  # GIT_TAG vfpga # branch name is also ok
+  GIT_TAG 4ad4a209d4293e5ed8833748c9d55db86216aa2e
 	CONFIGURE_COMMAND CC=gcc ./configure.sh
 	UPDATE_COMMAND ""
   BUILD_COMMAND make DISABLE_FPGA=${SOLO5_DISABLE_FPGA}
