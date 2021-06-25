@@ -11,9 +11,11 @@
 #include "platform.h"
 
 #include <buffer.hpp>
+#include <funky_msg.h>
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
+#define FUNKY_MSG_QUEUE_MAX_ELEMS 128
 
 class device : public _cl_device_id
 {
@@ -22,8 +24,8 @@ private:
   // hw::FPGA* vfpga; // = hw::Devices::fpga(0);
 
   // TODO: FunkyCL command class
-  std::unique_ptr<buffer::Reader<int>> response_q;
-  std::unique_ptr<buffer::Writer<int>> request_q;
+  std::unique_ptr<buffer::Reader<funky_msg::response>> response_q;
+  std::unique_ptr<buffer::Writer<funky_msg::request>> request_q;
 
 public:
   device(platform* pltf);
