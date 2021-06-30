@@ -11,7 +11,7 @@
 #include "platform.h"
 
 #include <buffer.hpp>
-#include <funky_msg.h>
+#include <funky_msg.hpp>
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
