@@ -46,6 +46,7 @@ IncludeOS_install
 
 # Vim
 *.swp
+Session.vim
 
 #CLion
 .idea/

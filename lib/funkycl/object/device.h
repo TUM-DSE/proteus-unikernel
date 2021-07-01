@@ -22,6 +22,7 @@ class device : public _cl_device_id
 private:
   platform* m_platform;
   // hw::FPGA* vfpga; // = hw::Devices::fpga(0);
+  bool init_flag;
 
   // TODO: FunkyCL command class
   std::unique_ptr<buffer::Reader<funky_msg::response>> response_q;
@@ -32,17 +33,14 @@ public:
   ~device();
 
   // TODO: add a method to invoke hypercalls with vfpga 
-  void init_vfpga_backend(std::vector<unsigned char>& bitstream);
-  
+  void init_vfpga(std::vector<unsigned char>& bitstream);
+  void free_vfpga(void);
+  bool is_initialized(void);
 };
 
 // device* get_device();
-//
-
-
 
 } // namespace funkycl
-
 
 #endif // __DEVICE_H
 

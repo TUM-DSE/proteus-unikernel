@@ -76,7 +76,7 @@ namespace funky_msg {
       // event_info events;
 
     public:
-      // delegating constructor
+      // delegating constructor (and for SYNC request)
       request(ReqType type) 
         : req_type(type), mem_num(0), mems(NULL), 
           kernel_name(NULL), arg_num(0), args(NULL), event_num(0)
