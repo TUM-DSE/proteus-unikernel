@@ -21,6 +21,8 @@
 #include "object/object.h"
 #include "object/platform.h"
 
+#include <iostream>
+
 namespace {
 static cl_device_type
 getDeviceType(cl_device_id device)
@@ -48,6 +50,8 @@ clGetDeviceIDs(cl_platform_id   platform,
   //       This will be replaced by get_device_range()
   auto device = f_platform->get_device();
 
+  cl_uint num_devices_cnt=0;
+
   switch(device_type)
   {
     case CL_DEVICE_TYPE_DEFAULT:
@@ -55,21 +59,23 @@ clGetDeviceIDs(cl_platform_id   platform,
       if (getDeviceType(device)!=CL_DEVICE_TYPE_CUSTOM) {
         if(num_entries > 0 && devices) {
           devices[0] = device;
-          *num_devices++;
         }
+        num_devices_cnt++;
       }
       break;
     case CL_DEVICE_TYPE_CPU:
     case CL_DEVICE_TYPE_GPU:
     case CL_DEVICE_TYPE_ACCELERATOR:
       if(getDeviceType(device)==device_type) {
-        if(num_entries > 0 && devices) {
+        if(num_entries >= 0 && devices) {
           devices[0] = device;
-          *num_devices++;
         }
+        num_devices_cnt++;
       }
       break;
   }
+
+  *num_devices = num_devices_cnt;
 
   return CL_SUCCESS;
 }

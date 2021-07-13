@@ -16,6 +16,10 @@ clCreateProgramWithBinary(cl_context                     context,
                           cl_int *                       errcode_ret)
 {
   auto program = std::make_unique<funkycl::program>(cl_to_funkycl(context), num_devices, device_list, binaries, lengths);
+
+  if(errcode_ret)
+    *errcode_ret = CL_SUCCESS;
+
   return program.release();
 }
 

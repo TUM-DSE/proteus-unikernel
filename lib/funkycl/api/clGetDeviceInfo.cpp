@@ -78,7 +78,7 @@ clGetDeviceInfo(cl_device_id   device,
 
   switch(param_name) {
   case CL_DEVICE_TYPE:
-    // TODO: implemente herefor 
+    // TODO: implement herefor 
     // buffer.as<cl_device_type>() = CL_DEVICE_TYPE_ACCELERATOR;
     ret = param.update<cl_device_type>(CL_DEVICE_TYPE_ACCELERATOR);
     break;

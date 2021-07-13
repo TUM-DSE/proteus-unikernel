@@ -25,12 +25,18 @@ public:
   context(platform* pltf);
   ~context();
 
+  device*
+  get_first_device() const
+  {
+    return (m_devices.size()==1)? m_devices[0]: nullptr;
+  }
+
+  device*
+  get_device() const;
 
 private:
   const cl_context_properties* m_props;
   std::vector<device*> m_devices;
-
-
 };
 
 } // namespace funkycl

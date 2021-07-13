@@ -25,7 +25,13 @@ context::~context()
   // TODO: release cl_device objects
 }
 
+device*
+context::get_device() const
+{
+  auto device = get_first_device();
+  return device;
+}
 
-} // funkycl
+} // funkygl
 
 

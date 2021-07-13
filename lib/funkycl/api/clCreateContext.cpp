@@ -3,6 +3,8 @@
 #include "object/object.h"
 #include "object/context.h"
 
+#include <iostream>
+
 namespace funkycl {
 
 static cl_context
@@ -20,6 +22,9 @@ clCreateContext(const cl_context_properties * properties,
 
   // TODO: set a callback function
   auto context = std::make_unique<funkycl::context>(properties,vdevices.size(),&vdevices[0]);
+
+  if(errcode_ret)
+    *errcode_ret = CL_SUCCESS;
 
   return context.release();
 }

@@ -44,6 +44,11 @@ program::
   }
 }
 
+context* 
+program::get_context()
+{
+  return m_context; 
+}
 
 } // funkycl
 

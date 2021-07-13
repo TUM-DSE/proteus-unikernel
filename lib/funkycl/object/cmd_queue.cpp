@@ -10,6 +10,11 @@ cmd_queue::cmd_queue(context* context, device* device, cl_command_queue_properti
 cmd_queue::~cmd_queue()
 {}
 
+device*
+cmd_queue::get_device()
+{
+  return m_device;
+}
 
 } // funkycl
 

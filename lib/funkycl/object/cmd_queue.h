@@ -17,12 +17,13 @@ public:
   cmd_queue(context* context, device* device, cl_command_queue_properties props);
   ~cmd_queue();
 
+  device* get_device();
 
 private:
+  // TODO: use smart (shared) pointer?
   device* m_device;
   context* m_context;
   cl_command_queue_properties m_props;
-  
 
 };
 

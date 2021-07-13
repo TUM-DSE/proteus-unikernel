@@ -36,6 +36,10 @@ public:
   void init_vfpga(std::vector<unsigned char>& bitstream);
   void free_vfpga(void);
   bool is_initialized(void);
+
+  bool vfpga_send_request(funky_msg::request& req);
+  funky_msg::response* vfpga_get_response();
+  
 };
 
 // device* get_device();

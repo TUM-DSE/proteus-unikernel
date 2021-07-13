@@ -31,6 +31,8 @@ public:
   program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
         const unsigned char** binaries, const size_t* lengths);
   ~program();
+
+  context* get_context();
 };
 
 } // namespace funkycl

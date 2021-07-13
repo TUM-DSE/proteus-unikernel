@@ -107,7 +107,9 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
   };
 
   /* test: send requests to execute vadd on FPGA */
-  test_send_requests();
+  // test_send_requests();
+
+  std::cout << "GUEST: sending fpga_init hypercall request..." << std::endl;
 
   /* do a hypercall */
   vfpga.init(bitstream.data(), bitstream.size(),
@@ -115,13 +117,14 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
       response_q->get_baseaddr(), response_q->get_mmsize());
 
   /* test: check the output results */
-  test_wait_for_response();
+  // test_wait_for_response();
 
   init_flag = true;
   return;
 }
 
-void device::free_vfpga()
+void 
+device::free_vfpga()
 {
   // TODO: do a hypercall to release FPGA
   std::cout << "TBD: free_vfpga()!!!!!!" << std::endl;
@@ -130,9 +133,23 @@ void device::free_vfpga()
   return;
 }
 
-bool device::is_initialized(void)
+bool 
+device::is_initialized(void)
 {
   return init_flag;
+}
+
+bool 
+device::vfpga_send_request(funky_msg::request& req)
+{
+  std::cout << "DEBUG: vfpga_send_rquest(): req " << req.get_request_type() << std::endl;
+  return request_q->push(req);
+}
+
+funky_msg::response* 
+device::vfpga_get_response()
+{
+  return response_q->pop();
 }
 
 device::~device()

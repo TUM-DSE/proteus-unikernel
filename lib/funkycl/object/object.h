@@ -25,7 +25,7 @@ class platform;
 class device;
 class context;
 class cmd_queue;
-class mem;
+class memory;
 class program;
 class kernel;
 class event;
@@ -78,7 +78,7 @@ struct _cl_platform_id  : public funkycl::cl_object_base<funkycl::platform, _cl_
 struct _cl_device_id    : public funkycl::cl_object_base<funkycl::device, _cl_device_id> {};
 struct _cl_context      : public funkycl::cl_object_base<funkycl::context, _cl_context> {};
 struct _cl_command_queue: public funkycl::cl_object_base<funkycl::cmd_queue, _cl_command_queue> {};
-struct _cl_mem          : public funkycl::cl_object_base<funkycl::mem, _cl_mem> {};
+struct _cl_mem          : public funkycl::cl_object_base<funkycl::memory, _cl_mem> {};
 struct _cl_program      : public funkycl::cl_object_base<funkycl::program, _cl_program> {};
 struct _cl_kernel       : public funkycl::cl_object_base<funkycl::kernel, _cl_kernel> {};
 struct _cl_event        : public funkycl::cl_object_base<funkycl::event, _cl_event> {};
