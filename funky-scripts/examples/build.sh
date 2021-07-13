@@ -13,7 +13,7 @@ fi
 
 mkdir ${BUILD_DIR}
 pushd ${BUILD_DIR}
-PLATFORM=x86_solo5 cmake ..
+PLATFORM=x86_solo5 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make -j 8
 popd
 

@@ -11,6 +11,7 @@ project (hello_xilinx)
 # set(SERVICE_NAME "Service with no Service::start, only main")
 set(SERVICE_NAME "hello world in Vitis Accel Examples")
 set(BINARY       "funkycl-app")
+set(CMAKE_BUILD_TYPE Debug)
 # set(MAX_MEM 128)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/xcl2)
@@ -32,3 +33,6 @@ set(LIBRARIES
 
 # include service build script
 include($ENV{INCLUDEOS_PREFIX}/includeos/post.service.cmake)
+
+# mount a bitstream file in VFS by using memdisk
+diskbuilder(disk)

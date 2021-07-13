@@ -43,7 +43,7 @@ std::vector<cl::Device> get_devices(const std::string& vendor_name) {
         }
     }
     if (i == platforms.size()) {
-        std::cout << "Error: Failed to find Xilinx platform" << std::endl;
+        std::cout << "Error: Failed to find Funky platform" << std::endl;
         std::cout << "Found the following platforms : " << std::endl;
         for (size_t j = 0; j < platforms.size(); j++) {
             platform = platforms[j];
@@ -59,9 +59,11 @@ std::vector<cl::Device> get_devices(const std::string& vendor_name) {
 }
 
 std::vector<cl::Device> get_xil_devices() {
-    return get_devices("Xilinx");
+    // return get_devices("Xilinx");
+    return get_devices("Funk");
 }
 
+/*
 cl::Device find_device_bdf(const std::vector<cl::Device>& devices, const std::string& bdf) {
     char device_bdf[20];
     cl_int err;
@@ -81,6 +83,7 @@ cl::Device find_device_bdf(const std::vector<cl::Device>& devices, const std::st
     }
     return device;
 }
+
 std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name) {
     std::cout << "INFO: Reading " << xclbin_file_name << std::endl;
     FILE* fp;
@@ -99,6 +102,7 @@ std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name)
     bin_file.read(reinterpret_cast<char*>(buf.data()), nb);
     return buf;
 }
+*/
 
 bool is_emulation() {
     bool ret = false;
