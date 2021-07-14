@@ -8,8 +8,9 @@ namespace funkycl {
 static cl_int
 clRetainKernel(cl_kernel kernel)
 {
-  /* Nothing is done here because we haven't implemented any reference count. */
-  // TODO: implement refcount
+  DEBUG_STREAM("Retain kernel [" << cl_to_funkycl(kernel)->get_id() << "]: refcount=" << cl_to_funkycl(kernel)->count()+1);
+
+  cl_to_funkycl(kernel)->retain();
   return CL_SUCCESS;
 }
 

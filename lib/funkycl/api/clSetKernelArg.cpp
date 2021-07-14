@@ -13,11 +13,13 @@ clSetKernelArg(cl_kernel    kernel,
 {
   // TODO: how to confirm if argument is cl_mem or not?
   // There would be no way to detect the type of argument other than reading meta data in xclbin...
-  //
+  DEBUG_STREAM("set an argument ...");
   auto f_kernel = cl_to_funkycl(kernel);
 
   f_kernel->create_argument(arg_index);
   f_kernel->set_argument(arg_index, arg_size, arg_value);
+
+  DEBUG_STREAM("finish.");
 
   return CL_SUCCESS;
 }

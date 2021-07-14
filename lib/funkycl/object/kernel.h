@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "object.h"
+#include "refcount.h"
 #include "device.h"
 #include "memory.h"
 #include "program.h"
@@ -35,7 +36,7 @@ namespace funkycl {
 // FIXME: compute_unit class is not necessary in guest?
 // class compute_unit;
 
-class kernel : public _cl_kernel
+class kernel : public _cl_kernel, public refcount
 {
 public:
   /**
@@ -94,10 +95,11 @@ public:
     { return sizeof(memory*); }
 
     virtual const void* get_value() const 
-    { return m_buffer; }
+    { return m_buffer.get(); }
 
   private:
-    memory* m_buffer; // buffer class? shared_ptr?
+    // memory* m_buffer; // buffer class? shared_ptr?
+    ptr<memory> m_buffer; // retain ownership
   };
 
   class scalar_argument : public argument
@@ -139,7 +141,7 @@ public:
 
   program* get_program() const
   {
-    return m_program;
+    return m_program.get();
   }
 
   context* get_context() const;
@@ -149,7 +151,8 @@ public:
 
 private:
   unsigned int m_id = 0;
-  program* m_program;
+  // program* m_program;
+  ptr<program> m_program;
   std::string m_name;
   std::vector<std::unique_ptr<argument>> m_args;
 };

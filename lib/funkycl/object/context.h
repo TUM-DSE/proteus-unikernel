@@ -8,12 +8,13 @@
 #include <CL/opencl.h>
 
 #include "object.h"
+#include "refcount.h"
 #include "device.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
 
-class context : public _cl_context
+class context : public _cl_context, public refcount
 {
 public:
   context(const cl_context_properties* properties
@@ -28,7 +29,9 @@ public:
   device*
   get_first_device() const
   {
-    return (m_devices.size()==1)? m_devices[0]: nullptr;
+    return (m_devices.size()==1)
+      ? (*(m_devices.begin())).get()
+      : nullptr;
   }
 
   device*
@@ -36,7 +39,7 @@ public:
 
 private:
   const cl_context_properties* m_props;
-  std::vector<device*> m_devices;
+  std::vector<ptr<device>> m_devices;
 };
 
 } // namespace funkycl

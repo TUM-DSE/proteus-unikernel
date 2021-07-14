@@ -8,8 +8,7 @@ namespace funkycl {
 static cl_int
 clRetainContext(cl_context context)
 {
-  /* Nothing is done here because we haven't implemented any reference count. */
-  // TODO: implement refcount
+  cl_to_funkycl(context)->retain();
   return CL_SUCCESS;
 }
 

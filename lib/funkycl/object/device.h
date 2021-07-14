@@ -8,6 +8,7 @@
 #include <hw/devices.hpp>
 
 #include "object.h"
+#include "refcount.h"
 #include "platform.h"
 
 #include <buffer.hpp>
@@ -17,7 +18,7 @@ namespace funkycl {
 #define FUNKY_VFPGA_ID 1
 #define FUNKY_MSG_QUEUE_MAX_ELEMS 128
 
-class device : public _cl_device_id
+class device : public _cl_device_id, public refcount
 {
 private:
   platform* m_platform;

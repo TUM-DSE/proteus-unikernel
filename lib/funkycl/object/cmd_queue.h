@@ -5,13 +5,14 @@
 #include <vector>
 
 #include "object.h"
+#include "refcount.h"
 #include "device.h"
 #include "context.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
 
-class cmd_queue : public _cl_command_queue
+class cmd_queue : public _cl_command_queue, public refcount
 {
 public:
   cmd_queue(context* context, device* device, cl_command_queue_properties props);
@@ -20,9 +21,11 @@ public:
   device* get_device();
 
 private:
-  // TODO: use smart (shared) pointer?
-  device* m_device;
-  context* m_context;
+  unsigned int m_id=0;
+  // device* m_device;
+  ptr<device> m_device;
+  // context* m_context;
+  ptr<context> m_context;
   cl_command_queue_properties m_props;
 
 };

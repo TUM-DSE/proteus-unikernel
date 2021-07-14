@@ -6,10 +6,10 @@
 namespace funkycl {
 
 static cl_int
-clReleaseCommandQueue(cl_command_queue cmd_queue)
+clReleaseCommandQueue(cl_command_queue command_queue)
 {
-  // if (cl_to_funkycl(cmd_queue)->release()) // release() is not implemented
-  delete cl_to_funkycl(cmd_queue);
+  if (cl_to_funkycl(command_queue)->release())
+    delete cl_to_funkycl(command_queue);
 
   return CL_SUCCESS;
 }
@@ -17,9 +17,9 @@ clReleaseCommandQueue(cl_command_queue cmd_queue)
 } // funkycl
 
 cl_int
-clReleaseCommandQueue(cl_command_queue cmd_queue)
+clReleaseCommandQueue(cl_command_queue command_queue)
 {
-  return funkycl::clReleaseCommandQueue(cmd_queue);
+  return funkycl::clReleaseCommandQueue(command_queue);
 }
 
 

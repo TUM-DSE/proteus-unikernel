@@ -8,8 +8,13 @@ namespace funkycl {
 static cl_int
 clReleaseKernel(cl_kernel kernel)
 {
-  // if (cl_to_funkycl(kernel)->release()) // release() cannot be called?
-  delete cl_to_funkycl(kernel);
+  DEBUG_STREAM("Release kernel [" << cl_to_funkycl(kernel)->get_id() << "]: refcount=" << cl_to_funkycl(kernel)->count()-1);
+
+  if (cl_to_funkycl(kernel)->release())
+  {
+    DEBUG_STREAM("destroy kernel [" << cl_to_funkycl(kernel)->get_id() << "]!");
+    delete cl_to_funkycl(kernel);
+  }
 
   return CL_SUCCESS;
 }

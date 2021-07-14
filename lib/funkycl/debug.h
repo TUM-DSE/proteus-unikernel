@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <iostream>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \
@@ -17,7 +17,7 @@
   std::cout << "[DEBUG] " << __FUNCTION__ << "(): " << msg << std::endl
 #else
 #define DEBUG_PRINT(fmt, ...)                                                                   
-#define DEBUG_IOSTREAM(msg)                                                                   
+#define DEBUG_STREAM(msg)
 #endif
 
 #endif // __DEBUG_H

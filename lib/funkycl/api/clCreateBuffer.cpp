@@ -40,6 +40,8 @@ clCreateBuffer(cl_context   context,
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
 
+  DEBUG_STREAM("Create buffer [" << buffer->get_id() << "]: refcount=" << buffer->count());
+
   return buffer.release();
 }
 

@@ -8,9 +8,9 @@ namespace funkycl {
 static cl_int
 clRetainMemObject(cl_mem memobj)
 {
-  /* Nothing is done here because we haven't implemented any reference count. */
-  // TODO: implement refcount
-  DEBUG_PRINT("debug");
+  DEBUG_STREAM("Retain memobj [" << cl_to_funkycl(memobj)->get_id() << "]: refcount=" << cl_to_funkycl(memobj)->count()+1);
+
+  cl_to_funkycl(memobj)->retain();
   return CL_SUCCESS;
 }
 

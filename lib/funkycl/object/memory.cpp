@@ -55,8 +55,7 @@ memory(context* cxt, cl_mem_flags flags)
   static unsigned int id_count = 0;
   m_id = id_count++;
 
-  // TODO: develop debug print function for funkycl
-  std::cout << "funkycl::memory::memory(): " << m_id << std::endl;
+  DEBUG_STREAM("create memory obj [" << m_id << "]");
 
   //appdebug::add_clmem(this);
 }
@@ -64,7 +63,7 @@ memory(context* cxt, cl_mem_flags flags)
 memory::
 ~memory()
 {
-  std::cout << "funkycl::memory::~memory(): " << m_id << std::endl;
+  DEBUG_STREAM("destroy memory obj [" << m_id << "]");
 }
 
 bool

@@ -8,11 +8,14 @@ namespace funkycl {
 static cl_int
 clReleaseMemObject(cl_mem memobj)
 {
-  // std::cout << "INFO: here is in " << __FUNCTION__ << std::endl;
-  DEBUG_PRINT("debug");
+  // DEBUG_STREAM("Release memobj [" << cl_to_funkycl(memobj)->get_id() << "]");
+  DEBUG_STREAM("Release memobj [" << cl_to_funkycl(memobj)->get_id() << "]: refcount=" << cl_to_funkycl(memobj)->count()-1);
 
-  // if (cl_to_funkycl(memobj)->release()) // release() cannot be called?
-  delete cl_to_funkycl(memobj);
+  if (cl_to_funkycl(memobj)->release())
+  {
+    DEBUG_STREAM("destroy memobj [" << cl_to_funkycl(memobj)->get_id() << "]!");
+    delete cl_to_funkycl(memobj);
+  }
 
   return CL_SUCCESS;
 }

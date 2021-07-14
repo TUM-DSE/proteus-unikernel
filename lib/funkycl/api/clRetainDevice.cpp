@@ -8,8 +8,9 @@ namespace funkycl {
 static cl_int
 clRetainDevice(cl_device_id device)
 {
-  /* Nothing is done here because we haven't implemented any reference count. */
-  // TODO: implement refcount
+  DEBUG_STREAM("Retain device");
+
+  cl_to_funkycl(device)->retain();
   return CL_SUCCESS;
 }
 

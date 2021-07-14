@@ -8,8 +8,8 @@ namespace funkycl {
 static cl_int
 clReleaseContext(cl_context  context )
 {
-  // if (cl_to_funkycl(context)->release())
-  delete cl_to_funkycl(context);
+  if (cl_to_funkycl(context)->release())
+    delete cl_to_funkycl(context);
 
   return CL_SUCCESS;
 }

@@ -23,13 +23,14 @@
 #include <stdexcept>
 
 #include "object.h"
+#include "refcount.h"
 #include "device.h"
 #include "context.h"
 
 
 namespace funkycl {
 
-class memory : public _cl_mem
+class memory : public _cl_mem, public refcount
 {
 public:
   memory(context* cxt, cl_mem_flags flags);
@@ -66,7 +67,8 @@ public:
   context*
   get_context() const
   {
-    return m_context;
+    // return m_context;
+    return m_context.get();
   }
 
   bool
@@ -191,7 +193,8 @@ public:
 
 private:
   unsigned int m_id = 0;
-  context* m_context;
+  // context* m_context;
+  ptr<context> m_context;
 
   cl_mem_flags m_flags {0};
 
@@ -277,7 +280,7 @@ public:
   virtual memory*
   get_sub_buffer_parent() const
   {
-    return m_parent;
+    return m_parent.get();
   }
 
   virtual const device*
@@ -287,7 +290,8 @@ public:
   }
 
 private:
-  memory* m_parent;
+  // memory* m_parent;
+  ptr<memory> m_parent;
   size_t m_offset;
 };
 

@@ -45,12 +45,14 @@ kernel(program* prog, const std::string& name)
 {
   static unsigned int id_count = 0;
   m_id = id_count++;
+
+  DEBUG_STREAM("create kernel obj [" << m_id << "]");
 }
 
 kernel::
 ~kernel()
 {
-  std::cout << "xocl::kernel::~kernel(" << m_id << std::endl;
+  DEBUG_STREAM("destroy kernel obj [" << m_id << "]");
 }
 
 // std::unique_ptr<kernel::argument>
@@ -59,18 +61,18 @@ kernel::create_argument(unsigned long idx)
 {
   // FIXME: here is just for initial test: only available for vadd.xclbin (hello world).
   if(idx == 3)
-    m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
-  else
     m_args.emplace_back(std::make_unique<kernel::scalar_argument>(this, idx));
+  else
+    m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
 }
 
 void
 kernel::set_argument(unsigned long idx, size_t size, const void* arg)
 {
   // FIXME: here is just for initial test: only available for vadd.xclbin (hello world).
-  if(idx == 3)
-    m_args.at(idx)->set(idx, size, arg);
-  else
+  // if(idx == 3)
+  //   m_args.at(idx)->set(idx, size, arg);
+  // else
     m_args.at(idx)->set(idx, size, arg);
 }
 
@@ -78,7 +80,7 @@ context*
 kernel::
 get_context() const
 {
-  return m_program->get_context();
+  return get_program()->get_context();
 }
 
 } // xocl

@@ -36,11 +36,14 @@ program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
 program::
 ~program()
 {
-  DEBUG_PRINT("debug");
+  DEBUG_STREAM("destroy program obj");
 
   /* notify the backend to release FPGA */
-  for (auto device : m_devices)
+  // TODO: check if this iteration prevent retaining ownership. 
+  //       The original code (xocl) uses boost::range(), but boost library is not linked to unikernel bin
+  for (auto itr = device_iterator_type(m_devices.begin()); itr != device_iterator_type(m_devices.end()); itr++)
   {
+    auto device = itr->get();
     if(device->is_initialized())
       device->free_vfpga();
   }
@@ -49,7 +52,7 @@ program::
 context* 
 program::get_context()
 {
-  return m_context; 
+  return m_context.get(); 
 }
 
 } // funkycl

@@ -22,6 +22,8 @@ clCreateKernel(cl_program      program,
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
 
+  DEBUG_STREAM("Create kernel [" << kernel->get_id() << "]: refcount=" << kernel->count());
+
   return kernel.release();
 }
 

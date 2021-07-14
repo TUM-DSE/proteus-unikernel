@@ -8,7 +8,14 @@ namespace funkycl {
 static cl_int
 clReleaseDevice(cl_device_id device)
 {
-  // TODO: delete device?
+  DEBUG_STREAM("decrement refcount. ");
+
+  if (cl_to_funkycl(device)->release())
+  {
+    DEBUG_STREAM("destroy device!");
+    delete cl_to_funkycl(device);
+  }
+
   return CL_SUCCESS;
 }
 

@@ -8,8 +8,9 @@ namespace funkycl {
 static cl_int
 clRetainProgram(cl_program program)
 {
-  /* Nothing is done here because we haven't implemented any reference count. */
-  // TODO: implement refcount
+  DEBUG_STREAM("Retain program");
+
+  cl_to_funkycl(program)->retain();
   return CL_SUCCESS;
 }
 

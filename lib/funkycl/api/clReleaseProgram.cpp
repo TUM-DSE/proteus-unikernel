@@ -8,8 +8,13 @@ namespace funkycl {
 static cl_int
 clReleaseProgram(cl_program program)
 {
-  // if (cl_to_funkycl(cmd_queue)->release()) // release() is not implemented
-  delete cl_to_funkycl(program);
+  DEBUG_STREAM("decrement refcount of program");
+
+  if (cl_to_funkycl(program)->release())
+  {
+    DEBUG_STREAM("destroy program!");
+    delete cl_to_funkycl(program);
+  }
 
   return CL_SUCCESS;
 }
