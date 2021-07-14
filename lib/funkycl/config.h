@@ -9,4 +9,6 @@
 #include <memory>
 #include <vector>
 
+#include "debug.h"
+
 #endif // __CONFIG_H

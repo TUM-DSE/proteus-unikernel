@@ -8,6 +8,9 @@ namespace funkycl {
 static cl_int
 clReleaseMemObject(cl_mem memobj)
 {
+  // std::cout << "INFO: here is in " << __FUNCTION__ << std::endl;
+  DEBUG_PRINT("debug");
+
   // if (cl_to_funkycl(memobj)->release()) // release() cannot be called?
   delete cl_to_funkycl(memobj);
 

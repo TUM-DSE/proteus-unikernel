@@ -36,6 +36,8 @@ program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
 program::
 ~program()
 {
+  DEBUG_PRINT("debug");
+
   /* notify the backend to release FPGA */
   for (auto device : m_devices)
   {

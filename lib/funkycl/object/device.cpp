@@ -127,7 +127,7 @@ void
 device::free_vfpga()
 {
   // TODO: do a hypercall to release FPGA
-  std::cout << "TBD: free_vfpga()!!!!!!" << std::endl;
+  DEBUG_PRINT("TBD: free_vfpga()!!");
 
   init_flag = false;
   return;
@@ -142,7 +142,8 @@ device::is_initialized(void)
 bool 
 device::vfpga_send_request(funky_msg::request& req)
 {
-  std::cout << "DEBUG: vfpga_send_rquest(): req " << req.get_request_type() << std::endl;
+  DEBUG_STREAM("req: " << req.get_request_type());
+
   return request_q->push(req);
 }
 

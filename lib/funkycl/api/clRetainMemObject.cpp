@@ -10,6 +10,7 @@ clRetainMemObject(cl_mem memobj)
 {
   /* Nothing is done here because we haven't implemented any reference count. */
   // TODO: implement refcount
+  DEBUG_PRINT("debug");
   return CL_SUCCESS;
 }
 

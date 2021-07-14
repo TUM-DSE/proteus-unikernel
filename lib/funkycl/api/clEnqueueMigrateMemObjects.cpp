@@ -39,7 +39,7 @@ clEnqueueMigrateMemObjects(cl_command_queue       command_queue,
     device->vfpga_send_request(transfer_output_req);
   }
 
-  std::cout << "Migrate!!!" << std::endl;
+  DEBUG_PRINT("");
 
   return CL_SUCCESS;
 }
