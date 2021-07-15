@@ -81,6 +81,13 @@ public:
       void* rd_queue, size_t rd_len) = 0;
 
   /**
+   * wakeup vfpga request handler (in backend)
+   *
+   * @return the number of retired requests
+   */
+  virtual int handle_requests(void) = 0;
+
+  /**
    * Method to deactivate the block device
    */
   virtual void deactivate() = 0;

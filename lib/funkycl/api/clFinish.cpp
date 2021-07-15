@@ -4,8 +4,6 @@
 #include "object/device.h"
 #include "object/cmd_queue.h"
 
-#include <iostream>
-
 namespace funkycl {
 
 static cl_int 
@@ -13,11 +11,22 @@ clFinish(cl_command_queue command_queue)
 {
   auto device = cl_to_funkycl(command_queue)->get_device();
 
-  // TODO: send a SYNC request to backend and wait
-  funky_msg::request dummy_sync_req(funky_msg::SYNC);
-  device->vfpga_send_request(dummy_sync_req);
+  funky_msg::request sync_req(funky_msg::SYNC);
+  device->vfpga_send_request(sync_req);
 
-  std::cout << "TBD: do a hypercall for clFinish() !!" << std::endl; 
+  /* do a hypercall to wake up vfpga backend request handler */
+  // TODO: Before doing the hypercall, it must be verified if vfpga worker thread exists. 
+  // In case the worker thread exists, the guest (unikernel) just wait for the SYNC response from backend
+  device->vfpga_handle_requests();
+
+  // wait for SYNC resonse
+  auto res = device->vfpga_get_response();
+
+  // TODO: set up timeout?
+  while(res == NULL)
+    res = device->vfpga_get_response();
+
+  std::cout << __FUNCTION__ << "(): vFPGA is synced." << std::endl;
 
   return CL_SUCCESS;
 }

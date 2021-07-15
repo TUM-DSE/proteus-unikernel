@@ -12,7 +12,9 @@ Usage:
 Options: 
   -h                    print help
 
-  -u <build_dir>        set path to dir including binary 
+  -g                    run the unikernel with gdb 
+
+  -b <build_dir>        set path to dir including binary 
                         (default: ${BUILD_DIR})
 
   -u <ukvm-bin>         set path to ukvm-bin 
@@ -26,6 +28,44 @@ Options:
 EOF
 }
 
+
+########### get arguments #############
+while getopts hgb:u:n:a: OPT
+do
+  case $OPT in
+    "h" )
+      usage
+      exit -1 ;;
+    "g" )
+      GDB_FLAG=true ;;
+    "b" )
+      USER_BUILD_DIR=${OPTARG} ;;
+    "u" )
+      USER_UKVM_BIN=${OPTARG} ;;
+    "n" )
+      USER_TAP_IF=${OPTARG} ;;
+    "a" )
+      USER_ARGS=${OPTARG} ;;
+  esac
+done
+
+########### set arguments #############
+if [ ! -z ${USER_BUILD_DIR} ]; then
+  echo "INFO: ${USER_BUILD_DIR} is specified as the build directory."
+  BUILD_DIR=${USER_BUILD_DIR}
+fi
+
+if [ ! -z ${USER_UKVM_BIN} ]; then
+  echo "INFO: ${USER_UKVM_BIN} is used as the monitor."
+  UKVM_BIN=${USER_UKVM_BIN}
+fi
+
+if [ ! -z ${USER_TAP_IF} ]; then
+  echo "INFO: ${USER_TAP_IF} is used as a tap interface."
+  TAP_IF=${USER_TAP_IF}
+fi
+
+########### Error check #############
 if [ ! -e ${BUILD_DIR} ]; then
   echo "Error: ${BUILD_DIR} doesn't exist. Please specify the correct build directory or compile an application first."
   exit -1
@@ -34,7 +74,6 @@ fi
 # search build_dir for unikernel app binary
 APP_BIN=$(find ${BUILD_DIR} -maxdepth 1 -executable -type f)
 
-########### Error check #############
 if [ ! -e ${APP_BIN} ]; then
   echo "Error: binary ${APP_BIN} is missing. Please specify the correct build directory."
   exit -1
@@ -50,34 +89,6 @@ if [ -z ${INCLUDEOS_PREFIX} ]; then
   exit -1
 fi
 
-########### get arguments #############
-while getopts u:n:a:h OPT
-do
-  case $OPT in
-    "h" )
-      usage
-      exit -1 ;;
-    "u" )
-      USER_UKVM_BIN=${OPTARG} ;;
-    "n" )
-      USER_TAP_IF=${OPTARG} ;;
-    "a" )
-      USER_ARGS=${OPTARG} ;;
-  esac
-done
-
-########### set arguments #############
-if [ ! -z ${USER_UKVM_BIN} ]; then
-  echo "INFO: ${USER_UKVM_BIN} is used as the monitor."
-  UKVM_BIN=${USER_UKVM_BIN}
-fi
-
-if [ ! -z ${USER_TAP_IF} ]; then
-  echo "INFO: ${USER_TAP_IF} is used as a tap interface."
-  TAP_IF=${USER_TAP_IF}
-fi
-
-
 
 ########### Execute app #############
 # apply exec permission to ukvm bin
@@ -86,4 +97,12 @@ if [ -e ${UKVM_BIN} -a ! -x ${UKVM_BIN} ]; then
 fi
 
 # sudo -E ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN}
-${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN} ${USER_ARGS}
+
+if [ -z ${GDB_FLAG} ]; then
+  ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN} ${USER_ARGS}
+else 
+  echo "Usage: run --disk=${APP_BIN} --net=tap100 ${APP_BIN} ${USER_ARGS}"
+  echo "Press the Enter to start gdb..."
+  read Wait
+  gdb -tui ${UKVM_BIN} 
+fi

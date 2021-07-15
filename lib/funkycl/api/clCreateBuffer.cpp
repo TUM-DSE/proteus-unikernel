@@ -33,7 +33,9 @@ clCreateBuffer(cl_context   context,
 
   funky_msg::mem_info  minfo(index, funky_msg::BUFFER, flags,  host_ptr, size);
   funky_msg::mem_info* mems[] = {&minfo};
-  funky_msg::request memory_req(funky_msg::MEMORY, 3, (void **)mems);
+
+  DEBUG_STREAM("Create meminfo: addr:" << &minfo << ", index=" << minfo.id << ", MemType=" << minfo.type << ", flags=" << minfo.flags << ", host_ptr=" << minfo.src << ", size=" << minfo.size);
+  funky_msg::request memory_req(funky_msg::MEMORY, 1, (void **)mems);
   device->vfpga_send_request(memory_req);
   index++;
 

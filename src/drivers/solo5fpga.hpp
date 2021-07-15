@@ -47,6 +47,8 @@ public:
 
   int init(void*, size_t, void*, size_t, void*, size_t) override; // stays
 
+  int handle_requests(void) override; // stays
+
   void deactivate() override; // stays
 
   /** Constructor. */

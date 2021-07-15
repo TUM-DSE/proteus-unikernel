@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <iostream>
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, ...) \

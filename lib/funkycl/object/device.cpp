@@ -142,7 +142,17 @@ device::is_initialized(void)
 bool 
 device::vfpga_send_request(funky_msg::request& req)
 {
-  DEBUG_STREAM("req: " << req.get_request_type());
+  DEBUG_STREAM("req: " << req.get_request_type() << ", addr:" << &req);
+
+  if (req.get_request_type() == funky_msg::MEMORY)
+  {
+    int num;
+    auto mems = (funky_msg::mem_info**) req.get_meminfo_array(num);
+    auto mem = (funky_msg::mem_info*) mems[0];
+    DEBUG_STREAM("Before pushing Memreq: addr=" << mem << ", num=" << num << ", index=" << mem->id << ", MemType=" << mem->type << ", flags=" << mem->flags << ", host_ptr=" << mem->src << ", size=" << mem->size);
+
+  }
+
 
   return request_q->push(req);
 }
@@ -151,6 +161,15 @@ funky_msg::response*
 device::vfpga_get_response()
 {
   return response_q->pop();
+}
+
+int 
+device::vfpga_handle_requests()
+{
+  auto& vfpga = hw::Devices::fpga(0);
+
+  /* do a hypercall */
+  return vfpga.handle_requests();
 }
 
 device::~device()

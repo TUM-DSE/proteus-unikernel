@@ -53,3 +53,6 @@ Session.vim
 
 # Starbase disk file
 lib/uplink/starbase/disk
+
+# gdb
+*.gdb

@@ -33,14 +33,14 @@ public:
   device(platform* pltf);
   ~device();
 
-  // TODO: add a method to invoke hypercalls with vfpga 
   void init_vfpga(std::vector<unsigned char>& bitstream);
   void free_vfpga(void);
+  // void sync_vfpga(void);
   bool is_initialized(void);
 
   bool vfpga_send_request(funky_msg::request& req);
-  funky_msg::response* vfpga_get_response();
-  
+  funky_msg::response* vfpga_get_response(void);
+  int vfpga_handle_requests(void);
 };
 
 // device* get_device();

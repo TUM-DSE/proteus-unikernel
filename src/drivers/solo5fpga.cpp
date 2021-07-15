@@ -46,6 +46,11 @@ int Solo5FPGA::init(void* bs, size_t bs_len,
   return 0;
 }
 
+int Solo5FPGA::handle_requests(void)
+{
+  return solo5_fpga_handle_request();
+}
+
 // Unused
 void Solo5FPGA::deactivate()
 {
