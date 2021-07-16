@@ -18,28 +18,21 @@ clEnqueueMigrateMemObjects(cl_command_queue       command_queue,
                            const cl_event *       event_wait_list,
                            cl_event *             event)
 {
+  auto cmd_queue = cl_to_funkycl(command_queue);
   auto device = cl_to_funkycl(command_queue)->get_device();
 
-  static bool is_first=true;
+  /* send a MEMORY request every time when this function is called
+   * TODO: send the request only if any memobj has been newly created 
+   *       since the last time this function called 
+   * */
+  auto ret = cmd_queue->vfpga_send_memory_request();
+  if(ret)
+    DEBUG_STREAM("Memory creation request has been issued.");
+  else
+    DEBUG_STREAM("No memory request is issued. all memobjs are already initialized.");
 
-  // TODO: send a "TRANSFER" request to backend
-  if(is_first) {
-    /* send a TRANSFER request */
-    int in_mem_ids[] = {1, 2};
-    funky_msg::transfer_info trans_input(in_mem_ids, 2, 0);
-    funky_msg::request transfer_input_req(funky_msg::TRANSFER, (void *)&trans_input);
-    device->vfpga_send_request(transfer_input_req);
-    is_first=false;
-  }
-  else {
-    /* send a TRANSFER request */
-    int out_mem_ids[] = {3};
-    funky_msg::transfer_info trans_output(out_mem_ids, 1, CL_MIGRATE_MEM_OBJECT_HOST);
-    funky_msg::request transfer_output_req(funky_msg::TRANSFER, (void *)&trans_output);
-    device->vfpga_send_request(transfer_output_req);
-  }
-
-  DEBUG_PRINT("");
+  /* send a "TRANSFER" request to backend */
+  cmd_queue->vfpga_send_transfer_request(num_mem_objects, mem_objects, flags);
 
   return CL_SUCCESS;
 }

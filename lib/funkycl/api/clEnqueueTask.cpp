@@ -22,17 +22,21 @@ clEnqueueTask(cl_command_queue  command_queue,
   
   // TODO: read arguments from arg
   int size = 4096;
-  funky_msg::arg_info arg0(0, 1);
-  funky_msg::arg_info arg1(1, 2);
-  funky_msg::arg_info arg2(2, 3);
+  funky_msg::arg_info arg0(0, 0);
+  funky_msg::arg_info arg1(1, 1);
+  funky_msg::arg_info arg2(2, 2);
   funky_msg::arg_info arg3(3, -1, &size, sizeof(size));
 
   // TODO: send an "EXECUTE" request to backend
   funky_msg::arg_info* args[] = {&arg0, &arg1, &arg2, &arg3};
 
   std::string dummy_kernel("vadd");
-  funky_msg::request dummy_exec_req(funky_msg::EXECUTE, dummy_kernel.c_str(), dummy_kernel.length(), 4, (void **)args);
-  device->vfpga_send_request(dummy_exec_req);
+  funky_msg::request exec_req(funky_msg::EXECUTE, dummy_kernel.c_str(), dummy_kernel.length(), 4, (void **)args);
+
+  device->vfpga_send_request(exec_req);
+
+  // just for test
+  device->vfpga_handle_requests();
 
   // TODO: call clEnqueueNDRangeKernel() here. clEnqueueTask() is just a wrapper
 

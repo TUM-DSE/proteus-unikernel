@@ -32,6 +32,15 @@ context::get_device() const
   return device;
 }
 
+void 
+context::register_meminfo(funky_msg::mem_info* meminfo)
+{
+  meminfo_list_update_flag = true;
+  meminfo_list.push_back(meminfo);
+
+  DEBUG_STREAM("register meminfo. addr: " << meminfo);
+}
+
 } // funkygl
 
 

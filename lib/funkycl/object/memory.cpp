@@ -21,32 +21,6 @@
 
 #include <iostream>
 
-namespace {
-
-#ifdef __GNUC__
-int
-ctz(unsigned int x)
-{
-  return __builtin_ctz(x);
-}
-#endif
-
-#ifdef _WIN32
-#pragma intrinsic(_BitScanForward64)
-int
-ctz(uint64_t x)
-{
-  if (!x)
-    return 64;
-  unsigned long idx = 0;
-  _BitScanForward64(&idx,x);
-  return idx;
-}
-#endif
-
-
-} // namespace
-
 namespace funkycl {
 memory::
 memory(context* cxt, cl_mem_flags flags)

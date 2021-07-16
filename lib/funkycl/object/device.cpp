@@ -153,8 +153,11 @@ device::vfpga_send_request(funky_msg::request& req)
 
   }
 
+  auto ret = request_q->push(req);
 
-  return request_q->push(req);
+  DEBUG_STREAM("num of queued requests: " << request_q->size());
+
+  return ret;
 }
 
 funky_msg::response* 

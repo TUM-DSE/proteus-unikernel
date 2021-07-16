@@ -136,7 +136,7 @@ namespace funky_msg {
         return req_type;
       }
 
-      const char* get_kernel_name(size_t size) {
+      const char* get_kernel_name(size_t& size) {
         size = name_size;
         return kernel_name;
       }

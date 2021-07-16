@@ -8,6 +8,7 @@
 #include "refcount.h"
 #include "device.h"
 #include "context.h"
+#include "memory.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
@@ -20,6 +21,10 @@ public:
 
   device* get_device();
 
+  /* for managing vfpga request/response queues */
+  bool vfpga_send_memory_request();
+  bool vfpga_send_transfer_request(cl_uint, const cl_mem*, cl_mem_migration_flags);
+
 private:
   unsigned int m_id=0;
   // device* m_device;
@@ -27,6 +32,14 @@ private:
   // context* m_context;
   ptr<context> m_context;
   cl_command_queue_properties m_props;
+
+  /* for vfpga TRANSFER requests */
+  std::vector<std::unique_ptr<std::vector<int>>> trans_memids_list; 
+  std::vector<std::unique_ptr<funky_msg::transfer_info>> trans_info_list; 
+
+  /* for vfpga EXECUTE requests */
+  using exec_args_type = std::vector<funky_msg::arg_info*>;
+  std::vector<std::unique_ptr<exec_args_type>> exec_args_list; 
 
 };
 

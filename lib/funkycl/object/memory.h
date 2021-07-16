@@ -206,7 +206,7 @@ class buffer : public memory
 {
 public:
   buffer(context* ctx,cl_mem_flags flags, size_t sz, void* host_ptr)
-    : memory(ctx,flags) ,m_size(sz), m_host_ptr(host_ptr)
+    : memory(ctx,flags) ,m_size(sz), m_host_ptr(host_ptr), m_meminfo(get_id(), funky_msg::BUFFER, flags, host_ptr, sz)
   {
     // TODO: check memory alignment?
 
@@ -254,10 +254,17 @@ public:
     return m_extra_sync;
   }
 
+  funky_msg::mem_info* get_meminfo()
+  {
+    return &m_meminfo;
+  }
+
 private:
   bool m_extra_sync = false;
   size_t m_size = 0;
   void* m_host_ptr = nullptr;
+
+  funky_msg::mem_info m_meminfo;
 };
 
 class sub_buffer : public buffer

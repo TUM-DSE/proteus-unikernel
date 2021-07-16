@@ -37,9 +37,32 @@ public:
   device*
   get_device() const;
 
+  /* for sending MEMORY requests to vfpga backend */
+  void register_meminfo(funky_msg::mem_info* meminfo);
+
+  size_t get_all_meminfo_size(void)
+  {
+    return meminfo_list.size();
+  }
+
+  void** load_all_meminfo_addr(void)
+  {
+    meminfo_list_update_flag = false;
+    return (void **)(&meminfo_list[0]);
+  }
+
+  bool is_meminfo_list_updated(void)
+  {
+    return meminfo_list_update_flag;
+  }
+
 private:
   const cl_context_properties* m_props;
   std::vector<ptr<device>> m_devices;
+
+  /* for sending MEMORY requests to vfpga backend */
+  std::vector<funky_msg::mem_info*> meminfo_list; 
+  bool meminfo_list_update_flag = false;
 };
 
 } // namespace funkycl

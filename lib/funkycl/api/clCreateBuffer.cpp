@@ -17,27 +17,12 @@ clCreateBuffer(cl_context   context,
   auto buffer =
     std::make_unique<funkycl::buffer>(cl_to_funkycl(context), flags, size, host_ptr);
 
-  auto device = cl_to_funkycl(context)->get_device();
+  auto f_context = cl_to_funkycl(context);
+  auto device = f_context->get_device();
 
-  // funky_msg::mem_info  minfo_in1(1, funky_msg::BUFFER, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,  source_in1, DATA_SIZE*sizeof(int));
-  // funky_msg::mem_info  minfo_in2(2, funky_msg::BUFFER, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY,  source_in2, DATA_SIZE*sizeof(int));
-  // funky_msg::mem_info  minfo_out(3, funky_msg::BUFFER, CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY, hw_results, DATA_SIZE*sizeof(int));
-
-  // funky_msg::mem_info* mems[] = {&minfo_in1, &minfo_in2, &minfo_out};
-  // funky_msg::request dummy_memory_req(funky_msg::MEMORY, 3, (void **)mems);
-  // request_q->push(dummy_memory_req);
-
-  /* send a MEMORY request */
-  // TODO: obtain an index of buffer 
-  static unsigned int index=1;
-
-  funky_msg::mem_info  minfo(index, funky_msg::BUFFER, flags,  host_ptr, size);
-  funky_msg::mem_info* mems[] = {&minfo};
-
-  DEBUG_STREAM("Create meminfo: addr:" << &minfo << ", index=" << minfo.id << ", MemType=" << minfo.type << ", flags=" << minfo.flags << ", host_ptr=" << minfo.src << ", size=" << minfo.size);
-  funky_msg::request memory_req(funky_msg::MEMORY, 1, (void **)mems);
-  device->vfpga_send_request(memory_req);
-  index++;
+  /* register meminfo in the context */
+  f_context->register_meminfo(buffer->get_meminfo());
+  DEBUG_STREAM("add new meminfo (num of memobjs: " << f_context->get_all_meminfo_size() << ")");
 
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
