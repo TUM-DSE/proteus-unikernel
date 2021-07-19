@@ -88,6 +88,13 @@ public:
   virtual int handle_requests(void) = 0;
 
   /**
+   * release vFPGA (in backend)
+   *
+   * @return 0 (success) or -1 (failed) 
+   */
+  virtual int free(void) = 0;
+
+  /**
    * Method to deactivate the block device
    */
   virtual void deactivate() = 0;

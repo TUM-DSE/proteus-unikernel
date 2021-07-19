@@ -49,6 +49,8 @@ public:
 
   int handle_requests(void) override; // stays
 
+  int free() override; // stays
+
   void deactivate() override; // stays
 
   /** Constructor. */

@@ -51,6 +51,11 @@ int Solo5FPGA::handle_requests(void)
   return solo5_fpga_handle_request();
 }
 
+int Solo5FPGA::free(void)
+{
+  return solo5_fpga_free();
+}
+
 // Unused
 void Solo5FPGA::deactivate()
 {

@@ -126,8 +126,9 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
 void 
 device::free_vfpga()
 {
-  // TODO: do a hypercall to release FPGA
-  DEBUG_PRINT("TBD: free_vfpga()!!");
+  DEBUG_PRINT("release vFPGA.");
+  auto& vfpga = hw::Devices::fpga(0);
+  vfpga.free();
 
   init_flag = false;
   return;

@@ -26,7 +26,7 @@ clFinish(cl_command_queue command_queue)
   while(res == NULL)
     res = device->vfpga_get_response();
 
-  std::cout << __FUNCTION__ << "(): vFPGA is synced." << std::endl;
+  DEBUG_STREAM("vFPGA is synced.");
 
   return CL_SUCCESS;
 }
