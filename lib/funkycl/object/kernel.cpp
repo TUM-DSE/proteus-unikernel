@@ -36,12 +36,15 @@ set(size_t size, const void* arg)
   auto mem = value ? *static_cast<cl_mem*>(value) : nullptr;
 
   m_buffer = cl_to_funkycl(mem);
+
+  DEBUG_STREAM("mem id: " << m_buffer->get_id());
+
   m_set = true;
 }
 
 kernel::
 kernel(program* prog, const std::string& name)
-  : m_program(prog), m_name(name)
+  : m_program(prog), m_name(std::make_unique<std::string>(name))
 {
   static unsigned int id_count = 0;
   m_id = id_count++;
@@ -55,25 +58,22 @@ kernel::
   DEBUG_STREAM("destroy kernel obj [" << m_id << "]");
 }
 
-// std::unique_ptr<kernel::argument>
 void
-kernel::create_argument(unsigned long idx)
+kernel::create_clmem_argument(unsigned long idx)
 {
-  // FIXME: here is just for initial test: only available for vadd.xclbin (hello world).
-  if(idx == 3)
-    m_args.emplace_back(std::make_unique<kernel::scalar_argument>(this, idx));
-  else
-    m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
+  m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
 }
 
 void
-kernel::set_argument(unsigned long idx, size_t size, const void* arg)
+kernel::create_scalar_argument(unsigned long idx)
 {
-  // FIXME: here is just for initial test: only available for vadd.xclbin (hello world).
-  // if(idx == 3)
-  //   m_args.at(idx)->set(idx, size, arg);
-  // else
-    m_args.at(idx)->set(idx, size, arg);
+  m_args.emplace_back(std::make_unique<kernel::scalar_argument>(this, idx));
+}
+
+void
+kernel::set_argument(unsigned long idx, size_t size=0, const void* arg=nullptr)
+{
+  m_args.at(idx)->set(idx, size, arg);
 }
 
 context*

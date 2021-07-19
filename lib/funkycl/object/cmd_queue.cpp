@@ -47,7 +47,7 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
   {
     auto mem = cl_to_funkycl(mem_objects[i]);
     memids.emplace_back(mem->get_id());
-    DEBUG_STREAM("memid[" << i << "]:" << memids.back());
+    DEBUG_STREAM("mem addr: " << mem_objects[i] << ", memid[" << i << "]: " << memids.back());
   }
   trans_memids_list.emplace_back(std::make_unique<std::vector<int>>(memids));
 
@@ -63,6 +63,49 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
   funky_msg::request transfer_req(funky_msg::TRANSFER, (void *)(trans_info));
   auto device  = m_device.get();
   device->vfpga_send_request(transfer_req);
+
+  return true;
+}
+
+bool 
+cmd_queue::vfpga_send_exec_request(cl_kernel kernel)
+{
+  /* create args_info for exec request */
+  exec_args_info_type  args_info;
+  auto f_kernel = cl_to_funkycl(kernel);
+  auto num_args = f_kernel->get_argnum();
+
+  for (int idx=0; idx < num_args; idx++)
+  {
+    auto arg = f_kernel->get_argument(idx);
+    auto arg_type = arg->get_argtype();
+
+    if(arg_type == kernel::argtype::CLMEM)
+    {
+      auto mem = (memory*) arg->get_value();
+      auto mem_id = (int) mem->get_id();
+
+      funky_msg::arg_info ainfo(idx, mem_id);
+      args_info.emplace_back(ainfo);
+    }
+    else if(arg_type == kernel::argtype::SCALAR)
+    {
+      funky_msg::arg_info ainfo(idx, -1, const_cast<void*>(arg->get_value()), arg->get_size());
+      args_info.emplace_back(ainfo);
+    }
+      
+    DEBUG_STREAM("arg[" << idx << "], id: " << (args_info.back()).mem_id );
+  }
+
+  /* save the args_info and keep it until the request has been handled */
+  exec_args_list.emplace_back(std::make_unique<exec_args_info_type>(args_info));
+  auto exec_args_info = exec_args_list.back().get();
+
+  /* send an EXECUTE request */
+  auto kernel_name = f_kernel->get_name();
+  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())));
+  auto device  = m_device.get();
+  device->vfpga_send_request(exec_req);
 
   return true;
 }

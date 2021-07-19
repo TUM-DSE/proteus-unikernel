@@ -90,7 +90,7 @@ namespace funky_msg {
       const char* kernel_name;
       size_t name_size;
       uint32_t arg_num; 
-      arg_info **args; 
+      arg_info *args; 
 
       /* for SYNC request */
       // uint32_t event_num;
@@ -122,14 +122,14 @@ namespace funky_msg {
       }
 
       /* for EXEC request */
-      request(ReqType type, const char* name, size_t size, uint32_t num, void** ptr)
+      request(ReqType type, const char* name, size_t size, uint32_t num, void* ptr)
         : request(type)
       {
         // TODO: error if type != EXEC
         kernel_name = name;
         name_size = size;
         arg_num = num;
-        args    = (arg_info**) ptr;
+        args    = (arg_info*) ptr;
       }
 
       ReqType get_request_type(void) {

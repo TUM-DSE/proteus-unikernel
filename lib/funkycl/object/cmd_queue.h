@@ -9,6 +9,7 @@
 #include "device.h"
 #include "context.h"
 #include "memory.h"
+#include "kernel.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
@@ -24,6 +25,7 @@ public:
   /* for managing vfpga request/response queues */
   bool vfpga_send_memory_request();
   bool vfpga_send_transfer_request(cl_uint, const cl_mem*, cl_mem_migration_flags);
+  bool vfpga_send_exec_request(cl_kernel kernel);
 
 private:
   unsigned int m_id=0;
@@ -38,8 +40,8 @@ private:
   std::vector<std::unique_ptr<funky_msg::transfer_info>> trans_info_list; 
 
   /* for vfpga EXECUTE requests */
-  using exec_args_type = std::vector<funky_msg::arg_info*>;
-  std::vector<std::unique_ptr<exec_args_type>> exec_args_list; 
+  using exec_args_info_type = std::vector<funky_msg::arg_info>;
+  std::vector<std::unique_ptr<exec_args_info_type>> exec_args_list; 
 
 };
 

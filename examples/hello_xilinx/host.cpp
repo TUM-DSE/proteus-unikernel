@@ -77,8 +77,6 @@ int main(int argc, char** argv) {
     // get_xil_devices() is a utility API which will find the xilinx
     // platforms and will return list of devices connected to Xilinx platform
     auto devices = xcl::get_xil_devices();
-    std::cout << "DEBUG: devices.size() " << devices.size() << std::endl;
-
     // read_binary_file() is a utility API which will load the binaryFile
     // and will return the pointer to file buffer.
     // auto fileBuf = xcl::read_binary_file(binaryFile);
@@ -122,7 +120,6 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = krnl_vector_add.setArg(2, buffer_output));
     OCL_CHECK(err, err = krnl_vector_add.setArg(3, size));
 
-    // TODO: debug here: after calling enqueueMigrateMemObjects(), buffer_in1 and in2 are freed unexpectedly. 
     // Copy input data to device global memory
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_in1, buffer_in2}, 0 /* 0 means from host*/));
 

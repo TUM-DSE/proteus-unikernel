@@ -19,7 +19,6 @@ clEnqueueMigrateMemObjects(cl_command_queue       command_queue,
                            cl_event *             event)
 {
   auto cmd_queue = cl_to_funkycl(command_queue);
-  auto device = cl_to_funkycl(command_queue)->get_device();
 
   /* send a MEMORY request every time when this function is called
    * TODO: send the request only if any memobj has been newly created 

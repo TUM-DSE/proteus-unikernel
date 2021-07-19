@@ -11,15 +11,22 @@ clSetKernelArg(cl_kernel    kernel,
                size_t       arg_size,
                const void * arg_value)
 {
-  // TODO: how to confirm if argument is cl_mem or not?
-  // There would be no way to detect the type of argument other than reading meta data in xclbin...
-  DEBUG_STREAM("set an argument ...");
   auto f_kernel = cl_to_funkycl(kernel);
+  DEBUG_STREAM("arg id: " << arg_index <<  ", size: " << arg_size << ", addr: " << arg_value);
 
-  f_kernel->create_argument(arg_index);
+  // TODO: how to find out type of the argument: cl_mem or not?
+  // There would be no way to detect the type other than reading meta data in xclbin...
+  // As a temporal solution, check arg_size and treat the argument as cl_mem if it is the same as sizeof(cl_mem). 
+  // However, this goes wrong if the argument is uint64_t, size_t or other 64-bit variables (not pointer). 
+  // Another way is to modify original OpenCL API definitions (OpenCL headers), but not preferrable. 
+
+  // size of a pointer to _cl_mem (8 Bytes)
+  if(arg_size == sizeof(cl_mem)) 
+    f_kernel->create_clmem_argument(arg_index);
+  else
+    f_kernel->create_scalar_argument(arg_index);
+
   f_kernel->set_argument(arg_index, arg_size, arg_value);
-
-  DEBUG_STREAM("finish.");
 
   return CL_SUCCESS;
 }

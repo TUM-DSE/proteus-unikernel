@@ -39,6 +39,7 @@ namespace funkycl {
 class kernel : public _cl_kernel, public refcount
 {
 public:
+  enum argtype {CLMEM, SCALAR, NOTYPE};
   /**
    * class argument is a class hierarchy that represents a kernel
    * object argument constructed from meta data.
@@ -76,6 +77,9 @@ public:
     virtual const void* get_value() const
     { return nullptr; }
 
+    virtual argtype get_argtype() const
+    { return NOTYPE; }
+
   protected:
     kernel* m_kernel = nullptr;
     unsigned long m_argidx = std::numeric_limits<unsigned long>::max();
@@ -96,6 +100,9 @@ public:
 
     virtual const void* get_value() const 
     { return m_buffer.get(); }
+
+    virtual argtype get_argtype() const 
+    { return CLMEM; }
 
   private:
     // memory* m_buffer; // buffer class? shared_ptr?
@@ -120,6 +127,9 @@ public:
 
     virtual const void* get_value() const 
     { return m_value; }
+    
+    virtual argtype get_argtype() const 
+    { return SCALAR; }
 
   private:
     size_t m_size;
@@ -144,16 +154,32 @@ public:
     return m_program.get();
   }
 
-  context* get_context() const;
-  void create_argument(unsigned long idx);
-  void set_argument(unsigned long idx, size_t sz, const void* arg);
+  std::string* get_name()
+  {
+    return m_name.get();
+  }
 
+  int get_argnum() const
+  { 
+    return m_args.size(); 
+  }
+
+  argument* get_argument(int idx) const
+  { 
+    return m_args[idx].get(); 
+  }
+
+  context* get_context() const;
+  // void create_argument(unsigned long idx);
+  void create_clmem_argument(unsigned long idx);
+  void create_scalar_argument(unsigned long idx);
+  void set_argument(unsigned long idx, size_t size, const void* arg);
 
 private:
   unsigned int m_id = 0;
   // program* m_program;
   ptr<program> m_program;
-  std::string m_name;
+  std::unique_ptr<std::string> m_name;
   std::vector<std::unique_ptr<argument>> m_args;
 };
 
