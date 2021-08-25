@@ -2,6 +2,8 @@
 BUILD_DIR=build/
 UKVM_BIN=${INCLUDEOS_PREFIX}/includeos/x86_64/lib/ukvm-bin
 TAP_IF=tap100
+SOCKET_IF=/tmp/solo5_socket
+MIG_FILE=mig_file
 
 function usage {
   cat <<EOF
@@ -12,7 +14,11 @@ Usage:
 Options: 
   -h                    print help
 
-  -g                    run the unikernel with gdb 
+  -g                    run the unikernel in debug mode (gdb)
+
+  -m                    enable VM migration
+
+  -l                    load VM from migration file
 
   -b <build_dir>        set path to dir including binary 
                         (default: ${BUILD_DIR})
@@ -23,6 +29,12 @@ Options:
   -t <network device>   set tap device 
                         (default: ${TAP_IF})
 
+  -s <socket name>      set socket file name 
+                        (default: ${SOCKET_IF})
+
+  -f <migfile name>     set migration file name
+                        (default: ${MIG_FILE})
+
   -a <arguments...>     set arguments for the app 
 
 EOF
@@ -30,7 +42,11 @@ EOF
 
 
 ########### get arguments #############
-while getopts hgb:u:n:a: OPT
+GDB_FLAG=false
+MON_FLAG=false
+LOAD_FLAG=false
+
+while getopts hgmlb:u:n:s:f:a: OPT
 do
   case $OPT in
     "h" )
@@ -38,12 +54,20 @@ do
       exit -1 ;;
     "g" )
       GDB_FLAG=true ;;
+    "m" )
+      MON_FLAG=true ;;
+    "l" )
+      LOAD_FLAG=true ;;
     "b" )
       USER_BUILD_DIR=${OPTARG} ;;
     "u" )
       USER_UKVM_BIN=${OPTARG} ;;
     "n" )
       USER_TAP_IF=${OPTARG} ;;
+    "s" )
+      USER_SOCKET_IF=${OPTARG} ;;
+    "f" )
+      USER_MIG_FILE=${OPTARG} ;;
     "a" )
       USER_ARGS=${OPTARG} ;;
   esac
@@ -56,8 +80,18 @@ if [ ! -z ${USER_BUILD_DIR} ]; then
 fi
 
 if [ ! -z ${USER_UKVM_BIN} ]; then
-  echo "INFO: ${USER_UKVM_BIN} is used as the monitor."
+  echo "INFO: ${USER_UKVM_BIN} is used as the backend monitor."
   UKVM_BIN=${USER_UKVM_BIN}
+fi
+
+if [ ! -z ${USER_SOCKET_IF} ]; then
+  echo "INFO: ${USER_SOCKET_IF} is used as a socket interface."
+  SOCKET_IF=${USER_SOCKET_IF}
+fi
+
+if [ ! -z ${USER_MIG_FILE} ]; then
+  echo "INFO: ${USER_MIG_FILE} is used as a socket interface."
+  MIG_FILE=${USER_MIG_FILE}
 fi
 
 if [ ! -z ${USER_TAP_IF} ]; then
@@ -96,13 +130,19 @@ if [ -e ${UKVM_BIN} -a ! -x ${UKVM_BIN} ]; then
   chmod a+x ${UKVM_BIN}
 fi
 
-# sudo -E ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN}
+if "${MON_FLAG}" ; then
+  MON_OPT="--mon=${SOCKET_IF}"
+fi
 
-if [ -z ${GDB_FLAG} ]; then
-  ${UKVM_BIN} --disk=${APP_BIN} --net=tap100 ${APP_BIN} ${USER_ARGS}
-else 
-  echo "Usage: run --disk=${APP_BIN} --net=tap100 ${APP_BIN} ${USER_ARGS}"
+if "${LOAD_FLAG}" ; then
+  LOAD_OPT="--load=${MIG_FILE}"
+fi
+
+if "${GDB_FLAG}" ; then
+  echo "Usage: run --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
   echo "Press the Enter to start gdb..."
   read Wait
   gdb -tui ${UKVM_BIN} 
+else 
+  ${UKVM_BIN} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
 fi

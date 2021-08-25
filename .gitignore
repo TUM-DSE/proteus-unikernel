@@ -56,3 +56,6 @@ lib/uplink/starbase/disk
 
 # gdb
 *.gdb
+
+# Migration
+mig_file*
