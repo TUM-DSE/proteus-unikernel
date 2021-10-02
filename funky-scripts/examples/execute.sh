@@ -139,10 +139,10 @@ if "${LOAD_FLAG}" ; then
 fi
 
 if "${GDB_FLAG}" ; then
-  echo "Usage: run --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
+  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
   echo "Press the Enter to start gdb..."
   read Wait
   gdb -tui ${UKVM_BIN} 
 else 
-  ${UKVM_BIN} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
+  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
 fi

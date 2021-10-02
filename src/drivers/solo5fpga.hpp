@@ -32,7 +32,7 @@ public:
 
   static std::unique_ptr<FPGA> new_instance()
   {
-    INFO("Solo5FPGA", "Creating new FPGA instance...");
+    // INFO("Solo5FPGA", "Creating new FPGA instance...");
     return std::make_unique<Solo5FPGA>();
   }
 

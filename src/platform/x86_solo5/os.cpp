@@ -89,15 +89,15 @@ void OS::start(const char* cmdline)
 
   PROFILE("");
   // Print a fancy header
-  CAPTION("#include<os> // Literally");
+  // CAPTION("#include<os> // Literally");
 
   void* esp = get_cpu_esp();
-  MYINFO("Stack: %p", esp);
+  // MYINFO("Stack: %p", esp);
 
   PROFILE("Memory map");
   // Assign memory ranges used by the kernel
   auto& memmap = memory_map();
-  MYINFO("Assigning fixed memory ranges (Memory map)");
+  // MYINFO("Assigning fixed memory ranges (Memory map)");
 
   memmap.assign_range({0x500, 0x5fff, "solo5"});
   memmap.assign_range({0x6000, 0x8fff, "Statman"});
@@ -113,13 +113,13 @@ void OS::start(const char* cmdline)
   uintptr_t span_max = std::numeric_limits<std::ptrdiff_t>::max();
   uintptr_t heap_range_max_ = std::min(span_max, heap_max_);
 
-  MYINFO("Assigning heap");
+  // MYINFO("Assigning heap");
   memmap.assign_range({heap_begin(), heap_range_max_,
         "Dynamic memory", heap_usage });
 
-  MYINFO("Printing memory map");
-  for (const auto &i : memmap)
-    INFO2("* %s",i.second.to_string().c_str());
+  // MYINFO("Printing memory map");
+  // for (const auto &i : memmap)
+  //   INFO2("* %s",i.second.to_string().c_str());
 
   extern void __platform_init();
   __platform_init();

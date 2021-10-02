@@ -22,11 +22,18 @@
 #include <cstdio>
 #include <unistd.h>
 
+#include "timer.h"
+
 #include "xcl2.hpp"
 #include <algorithm>
 #include <vector>
 // #define DATA_SIZE 4096
-#define DATA_SIZE 4*1024*1024
+// #define DATA_SIZE 16*1024*1024
+#define DATA_SIZE 20*1024*1024
+
+// #define MIGRATION
+
+TIMER_INIT(9);
 
 std::vector<unsigned char> read_binary_file_vfs(const std::string& xclbin_file_name)
 {
@@ -77,11 +84,17 @@ int main(int argc, char** argv) {
         source_hw_results[i] = 0;
     }
 
+#ifdef MIGRATION
     /* Checkpoint 1: Worker thread is not created */
     std::cout << "[Guest] checkpoint 1: waiting..." << std::endl;
     uint64_t cnt=0;
     while(cnt < 10000000000)
       cnt++;
+#endif
+
+    // TIMER_START(1);
+    // std::cout << "AAAAAAAAAAAAAAAAAA\n";
+    TIMER_START(2);
 
     // OPENCL HOST CODE AREA START
     // get_xil_devices() is a utility API which will find the xilinx
@@ -93,19 +106,33 @@ int main(int argc, char** argv) {
     auto fileBuf = read_binary_file_vfs(binaryFile);
     cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
 
+    // TIMER_STOP;
+
     bool valid_device = false;
     for (unsigned int i = 0; i < devices.size(); i++) {
         auto device = devices[i];
+
+        // TIMER_START(2);
+
         // Creating Context and Command Queue for selected Device
         OCL_CHECK(err, context = cl::Context(device, nullptr, nullptr, nullptr, &err));
         OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err));
-        std::cout << "Trying to program device[" << i << "]: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
+        // std::cout << "Trying to program device[" << i << "]: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
         cl::Program program(context, {device}, bins, nullptr, &err);
+
+        q.finish();
+        TIMER_STOP;
+        // std::cout << "BBBBBBBBBBBBBBBBBBBBBBBB\n";
+
         if (err != CL_SUCCESS) {
             std::cout << "Failed to program device[" << i << "] with xclbin file!\n";
         } else {
             std::cout << "Device[" << i << "]: program successful!\n";
+
+            TIMER_START(3);
             OCL_CHECK(err, krnl_vector_add = cl::Kernel(program, "vadd", &err));
+            TIMER_STOP;
+
             valid_device = true;
             break; // we break because we found a valid device
         }
@@ -115,49 +142,68 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    TIMER_STOP;
+
+
+#ifdef MIGRATION
     /* Checkpoint 2: Worker thread is created but any data is sent to FPGA */
     q.finish();
     std::cout << "[Guest] checkpoint 2: waiting..." << std::endl;
     cnt=0;
     while(cnt < 10000000000)
       cnt++;
+#endif
 
     // Allocate Buffer in Global Memory
     // Buffers are allocated using CL_MEM_USE_HOST_PTR for efficient memory and
     // Device-to-host communication
+    TIMER_START(4);
     OCL_CHECK(err, cl::Buffer buffer_in1(context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, vector_size_bytes,
                                          source_in1.data(), &err));
     OCL_CHECK(err, cl::Buffer buffer_in2(context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, vector_size_bytes,
                                          source_in2.data(), &err));
     OCL_CHECK(err, cl::Buffer buffer_output(context, CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY, vector_size_bytes,
                                             source_hw_results.data(), &err));
+    TIMER_STOP;
 
+    TIMER_START(5);
     int size = DATA_SIZE;
     OCL_CHECK(err, err = krnl_vector_add.setArg(0, buffer_in1));
     OCL_CHECK(err, err = krnl_vector_add.setArg(1, buffer_in2));
     OCL_CHECK(err, err = krnl_vector_add.setArg(2, buffer_output));
     OCL_CHECK(err, err = krnl_vector_add.setArg(3, size));
+    TIMER_STOP;
 
+    TIMER_START(6);
     // Copy input data to device global memory
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_in1, buffer_in2}, 0 /* 0 means from host*/));
+    q.finish();
+    TIMER_STOP;
 
 
+#ifdef MIGRATION
     /* Checkpoint 3: Worker thread is created and input data are sent to FPGA */
     std::cout << "[Guest] checkpoint 3: waiting..." << std::endl;
     q.finish();
-    cnt=0;
+    uint64_t cnt=0;
     while(cnt < 10000000000)
       cnt++;
+#endif
 
     // Launch the Kernel
     // For HLS kernels global and local size is always (1,1,1). So, it is
     // recommended
     // to always use enqueueTask() for invoking HLS kernel
+    TIMER_START(7);
     OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add));
+    q.finish();
+    TIMER_STOP;
 
     // Copy Result from Device Global Memory to Host Local Memory
+    TIMER_START(8);
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST));
     q.finish();
+    TIMER_STOP;
     // OPENCL HOST CODE AREA END
 
     // Compare the results of the Device to the simulation
@@ -173,5 +219,20 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl;
+
+    printf("------------------------------------------------------\n");
+    printf("  Performance Summary                                 \n");
+    printf("------------------------------------------------------\n");
+    printf("  Writing Bitstream          : %12.4f ms\n", TIMER_REPORT_MS(2));
+    printf("  Kernel Allocation          : %12.4f ms\n", TIMER_REPORT_MS(3));
+    printf("  Buffer Allocation          : %12.4f ms\n", TIMER_REPORT_MS(4));
+    printf("  Set Kernel arguments       : %12.4f ms\n", TIMER_REPORT_MS(5));
+    printf("  Input Data transfer        : %12.4f ms\n", TIMER_REPORT_MS(6));
+    printf("  Enqueue Kernel             : %12.4f ms\n", TIMER_REPORT_MS(7));
+    printf("  Output Data transfer       : %12.4f ms\n", TIMER_REPORT_MS(8));
+    printf("------------------------------------------------------\n");
+
+
+
     return (match ? EXIT_SUCCESS : EXIT_FAILURE);
 }

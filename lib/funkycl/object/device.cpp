@@ -87,8 +87,8 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
     while(res == NULL) // buffer is empty
       res = response_q->pop();
 
-    if(res->get_response_type() == funky_msg::SYNC)
-      std::cout << "GUEST: sync is done." << std::endl;
+    // if(res->get_response_type() == funky_msg::SYNC)
+    //   std::cout << "GUEST: sync is done." << std::endl;
 
     // Compare the results of the Device to the simulation
     bool match = true;
@@ -109,7 +109,7 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
   /* test: send requests to execute vadd on FPGA */
   // test_send_requests();
 
-  std::cout << "GUEST: sending fpga_init hypercall request..." << std::endl;
+  // std::cout << "GUEST: sending fpga_init hypercall request..." << std::endl;
 
   /* do a hypercall */
   vfpga.init(bitstream.data(), bitstream.size(),

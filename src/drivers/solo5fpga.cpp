@@ -18,7 +18,7 @@ Solo5FPGA::Solo5FPGA()
 {
   // struct solo5_fpga_info fpgai;
   // solo5_fpga_info(&fpgai);
-  INFO("Solo5FPGA", "Funky Virt FPGA");
+  // INFO("Solo5FPGA", "Funky Virt FPGA");
 }
 
 
