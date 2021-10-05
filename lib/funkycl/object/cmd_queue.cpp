@@ -39,7 +39,7 @@ cmd_queue::vfpga_send_memory_request()
 }
 
 bool 
-cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* mem_objects, cl_mem_migration_flags flags)
+cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* mem_objects, cl_mem_migration_flags flags, cl_uint cmdq_id)
 {
   /* identify memory objects to be transferred */
   std::vector<int> memids;
@@ -53,14 +53,14 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
 
   /* create request info */
   auto trans_memids = trans_memids_list.back().get();
-  DEBUG_STREAM("trans_memids addr: " << &(trans_memids->back()) );
+  DEBUG_STREAM("trans_memids addr: " << &(trans_memids->back()));
 
   trans_info_list.emplace_back(std::make_unique<funky_msg::transfer_info>(&(trans_memids->front()), trans_memids->size(), flags));
   auto trans_info = trans_info_list.back().get();
   DEBUG_STREAM("Create a new transfer request info. addr: " << trans_info->ids << ", num: " << trans_info->num << ", flags: " << trans_info->flags);
 
   /* send a TRANSFER request */
-  funky_msg::request transfer_req(funky_msg::TRANSFER, (void *)(trans_info));
+  funky_msg::request transfer_req(funky_msg::TRANSFER, (void *)(trans_info), cmdq_id);
   auto device  = m_device.get();
   device->vfpga_send_request(transfer_req);
 
@@ -68,7 +68,7 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
 }
 
 bool 
-cmd_queue::vfpga_send_exec_request(cl_kernel kernel)
+cmd_queue::vfpga_send_exec_request(cl_kernel kernel, cl_uint cmdq_id)
 {
   /* create args_info for exec request */
   exec_args_info_type  args_info;
@@ -103,7 +103,7 @@ cmd_queue::vfpga_send_exec_request(cl_kernel kernel)
 
   /* send an EXECUTE request */
   auto kernel_name = f_kernel->get_name();
-  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())));
+  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())), cmdq_id);
   auto device  = m_device.get();
   device->vfpga_send_request(exec_req);
 

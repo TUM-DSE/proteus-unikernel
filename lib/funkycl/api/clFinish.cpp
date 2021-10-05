@@ -9,9 +9,10 @@ namespace funkycl {
 static cl_int 
 clFinish(cl_command_queue command_queue)
 {
-  auto device = cl_to_funkycl(command_queue)->get_device();
+  auto cmd_queue = cl_to_funkycl(command_queue);
+  auto device = cmd_queue->get_device();
 
-  funky_msg::request sync_req(funky_msg::SYNC);
+  funky_msg::request sync_req(funky_msg::SYNC, cmd_queue->get_id());
   device->vfpga_send_request(sync_req);
 
   /* do a hypercall to wake up vfpga backend request handler */

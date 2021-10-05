@@ -20,12 +20,18 @@ public:
   cmd_queue(context* context, device* device, cl_command_queue_properties props);
   ~cmd_queue();
 
+  unsigned int
+  get_id() const
+  {
+    return m_id;
+  }
+
   device* get_device();
 
   /* for managing vfpga request/response queues */
   bool vfpga_send_memory_request();
-  bool vfpga_send_transfer_request(cl_uint, const cl_mem*, cl_mem_migration_flags);
-  bool vfpga_send_exec_request(cl_kernel kernel);
+  bool vfpga_send_transfer_request(cl_uint, const cl_mem*, cl_mem_migration_flags, cl_uint);
+  bool vfpga_send_exec_request(cl_kernel, cl_uint);
 
 private:
   unsigned int m_id=0;
