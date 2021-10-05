@@ -33,7 +33,8 @@
 
 // #define MIGRATION
 
-TIMER_INIT(9);
+TIMER_INIT(10);
+// TIMER_INIT(9);
 
 std::vector<unsigned char> read_binary_file_vfs(const std::string& xclbin_file_name)
 {
@@ -71,6 +72,8 @@ int main(int argc, char** argv) {
     // boundary. It will
     // ensure that user buffer is used when user create Buffer/Mem object with
     // CL_MEM_USE_HOST_PTR
+
+    // TIMER_START(9);
     std::vector<int, aligned_allocator<int> > source_in1(DATA_SIZE);
     std::vector<int, aligned_allocator<int> > source_in2(DATA_SIZE);
     std::vector<int, aligned_allocator<int> > source_hw_results(DATA_SIZE);
@@ -83,6 +86,7 @@ int main(int argc, char** argv) {
         source_sw_results[i] = source_in1[i] + source_in2[i];
         source_hw_results[i] = 0;
     }
+    // TIMER_STOP_ID(9);
 
 #ifdef MIGRATION
     /* Checkpoint 1: Worker thread is not created */
@@ -92,10 +96,9 @@ int main(int argc, char** argv) {
       cnt++;
 #endif
 
-    // TIMER_START(1);
-    // std::cout << "AAAAAAAAAAAAAAAAAA\n";
-    TIMER_START(2);
+    TIMER_START(0); // total time (exclude input/output data initialization)
 
+    TIMER_START(1);
     // OPENCL HOST CODE AREA START
     // get_xil_devices() is a utility API which will find the xilinx
     // platforms and will return list of devices connected to Xilinx platform
@@ -105,6 +108,7 @@ int main(int argc, char** argv) {
     // auto fileBuf = xcl::read_binary_file(binaryFile);
     auto fileBuf = read_binary_file_vfs(binaryFile);
     cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
+    TIMER_STOP_ID(1);
 
     // TIMER_STOP;
 
@@ -112,16 +116,18 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < devices.size(); i++) {
         auto device = devices[i];
 
-        // TIMER_START(2);
+        TIMER_START(9); // total time (exclude input/output data initialization and open a file)
 
+        TIMER_START(2);
         // Creating Context and Command Queue for selected Device
         OCL_CHECK(err, context = cl::Context(device, nullptr, nullptr, nullptr, &err));
         OCL_CHECK(err, q = cl::CommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err));
         // std::cout << "Trying to program device[" << i << "]: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
-        cl::Program program(context, {device}, bins, nullptr, &err);
 
+        cl::Program program(context, {device}, bins, nullptr, &err);
         q.finish();
-        TIMER_STOP;
+        TIMER_STOP_ID(2);
+
         // std::cout << "BBBBBBBBBBBBBBBBBBBBBBBB\n";
 
         if (err != CL_SUCCESS) {
@@ -131,7 +137,7 @@ int main(int argc, char** argv) {
 
             TIMER_START(3);
             OCL_CHECK(err, krnl_vector_add = cl::Kernel(program, "vadd", &err));
-            TIMER_STOP;
+            TIMER_STOP_ID(3);
 
             valid_device = true;
             break; // we break because we found a valid device
@@ -141,9 +147,6 @@ int main(int argc, char** argv) {
         std::cout << "Failed to program any device found, exit!\n";
         exit(EXIT_FAILURE);
     }
-
-    TIMER_STOP;
-
 
 #ifdef MIGRATION
     /* Checkpoint 2: Worker thread is created but any data is sent to FPGA */
@@ -164,7 +167,7 @@ int main(int argc, char** argv) {
                                          source_in2.data(), &err));
     OCL_CHECK(err, cl::Buffer buffer_output(context, CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY, vector_size_bytes,
                                             source_hw_results.data(), &err));
-    TIMER_STOP;
+    TIMER_STOP(4);
 
     TIMER_START(5);
     int size = DATA_SIZE;
@@ -172,13 +175,13 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = krnl_vector_add.setArg(1, buffer_in2));
     OCL_CHECK(err, err = krnl_vector_add.setArg(2, buffer_output));
     OCL_CHECK(err, err = krnl_vector_add.setArg(3, size));
-    TIMER_STOP;
+    TIMER_STOP(5);
 
     TIMER_START(6);
     // Copy input data to device global memory
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_in1, buffer_in2}, 0 /* 0 means from host*/));
     q.finish();
-    TIMER_STOP;
+    TIMER_STOP(6);
 
 
 #ifdef MIGRATION
@@ -197,14 +200,17 @@ int main(int argc, char** argv) {
     TIMER_START(7);
     OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add));
     q.finish();
-    TIMER_STOP;
+    TIMER_STOP(7);
 
     // Copy Result from Device Global Memory to Host Local Memory
     TIMER_START(8);
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST));
     q.finish();
-    TIMER_STOP;
+    TIMER_STOP(8);
     // OPENCL HOST CODE AREA END
+
+    TIMER_STOP_ID(0); // end total time
+    TIMER_STOP_ID(9); // end total time
 
     // Compare the results of the Device to the simulation
     bool match = true;
@@ -223,13 +229,17 @@ int main(int argc, char** argv) {
     printf("------------------------------------------------------\n");
     printf("  Performance Summary                                 \n");
     printf("------------------------------------------------------\n");
-    printf("  Writing Bitstream          : %12.4f ms\n", TIMER_REPORT_MS(2));
-    printf("  Kernel Allocation          : %12.4f ms\n", TIMER_REPORT_MS(3));
-    printf("  Buffer Allocation          : %12.4f ms\n", TIMER_REPORT_MS(4));
-    printf("  Set Kernel arguments       : %12.4f ms\n", TIMER_REPORT_MS(5));
-    printf("  Input Data transfer        : %12.4f ms\n", TIMER_REPORT_MS(6));
-    printf("  Enqueue Kernel             : %12.4f ms\n", TIMER_REPORT_MS(7));
-    printf("  Output Data transfer       : %12.4f ms\n", TIMER_REPORT_MS(8));
+    // printf("  Input data generation      : %12.4f ms\n", TIMER_REPORT_MS(9));
+    printf("  Open a bitstream file (memdisk) : %12.4f ms\n", TIMER_REPORT_MS(1));
+    printf("  Writing Bitstream (init Funky)  : %12.4f ms\n", TIMER_REPORT_MS(2));
+    printf("  Kernel Allocation               : %12.4f ms\n", TIMER_REPORT_MS(3));
+    printf("  Buffer Allocation               : %12.4f ms\n", TIMER_REPORT_MS(4));
+    printf("  Set Kernel arguments            : %12.4f ms\n", TIMER_REPORT_MS(5));
+    printf("  Input Data transfer             : %12.4f ms\n", TIMER_REPORT_MS(6));
+    printf("  Enqueue Kernel                  : %12.4f ms\n", TIMER_REPORT_MS(7));
+    printf("  Output Data transfer            : %12.4f ms\n", TIMER_REPORT_MS(8));
+    printf("  Total execution time            : %12.4f ms\n", TIMER_REPORT_MS(0));
+    printf("  Total execution time w/o open   : %12.4f ms\n", TIMER_REPORT_MS(9));
     printf("------------------------------------------------------\n");
 
 

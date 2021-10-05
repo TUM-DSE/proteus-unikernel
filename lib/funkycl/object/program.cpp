@@ -20,6 +20,12 @@ program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
   for (cl_uint i=0; i < num_devices; i++) {
     auto device = funkycl::cl_to_funkycl(devices[i]);
     m_devices.push_back(device);
+
+    /* 
+     * Copy the bitstream file into memory. This is a little time-consuming (~50ms) but necessary 
+     * because if the guest closes the file immediately after calling clCreateProgram(), 
+     * we can no more find the bitstream file location. This means we can't do migration for the guest. 
+     * */
     m_binaries.emplace(device, std::vector<unsigned char>{binaries[i], binaries[i] + lengths[i]});
 
     /* The device (vFPGA) is initialized only once unless it is freed. */
@@ -28,7 +34,7 @@ program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
       device->init_vfpga(binary);
     }
 
-    // TODO: if the device is already initialized but this program context is instanciated with different bitstream, notify to the backend
+    // TODO: if the device is already initialized but this program context is instantiated with different bitstream, notify to the backend
     //      (for future extension, which allows a single guest app to manage multiple programs)
   }
 }

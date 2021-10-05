@@ -26,7 +26,7 @@ Options:
   -u <ukvm-bin>         set path to ukvm-bin 
                         (default: ${UKVM_BIN})
 
-  -t <network device>   set tap device 
+  -n <network device>   set tap device 
                         (default: ${TAP_IF})
 
   -s <socket name>      set socket file name 
