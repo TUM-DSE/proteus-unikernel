@@ -22,6 +22,7 @@ include_directories(${FUNKY_UTILS_DIR})
 
 set(SOURCES 
   ${FUNKY_UTILS_DIR}/xcl2/xcl2.cpp
+  ${FUNKY_UTILS_DIR}/memdisk/diskio.cpp
   ${FUNKY_UTILS_DIR}/cmdparser/cmdlineparser.cpp
   ${FUNKY_UTILS_DIR}/logger/logger.cpp
   host.cpp)

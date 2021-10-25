@@ -17,9 +17,8 @@
 // FunkyOS
 #include <os> // IncludeOS
 
-#include "memdisk_io.h"
-#include "cmdparser/cmdlineparser.h"
-#include "xcl2/xcl2.hpp"
+#include "cmdparser/cmdlineparser.h" // funky_utils
+#include "xcl2/xcl2.hpp" // funky_utils
 #include <unistd.h>
 
 int main(int argc, char** argv) {
@@ -88,8 +87,7 @@ int main(int argc, char** argv) {
         auto device = devices[0];
         // read_binary_file() is a utility API which will load the binaryFile
         // and will return the pointer to file buffer.
-        // auto fileBuf = xcl::read_binary_file(xclbinFile[p]);
-        auto fileBuf = readfile_vfs(xclbinFile[p]);
+        auto fileBuf = xcl::read_binary_file(xclbinFile[p]);
         cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
 
 

@@ -26,6 +26,8 @@
 #include <unistd.h>
 #endif
 
+#include "memdisk/diskio.h"
+
 namespace xcl {
 std::vector<cl::Device> get_devices(const std::string& vendor_name) {
     size_t i;
@@ -103,6 +105,10 @@ std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name)
     return buf;
 }
 */
+
+std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name) {
+  return readfile_vfs(xclbin_file_name);
+}
 
 bool is_emulation() {
     bool ret = false;

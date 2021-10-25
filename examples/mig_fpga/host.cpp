@@ -22,7 +22,6 @@
 
 #include "timer.h"
 
-#include "memdisk_io.h"
 #include "xcl2/xcl2.hpp"
 #include <algorithm>
 #include <vector>
@@ -91,8 +90,7 @@ int main(int argc, char** argv) {
     auto devices = xcl::get_xil_devices();
     // read_binary_file() is a utility API which will load the binaryFile
     // and will return the pointer to file buffer.
-    // auto fileBuf = xcl::read_binary_file(binaryFile);
-    auto fileBuf = readfile_vfs(binaryFile);
+    auto fileBuf = xcl::read_binary_file(binaryFile);
     cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
     TIMER_STOP_ID(1);
 
