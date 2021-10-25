@@ -31,7 +31,7 @@ clEnqueueMigrateMemObjects(cl_command_queue       command_queue,
     DEBUG_STREAM("No memory request is issued. all memobjs are already initialized.");
 
   /* send a "TRANSFER" request to backend */
-  cmd_queue->vfpga_send_transfer_request(num_mem_objects, mem_objects, flags, cmd_queue->get_id());
+  cmd_queue->vfpga_send_transfer_request(cmd_queue->get_id(), num_mem_objects, mem_objects, flags);
 
   return CL_SUCCESS;
 }

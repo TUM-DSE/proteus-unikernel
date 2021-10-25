@@ -14,17 +14,30 @@ clSetKernelArg(cl_kernel    kernel,
   auto f_kernel = cl_to_funkycl(kernel);
   DEBUG_STREAM("arg id: " << arg_index <<  ", size: " << arg_size << ", addr: " << arg_value);
 
-  // TODO: how to find out type of the argument: cl_mem or not?
-  // There would be no way to detect the type other than reading meta data in xclbin...
-  // As a temporal solution, check arg_size and treat the argument as cl_mem if it is the same as sizeof(cl_mem). 
-  // However, this goes wrong if the argument is uint64_t, size_t or other 64-bit variables (not pointer). 
-  // Another way is to modify original OpenCL API definitions (OpenCL headers), but not preferrable. 
+  /*
+   * TODO: how to find out type of the argument: cl_mem or not?
+   * There would be no way to detect the type other than reading meta data in xclbin...
+   * As a temporal solution, check arg_size and treat the argument as cl_mem if it is the same as sizeof(cl_mem). 
+   * However, this goes wrong if the argument is uint64_t, size_t or other 64-bit variables (not pointer). 
+   * Another way is to modify original OpenCL API definitions (OpenCL headers), but not preferrable. 
+   *
+   * [updated on 25.10.2021] According to the memory map of IncludeOS unikernel, the heap stack address roughly starts at 0x2400000-0x2600000. 
+   * As arguments except cl_mem would probably not use heap, we can treat args whose pointer value is less than 0x2400000 as scalar.  
+   *
+   */
 
   // size of a pointer to _cl_mem (8 Bytes)
-  if(arg_size == sizeof(cl_mem)) 
+  // TODO: get the actual start address of heap region from solo5 kernel
+  if(arg_size == sizeof(cl_mem) && ( *(uint64_t*)arg_value >= 0x2400000))
+  {
+    DEBUG_STREAM("clmem arg value (base): " << std::hex << *(uint64_t*) arg_value);
     f_kernel->create_clmem_argument(arg_index);
+  }
   else
+  {
+    DEBUG_STREAM("scalar arg value (base): " << std::hex << *(uint64_t*) arg_value);
     f_kernel->create_scalar_argument(arg_index);
+  }
 
   f_kernel->set_argument(arg_index, arg_size, arg_value);
 

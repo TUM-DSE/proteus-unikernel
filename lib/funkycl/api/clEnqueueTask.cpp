@@ -16,7 +16,7 @@ clEnqueueTask(cl_command_queue  command_queue,
               cl_event *        event)
 {
   auto cmd_queue = cl_to_funkycl(command_queue);
-  cmd_queue->vfpga_send_exec_request(kernel, cmd_queue->get_id());
+  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel);
 
   return CL_SUCCESS;
 }

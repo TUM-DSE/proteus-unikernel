@@ -61,13 +61,15 @@ kernel::
 void
 kernel::create_clmem_argument(unsigned long idx)
 {
-  m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
+  // m_args.emplace_back(std::make_unique<kernel::clmem_argument>(this, idx));
+  m_args.emplace(std::make_pair(idx, std::make_unique<kernel::clmem_argument>(this, idx)));
 }
 
 void
 kernel::create_scalar_argument(unsigned long idx)
 {
-  m_args.emplace_back(std::make_unique<kernel::scalar_argument>(this, idx));
+  // m_args.emplace_back(std::make_unique<kernel::scalar_argument>(this, idx));
+  m_args.emplace(std::make_pair(idx, std::make_unique<kernel::scalar_argument>(this, idx)));
 }
 
 void

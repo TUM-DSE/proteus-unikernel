@@ -39,7 +39,7 @@ cmd_queue::vfpga_send_memory_request()
 }
 
 bool 
-cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* mem_objects, cl_mem_migration_flags flags, cl_uint cmdq_id)
+cmd_queue::vfpga_send_transfer_request(cl_uint cmdq_id, cl_uint num_mem_objects, const cl_mem* mem_objects, cl_mem_migration_flags flags)
 {
   /* identify memory objects to be transferred */
   std::vector<int> memids;
@@ -55,7 +55,7 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
   auto trans_memids = trans_memids_list.back().get();
   DEBUG_STREAM("trans_memids addr: " << &(trans_memids->back()));
 
-  trans_info_list.emplace_back(std::make_unique<funky_msg::transfer_info>(&(trans_memids->front()), trans_memids->size(), flags));
+  trans_info_list.emplace_back(std::make_unique<funky_msg::transfer_info>(funky_msg::MIGRATE, &(trans_memids->front()), trans_memids->size(), flags));
   auto trans_info = trans_info_list.back().get();
   DEBUG_STREAM("Create a new transfer request info. addr: " << trans_info->ids << ", num: " << trans_info->num << ", flags: " << trans_info->flags);
 
@@ -68,7 +68,45 @@ cmd_queue::vfpga_send_transfer_request(cl_uint num_mem_objects, const cl_mem* me
 }
 
 bool 
-cmd_queue::vfpga_send_exec_request(cl_kernel kernel, cl_uint cmdq_id)
+cmd_queue::vfpga_send_transfer_request(cl_uint cmdq_id, cl_uint num_mem_objects, const cl_mem* mem_objects, 
+    cl_bool blocking, size_t offset, size_t size, const void *ptr, bool is_write)
+{
+  if(num_mem_objects != 1)
+  {
+    std::cout << __func__ << " Error: num_mem_objects must be 1 for clEnqueueWriteBuffer(), clEnqueueReadBuffer()." << std::endl;
+    return -1;
+  }
+
+  /* identify memory objects to be transferred */
+  std::vector<int> memids;
+  for (cl_uint i=0; i<num_mem_objects; i++)
+  {
+    auto mem = cl_to_funkycl(mem_objects[i]);
+    memids.emplace_back(mem->get_id());
+    DEBUG_STREAM("mem addr: " << mem_objects[i] << ", memid[" << i << "]: " << memids.back());
+  }
+  trans_memids_list.emplace_back(std::make_unique<std::vector<int>>(memids));
+
+  /* create request info */
+  auto trans_memids = trans_memids_list.back().get();
+  DEBUG_STREAM("trans_memids addr: " << &(trans_memids->back()));
+
+  funky_msg::TransType trans_type = (is_write)?  funky_msg::WRITE: funky_msg::READ;
+  trans_info_list.emplace_back(std::make_unique<funky_msg::transfer_info>(trans_type, &(trans_memids->front()), trans_memids->size(), (uint64_t)blocking, offset, size, ptr));
+  auto trans_info = trans_info_list.back().get();
+  DEBUG_STREAM("Create a new transfer request info. addr: " << trans_info->ids << ", num: " << trans_info->num << ", flags: " << trans_info->flags);
+
+  /* send a TRANSFER request */
+  funky_msg::request transfer_req(funky_msg::TRANSFER, (void *)(trans_info), cmdq_id);
+  auto device  = m_device.get();
+  device->vfpga_send_request(transfer_req);
+
+  return true;
+}
+
+
+bool 
+cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel)
 {
   /* create args_info for exec request */
   exec_args_info_type  args_info;

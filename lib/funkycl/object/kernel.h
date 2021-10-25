@@ -166,7 +166,7 @@ public:
 
   argument* get_argument(int idx) const
   { 
-    return m_args[idx].get(); 
+    return m_args.at(idx).get(); 
   }
 
   context* get_context() const;
@@ -180,7 +180,8 @@ private:
   // program* m_program;
   ptr<program> m_program;
   std::unique_ptr<std::string> m_name;
-  std::vector<std::unique_ptr<argument>> m_args;
+  // std::vector<std::unique_ptr<argument>> m_args;
+  std::map<unsigned long, std::unique_ptr<argument>> m_args;
 };
 
 } // funkycl

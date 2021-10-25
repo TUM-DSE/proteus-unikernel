@@ -117,9 +117,9 @@ void OS::start(const char* cmdline)
   memmap.assign_range({heap_begin(), heap_range_max_,
         "Dynamic memory", heap_usage });
 
-  // MYINFO("Printing memory map");
-  // for (const auto &i : memmap)
-  //   INFO2("* %s",i.second.to_string().c_str());
+  MYINFO("Printing memory map");
+  for (const auto &i : memmap)
+    INFO2("* %s",i.second.to_string().c_str());
 
   extern void __platform_init();
   __platform_init();

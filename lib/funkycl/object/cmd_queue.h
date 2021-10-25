@@ -30,8 +30,9 @@ public:
 
   /* for managing vfpga request/response queues */
   bool vfpga_send_memory_request();
-  bool vfpga_send_transfer_request(cl_uint, const cl_mem*, cl_mem_migration_flags, cl_uint);
-  bool vfpga_send_exec_request(cl_kernel, cl_uint);
+  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_mem_migration_flags);
+  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_bool, size_t, size_t, const void*, bool);
+  bool vfpga_send_exec_request(cl_uint, cl_kernel);
 
 private:
   unsigned int m_id=0;

@@ -192,6 +192,7 @@ public:
   }
 
 private:
+  const uint32_t m_test = 0xBEEF;
   unsigned int m_id = 0;
   // context* m_context;
   ptr<context> m_context;

@@ -18,7 +18,7 @@ clFinish(cl_command_queue command_queue)
   /* do a hypercall to wake up vfpga backend request handler */
   // TODO: Before doing the hypercall, it must be verified if vfpga worker thread exists. 
   // In case the worker thread exists, the guest (unikernel) just wait for the SYNC response from backend
-  device->vfpga_handle_requests();
+  // device->vfpga_handle_requests();
 
   // wait for SYNC resonse
   auto res = device->vfpga_get_response();
