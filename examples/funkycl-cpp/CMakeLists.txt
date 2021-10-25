@@ -13,9 +13,11 @@ set(SERVICE_NAME "Test for Funky OpenCL C++ APIs")
 set(BINARY       "funkycl-cpp")
 # set(MAX_MEM 128)
 
+set(FUNKY_UTILS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../funky_utils)
+include_directories(${FUNKY_UTILS_DIR})
+
 set(SOURCES 
-  xcl2/xcl2.hpp
-  xcl2/xcl2.cpp
+  ${FUNKY_UTILS_DIR}/xcl2/xcl2.cpp
   main.cpp)
 
 if ("$ENV{PLATFORM}" STREQUAL "x86_solo5")

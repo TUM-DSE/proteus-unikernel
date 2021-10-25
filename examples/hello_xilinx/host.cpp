@@ -16,26 +16,12 @@
 
 // FunkyOS
 #include <os> // IncludeOS
-#include <memdisk> // for VFS
-#include <fstream>
 
-#include "xcl2.hpp"
+#include "memdisk_io.h"
+#include "xcl2/xcl2.hpp"
 #include <algorithm>
 #include <vector>
 #define DATA_SIZE 4096
-
-std::vector<unsigned char> read_binary_file_vfs(const std::string& xclbin_file_name)
-{
-  // read bitstream file using memdisk
-  auto& disk = fs::memdisk();
-  disk.init_fs([] (fs::error_t err, auto&) {
-    assert(!err);
-  });
-
-  auto file = disk.fs().read_file(xclbin_file_name);
-  std::vector<unsigned char> bs(file.data(), file.data() + file.size());
-  return bs;
-}
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -80,7 +66,7 @@ int main(int argc, char** argv) {
     // read_binary_file() is a utility API which will load the binaryFile
     // and will return the pointer to file buffer.
     // auto fileBuf = xcl::read_binary_file(binaryFile);
-    auto fileBuf = read_binary_file_vfs(binaryFile);
+    auto fileBuf = readfile_vfs(binaryFile);
     cl::Program::Binaries bins{{fileBuf.data(), fileBuf.size()}};
     bool valid_device = false;
     for (unsigned int i = 0; i < devices.size(); i++) {
