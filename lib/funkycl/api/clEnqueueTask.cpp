@@ -7,6 +7,7 @@
 
 namespace funkycl {
 
+
 /* Kernel Object APIs */
 static cl_int
 clEnqueueTask(cl_command_queue  command_queue,
@@ -15,10 +16,13 @@ clEnqueueTask(cl_command_queue  command_queue,
               const cl_event *  event_wait_list,
               cl_event *        event)
 {
-  auto cmd_queue = cl_to_funkycl(command_queue);
-  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel);
+  const size_t global_work_offset[1]={0};
+  const size_t global_work_size[1]={1};
+  const size_t local_work_size[1]={1};
 
-  return CL_SUCCESS;
+  return clEnqueueNDRangeKernel
+    (command_queue, kernel, 1, global_work_offset, global_work_size, local_work_size,
+     num_events_in_wait_list, event_wait_list, event);
 }
 
 } // funkycl

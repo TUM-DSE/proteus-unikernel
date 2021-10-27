@@ -191,6 +191,25 @@ public:
     throw std::runtime_error("get_pipe_max_packets called on bad object");
   }
 
+  virtual funky_msg::mem_info* 
+  get_meminfo()
+  {
+    throw std::runtime_error("get_meminfo called on bad object");
+  }
+
+  virtual void* 
+  map_buffer(size_t& size)
+  {
+    throw std::runtime_error("map_buffer called on bad object");
+  }
+
+  virtual bool 
+  unmap_buffer()
+  {
+    throw std::runtime_error("unmap_buffer called on bad object");
+  }
+
+
 private:
   const uint32_t m_test = 0xBEEF;
   unsigned int m_id = 0;
@@ -207,7 +226,7 @@ class buffer : public memory
 {
 public:
   buffer(context* ctx,cl_mem_flags flags, size_t sz, void* host_ptr)
-    : memory(ctx,flags) ,m_size(sz), m_host_ptr(host_ptr), m_meminfo(get_id(), funky_msg::BUFFER, flags, host_ptr, sz)
+    : memory(ctx,flags) ,m_size(sz), m_host_ptr(host_ptr), m_meminfo(get_id(), funky_msg::BUFFER, flags, host_ptr, sz), m_hostmem(nullptr)
   {
     // TODO: check memory alignment?
 
@@ -223,7 +242,23 @@ public:
   }
 
   ~buffer()
-  {}
+  {
+    if(m_hostmem != nullptr)
+      free(m_hostmem);
+  }
+
+  // Customized buffer allocation for 4K boundary alignment
+  template <typename T>
+  struct aligned_allocator {
+    using value_type = T;
+    T* allocate(std::size_t num) {
+      void* ptr = nullptr;
+      if (posix_memalign(&ptr, 4096, num * sizeof(T))) throw std::bad_alloc();
+      return reinterpret_cast<T*>(ptr);
+    }
+    void deallocate(T* p, std::size_t num) { free(p); }
+  };
+
 
   virtual cl_mem_object_type
   get_type() const
@@ -255,9 +290,37 @@ public:
     return m_extra_sync;
   }
 
-  funky_msg::mem_info* get_meminfo()
+  funky_msg::mem_info* 
+  get_meminfo() override
   {
     return &m_meminfo;
+  }
+
+  // for clEnqueueMapBuffer()
+  void* 
+  map_buffer(size_t& size) override
+  {
+    /* the mapped memory should be aligned to memory page size */
+    if (posix_memalign(&m_hostmem, 4096, size))
+      throw std::runtime_error("Could not allocate host ptr");
+
+    m_host_ptr = m_hostmem;
+    m_meminfo.src = m_host_ptr;
+    m_meminfo.size = size;
+
+    return m_host_ptr;
+  }
+  
+  // for clEnqueueUnmapMemObject()
+  bool 
+  unmap_buffer() override
+  {
+    m_host_ptr = nullptr;
+    m_meminfo.src = nullptr;
+    m_meminfo.size = 0;
+    free(m_hostmem);
+
+    return true;
   }
 
 private:
@@ -266,6 +329,7 @@ private:
   void* m_host_ptr = nullptr;
 
   funky_msg::mem_info m_meminfo;
+  void* m_hostmem;
 };
 
 class sub_buffer : public buffer

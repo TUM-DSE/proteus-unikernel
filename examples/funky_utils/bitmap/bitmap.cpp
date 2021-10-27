@@ -52,17 +52,21 @@ bool BitmapInterface::readBitmapFile() {
     unsigned int fileSize;
 
     std::string filename_str(filename);
+
     auto file_vec = readfile_vfs(filename_str);
     unsigned int offset = 0;
 
     core = new char[14];
     std::memcpy(core, &file_vec[0], 14);
     offset+=14;
-    
 
     magicNumber = (*(unsigned short*)(&(core[0])));
     fileSize = (*(unsigned int*)(&(core[2])));
     offsetOfImage = (*(unsigned int*)(&(core[10])));
+
+    // std::cout << "filename     : " << filename_str << std::endl;
+    // std::cout << "offsetOfImage: " << offsetOfImage << std::endl;
+    // std::cout << "fileSize     : " << fileSize << std::endl;
 
     // Just read in the DIB, but don't process it
     sizeOfDIB = offsetOfImage - 14;
