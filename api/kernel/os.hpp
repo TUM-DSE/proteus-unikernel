@@ -91,7 +91,7 @@ public:
    * Shutdown operating system
    *
    **/
-  static void shutdown();
+  static void shutdown(int );
 
   /**
    *  Halt until next interrupt.
@@ -289,6 +289,7 @@ private:
 
   static constexpr int PAGE_SHIFT = 12;
   static bool power_;
+  static int exit_code;
   static bool boot_sequence_passed_;
   static bool m_is_live_updated;
   static bool m_block_drivers_ready;

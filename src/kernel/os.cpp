@@ -56,6 +56,7 @@ inline static bool is_for_production_use() {
 }
 
 bool  OS::power_   = true;
+int   OS::exit_code;
 bool  OS::boot_sequence_passed_ = false;
 bool  OS::m_is_live_updated     = false;
 bool  OS::m_block_drivers_ready = false;
@@ -122,8 +123,9 @@ void OS::reboot()
   extern void __arch_reboot();
   __arch_reboot();
 }
-void OS::shutdown()
+void OS::shutdown(int exreas)
 {
+  exit_code = exreas;
   power_ = false;
 }
 
@@ -182,13 +184,14 @@ void OS::post_start()
     printf(" +--> WARNiNG: Environment unsafe for production\n");
     if (is_for_production_use()) {
       printf(" +--> Stop option enabled. Shutting down now...\n");
-      OS::shutdown();
+      OS::shutdown(-1);
       return;
     }
     FILLINE('~');
   }
 
-  Service::start();
+  int tr = Service::start();
+  OS::shutdown(tr);
 }
 
 void OS::add_stdout(OS::print_func func)

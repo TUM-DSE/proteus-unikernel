@@ -101,7 +101,7 @@ void stop_measure()
   double mbits  = (received/(1024*1024)*8) / durs;
   printf("Duration: %.2fs - Payload: %lu/%u MB - %.2f MBit/s\n",
           durs, received/(1024*1024), SIZE/(1024*1024), mbits);
-  OS::shutdown();
+  OS::shutdown(1);
 }
 
 void Service::start() {}

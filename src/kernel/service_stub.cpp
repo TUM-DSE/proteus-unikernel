@@ -32,10 +32,10 @@ const char* Service::name() {
 
 // functions that we can override if we want to
 __attribute__((weak))
-void Service::start()
+int Service::start()
 {
   const std::string args(OS::cmdline_args());
-  Service::start(args);
+  return Service::start(args);
 }
 
 extern "C" {
@@ -44,7 +44,7 @@ extern "C" {
 }
 
 __attribute__((weak))
-void Service::start(const std::string& cmd)
+int Service::start(const std::string& cmd)
 {
   std::string st(cmd); // mangled copy
   int argc = 0;
@@ -75,6 +75,7 @@ void Service::start(const std::string& cmd)
 
   int exit_status = main(argc, argv);
   INFO("main","returned with status %d", exit_status);
+  return exit_status;
 }
 
 __attribute__((weak))

@@ -34,9 +34,10 @@ extern bool os_default_stdout;
 #define PROFILE(name) /* name */
 #endif
 
-void solo5_poweroff()
+void solo5_poweroff(int exit_val)
 {
-  __asm__ __volatile__("cli; hlt");
+	solo5_exit(exit_val);
+  //__asm__ __volatile__("cli; hlt");
   for(;;);
 }
 
@@ -197,7 +198,7 @@ void OS::event_loop()
   Service::stop();
 
   MYINFO("Powering off");
-  solo5_poweroff();
+  solo5_poweroff(exit_code);
 }
 
 __attribute__((noinline))
