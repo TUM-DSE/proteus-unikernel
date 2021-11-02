@@ -243,8 +243,11 @@ public:
 
   ~buffer()
   {
-    if(m_hostmem != nullptr)
-      free(m_hostmem);
+    // DEBUG_STREAM("destroy buffer obj");
+    // if(m_hostmem != nullptr)
+    //   free(m_hostmem);
+
+    // DEBUG_STREAM("destroy buffer obj");
   }
 
   // Customized buffer allocation for 4K boundary alignment

@@ -17,6 +17,9 @@ clCreateBuffer(cl_context   context,
   auto buffer =
     std::make_unique<funkycl::buffer>(cl_to_funkycl(context), flags, size, host_ptr);
 
+  DEBUG_STREAM("Create buffer [" << buffer->get_id() << "]: refcount=" << buffer->count());
+  DEBUG_STREAM("size: " << std::hex << size << ", addr: " << host_ptr << ", flags: " << flags);
+
   auto f_context = cl_to_funkycl(context);
   auto device = f_context->get_device();
 
@@ -26,8 +29,6 @@ clCreateBuffer(cl_context   context,
 
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
-
-  DEBUG_STREAM("Create buffer [" << buffer->get_id() << "]: refcount=" << buffer->count());
 
   return buffer.release();
 }

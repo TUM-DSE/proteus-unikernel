@@ -12,7 +12,7 @@ clFinish(cl_command_queue command_queue)
   auto cmd_queue = cl_to_funkycl(command_queue);
   auto device = cmd_queue->get_device();
 
-  funky_msg::request sync_req(funky_msg::SYNC, cmd_queue->get_id());
+  funky_msg::request sync_req(funky_msg::SYNC, funky_msg::FINISH, cmd_queue->get_id(), (funky_msg::event_info *) nullptr);
   device->vfpga_send_request(sync_req);
 
   /* do a hypercall to wake up vfpga backend request handler */

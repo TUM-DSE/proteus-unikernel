@@ -10,6 +10,7 @@
 #include "context.h"
 #include "memory.h"
 #include "kernel.h"
+#include "event.h"
 
 namespace funkycl {
 #define FUNKY_VFPGA_ID 1
@@ -27,12 +28,15 @@ public:
   }
 
   device* get_device();
+  context* get_context();
 
   /* for managing vfpga request/response queues */
+  funky_msg::event_info* create_event_info(int event_ids, cl_uint num_deps, const cl_event* deps);
+
   bool vfpga_send_memory_request();
-  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_mem_migration_flags);
-  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_bool, size_t, size_t, const void*, bool);
-  bool vfpga_send_exec_request(cl_uint, cl_kernel);
+  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_mem_migration_flags, funky_msg::event_info*);
+  bool vfpga_send_transfer_request(cl_uint, cl_uint, const cl_mem*, cl_bool, size_t, size_t, const void*, bool, funky_msg::event_info*);
+  bool vfpga_send_exec_request(cl_uint, cl_kernel, funky_msg::event_info*);
 
 private:
   unsigned int m_id=0;
@@ -49,6 +53,10 @@ private:
   /* for vfpga EXECUTE requests */
   using exec_args_info_type = std::vector<funky_msg::arg_info>;
   std::vector<std::unique_ptr<exec_args_info_type>> exec_args_list; 
+
+  /* event_info is reserved here */
+  std::vector<std::unique_ptr<std::vector<int>>> event_ids_list; 
+  std::vector<std::unique_ptr<funky_msg::event_info>> event_info_list; 
 
 };
 

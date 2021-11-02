@@ -38,6 +38,11 @@ memory::
 ~memory()
 {
   DEBUG_STREAM("destroy memory obj [" << m_id << "]");
+
+  // if(m_hostmem != nullptr)
+  // {
+  //   free(m_hostmem);
+  // }
 }
 
 bool

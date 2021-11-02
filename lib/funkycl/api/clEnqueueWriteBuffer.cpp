@@ -4,6 +4,7 @@
 #include "object/device.h"
 #include "object/kernel.h"
 #include "object/cmd_queue.h"
+#include "object/event.h"
 
 #include <iostream>
 
@@ -32,9 +33,26 @@ clEnqueueWriteBuffer(cl_command_queue   command_queue,
   else
     DEBUG_STREAM("No memory request is issued. all memobjs are already initialized.");
 
-  /* send a "TRANSFER" request to backend */
   bool is_write = true;
-  cmd_queue->vfpga_send_transfer_request(cmd_queue->get_id(), 1, &buffer, blocking_write, offset, size, ptr, is_write);
+  /* create a new event object for this command */
+  if(event != nullptr)
+  {
+    auto new_event =
+      std::make_unique<funkycl::event>(cmd_queue, cmd_queue->get_context(), CL_COMMAND_MIGRATE_MEM_OBJECTS);
+    *event = new_event.release();
+  }
+
+  /* if any argument regarding event objects exists, create an event info in cmd_queue class. */
+  funky_msg::event_info* einfo=nullptr;
+  if(event != nullptr || event_wait_list != nullptr)
+  {
+    /* if event_id == -1, no event object is assigned to this command (request) */
+    int event_id = (event!=nullptr)? cl_to_funkycl(*event)->get_id(): -1;
+    einfo = cmd_queue->create_event_info(event_id, num_events_in_wait_list, event_wait_list);
+  }
+
+  /* send a "TRANSFER" request to backend */
+  cmd_queue->vfpga_send_transfer_request(cmd_queue->get_id(), 1, &buffer, blocking_write, offset, size, ptr, is_write, einfo);
 
   /* if blocking_write is true, wait until the command is complete including data transfer. */
   if(blocking_write == CL_TRUE)

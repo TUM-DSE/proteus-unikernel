@@ -8,9 +8,16 @@ namespace funkycl {
 static cl_int
 clReleaseEvent(cl_event event)
 {
-  if(event)
-    delete cl_to_funkycl(event);
+  DEBUG_STREAM("Release event [" << cl_to_funkycl(event)->get_id() << "]: refcount=" << cl_to_funkycl(event)->count()-1);
 
+  if (cl_to_funkycl(event)->release())
+  {
+    DEBUG_STREAM("destroy event [" << cl_to_funkycl(event)->get_id() << "]!");
+    delete cl_to_funkycl(event);
+  }
+  
+  // if(event)
+  //   delete cl_to_funkycl(event);
   // if (cl_to_funkycl(kernel)->release()) // release() cannot be called?
 
   return CL_SUCCESS;

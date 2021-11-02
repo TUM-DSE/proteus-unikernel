@@ -4,6 +4,7 @@
 #include "object/device.h"
 #include "object/kernel.h"
 #include "object/cmd_queue.h"
+#include "object/event.h"
 
 namespace funkycl {
 
@@ -33,7 +34,25 @@ clEnqueueNDRangeKernel(cl_command_queue command_queue,
     return CL_FALSE;
   }
 
-  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel);
+  /* create a new event object for this command */
+  if(event != nullptr)
+  {
+    auto new_event =
+      std::make_unique<funkycl::event>(cmd_queue, cmd_queue->get_context(), CL_COMMAND_NDRANGE_KERNEL);
+    *event = new_event.release();
+  }
+
+  /* if any argument regarding event objects exists, create an event info in cmd_queue class. */
+  funky_msg::event_info* einfo=nullptr;
+  if(event != nullptr || event_wait_list != nullptr)
+  {
+    /* if event_id == -1, no event object is assigned to this command (request) */
+    int event_id = (event!=nullptr)? cl_to_funkycl(*event)->get_id(): -1;
+    einfo = cmd_queue->create_event_info(event_id, num_events_in_wait_list, event_wait_list);
+  }
+
+  /* enqueue an execution object */
+  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel, einfo);
 
   return CL_SUCCESS;
 }
