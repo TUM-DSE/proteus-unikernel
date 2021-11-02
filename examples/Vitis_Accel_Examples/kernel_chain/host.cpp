@@ -173,6 +173,7 @@ int main(int argc, char** argv) {
     }
 
     // Kernel with ap_ctrl_chain
+    int mat_dim = MAT_DIM;
     auto start_chain = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < NUM_TIMES; i++) {
         OCL_CHECK(err, err = krnl_chain_mmult.setArg(0, buffer_in1[i]));
@@ -180,7 +181,8 @@ int main(int argc, char** argv) {
         OCL_CHECK(err, err = krnl_chain_mmult.setArg(2, buffer_in3[i]));
         OCL_CHECK(err, err = krnl_chain_mmult.setArg(3, buffer_in4[i]));
         OCL_CHECK(err, err = krnl_chain_mmult.setArg(4, buffer_output[i]));
-        OCL_CHECK(err, err = krnl_chain_mmult.setArg(5, MAT_DIM));
+        // OCL_CHECK(err, err = krnl_chain_mmult.setArg(5, MAT_DIM));
+        OCL_CHECK(err, err = krnl_chain_mmult.setArg(5, mat_dim));
 
         cl::Event event;
         // Copy input data to device global memory
@@ -227,7 +229,8 @@ int main(int argc, char** argv) {
         OCL_CHECK(err, err = krnl_simple_mmult.setArg(2, buffer_in3[i]));
         OCL_CHECK(err, err = krnl_simple_mmult.setArg(3, buffer_in4[i]));
         OCL_CHECK(err, err = krnl_simple_mmult.setArg(4, buffer_output1[i]));
-        OCL_CHECK(err, err = krnl_simple_mmult.setArg(5, MAT_DIM));
+        // OCL_CHECK(err, err = krnl_simple_mmult.setArg(5, MAT_DIM));
+        OCL_CHECK(err, err = krnl_simple_mmult.setArg(5, mat_dim));
 
         cl::Event event;
         // Copy input data to device global memory

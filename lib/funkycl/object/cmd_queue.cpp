@@ -158,7 +158,7 @@ cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, funky_msg:
       args_info.emplace_back(ainfo);
     }
       
-    DEBUG_STREAM("arg[" << idx << "], id: " << (args_info.back()).mem_id );
+    DEBUG_STREAM("arg[" << idx << "], mem_id: " << (args_info.back()).mem_id << ", size: " << arg->get_size() );
   }
 
   /* save the args_info and keep it until the request has been handled */
