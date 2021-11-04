@@ -22,17 +22,19 @@ clEnqueueNDRangeKernel(cl_command_queue command_queue,
 {
   auto cmd_queue = cl_to_funkycl(command_queue);
 
-  if(work_dim != 1)
-  {
-    std::cout << "Error: Funky does not support the work dimension greater than 1. Aborted. " << std::endl;
-    return CL_FALSE;
-  }
+  auto ret = cmd_queue->vfpga_send_memory_request();
 
-  if( (global_work_offset[0] != 0) || (global_work_size[0] != 1) || (local_work_size[0] != 1))
-  {
-    std::cout << "Error: Funky only supports {g_work_offset, g_work_size, l_work_size} = {0, 1, 1}. Aborted." << std::endl;
-    return CL_FALSE;
-  }
+  // if(work_dim != 1)
+  // {
+  //   std::cout << "Error: Funky does not support the work dimension greater than 1. Aborted. " << std::endl;
+  //   return CL_FALSE;
+  // }
+
+  // if( (global_work_offset[0] != 0) || (global_work_size[0] != 1) || (local_work_size[0] != 1))
+  // {
+  //   std::cout << "Error: Funky only supports {g_work_offset, g_work_size, l_work_size} = {0, 1, 1}. Aborted." << std::endl;
+  //   return CL_FALSE;
+  // }
 
   /* create a new event object for this command */
   if(event != nullptr)
@@ -52,7 +54,8 @@ clEnqueueNDRangeKernel(cl_command_queue command_queue,
   }
 
   /* enqueue an execution object */
-  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel, einfo);
+  const size_t ndrange_ptr[3] = {*global_work_offset, *global_work_size, *local_work_size};
+  cmd_queue->vfpga_send_exec_request(cmd_queue->get_id(), kernel, ndrange_ptr, einfo);
 
   return CL_SUCCESS;
 }

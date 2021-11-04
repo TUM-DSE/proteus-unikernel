@@ -30,6 +30,8 @@ clCreateBuffer(cl_context   context,
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
 
+  // auto ret = cmd_queue->vfpga_send_memory_request();
+
   return buffer.release();
 }
 

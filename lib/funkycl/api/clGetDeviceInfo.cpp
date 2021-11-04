@@ -25,40 +25,63 @@
 #include "object/device.h"
 
 #include <string>
+#include <cstring>
 
 namespace {
 
 // TODO: it might not work for a specific class (e.g., std::string for which sizeof() cannot be used)
-class cl_param
+struct cl_param
 {
-  private:
-    void* m_value;
-    size_t m_size;
-    size_t* m_size_ret;
-
   public:
     cl_param(void* value, size_t size, size_t* size_ret)
       : m_value(value), m_size(size), m_size_ret(size_ret)
     {}
 
-    template <typename T>
-    cl_int update(T value)
-    {
-      if(m_value == nullptr)
-        return CL_SUCCESS;
+    ~cl_param()
+    {}
 
-      if( (m_size < sizeof(T)) )
-        return CL_INVALID_VALUE;
-
-      if (m_size_ret)
-        *m_size_ret = sizeof(T);
-
-      // TODO: do a cast if m_value and value has a different type
-      *(T*)m_value = value;
-
-      return CL_SUCCESS;
-    }
+    void* m_value;
+    size_t m_size;
+    size_t* m_size_ret;
 };
+
+template <typename T>
+cl_int update(cl_param &param, T value)
+{
+  if(param.m_value == nullptr)
+    return CL_SUCCESS;
+
+  if( (param.m_size < sizeof(T)) )
+    return CL_INVALID_VALUE;
+
+  if (param.m_size_ret)
+    *(param.m_size_ret) = sizeof(T);
+
+  // TODO: do a cast if m_value and value has a different type
+  *(T*)(param.m_value) = value;
+
+  return CL_SUCCESS;
+}
+
+template <>
+cl_int update<const char*>(cl_param &param, const char* value)
+{
+  if(param.m_value == nullptr)
+    return CL_SUCCESS;
+
+  auto str_size = strlen(value)+1;
+
+  if (param.m_size_ret)
+    *(param.m_size_ret) = str_size;
+
+
+  strncpy((char*)(param.m_value), value, str_size);
+
+  std::cout <<  "size: " << str_size << std::endl;
+  std::cout <<  "char: " << (char*) param.m_value << std::endl;
+
+  return CL_SUCCESS;
+}
 
 }
 
@@ -80,7 +103,7 @@ clGetDeviceInfo(cl_device_id   device,
   case CL_DEVICE_TYPE:
     // TODO: implement herefor 
     // buffer.as<cl_device_type>() = CL_DEVICE_TYPE_ACCELERATOR;
-    ret = param.update<cl_device_type>(CL_DEVICE_TYPE_ACCELERATOR);
+    ret = update<cl_device_type>(param, CL_DEVICE_TYPE_ACCELERATOR);
     break;
   case CL_DEVICE_VENDOR_ID:
     // buffer.as<cl_uint>() = 0;
@@ -263,6 +286,7 @@ clGetDeviceInfo(cl_device_id   device,
     // buffer.as<cl_platform_id>() = xdevice->get_platform();
     break;
   case CL_DEVICE_NAME:
+    ret = update<const char*>(param, "xilinx_u50_gen3x16_xdma_201920_3\0");
     // buffer.as<char>() = xdevice->get_name();
     break;
   case CL_DEVICE_VENDOR:

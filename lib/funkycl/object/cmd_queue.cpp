@@ -52,11 +52,16 @@ cmd_queue::create_event_info(int event_id, cl_uint num_deps, const cl_event* dep
 bool 
 cmd_queue::vfpga_send_memory_request()
 {
+  DEBUG_STREAM("check the status of Memobjs in the backend...");
+
   auto context = m_context.get();
   auto device  = m_device.get();
 
   if(!context->is_meminfo_list_updated())
+  {
+    DEBUG_STREAM("Memobjs are already the latest version.");
     return false;
+  }
 
   funky_msg::request memory_req(funky_msg::MEMORY, context->get_all_meminfo_size(), context->load_all_meminfo_addr());
   device->vfpga_send_request(memory_req);
@@ -132,7 +137,7 @@ cmd_queue::vfpga_send_transfer_request(cl_uint cmdq_id, cl_uint num_mem_objects,
 
 
 bool 
-cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, funky_msg::event_info* einfo)
+cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, const size_t* ndrange, funky_msg::event_info* einfo)
 {
   /* create args_info for exec request */
   exec_args_info_type  args_info;
@@ -165,9 +170,12 @@ cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, funky_msg:
   exec_args_list.emplace_back(std::make_unique<exec_args_info_type>(args_info));
   auto exec_args_info = exec_args_list.back().get();
 
+
+  DEBUG_STREAM("offset=" << ndrange[0] << ", global=" << ndrange[1] << ", local=" << ndrange[2]);
+
   /* send an EXECUTE request */
   auto kernel_name = f_kernel->get_name();
-  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())), cmdq_id, einfo);
+  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())), cmdq_id, ndrange, einfo);
   auto device  = m_device.get();
   device->vfpga_send_request(exec_req);
 
