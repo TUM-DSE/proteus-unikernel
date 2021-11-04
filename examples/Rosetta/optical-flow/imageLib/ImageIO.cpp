@@ -28,7 +28,9 @@
 #include "ImageIO.h"
 #include <vector>
 
-#include <memdisk/diskio.h>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 // Comment out next line if you don't have the PNG library
 //#define HAVE_PNG_LIB
@@ -301,50 +303,88 @@ void WriteFileTGA(CImage img, const char* filename)
 // Portable Graymaps: support PGM, PPM, and PMF images
 //
 
-void skip_comment(FILE *fp)
+// void skip_comment(FILE *fp)
+void skip_comment(std::istringstream& fp)
 {
     // skip comment lines in the headers of pnm files
 
     char c;
-    while ((c=getc(fp)) == '#')
-        while (getc(fp) != '\n');
-    ungetc(c, fp);
+    // while ((c=getc(fp)) == '#')
+    //     while (getc(fp) != '\n');
+    // ungetc(c, fp);
+
+    fp.get(c);
+    while ((c) == '#')
+        while (c != '\n')
+          fp.get(c);
+    fp.unget();
 }
 
-void skip_space(FILE *fp)
+// void skip_space(FILE *fp)
+void skip_space(std::istringstream& fp)
 {
     // skip white space in the headers or pnm files
 
     char c;
+    // do {
+    //     c = getc(fp);
+    // } while (c == '\n' || c == ' ' || c == '\t' || c == '\r');
+    // ungetc(c, fp);
+
     do {
-        c = getc(fp);
+        fp.get(c);
     } while (c == '\n' || c == ' ' || c == '\t' || c == '\r');
-    ungetc(c, fp);
+    fp.unget();
 }
 
-void read_header(FILE *fp, const char *imtype, char c1, char c2, 
+// void read_header(FILE *fp, const char *imtype, char c1, char c2, 
+void read_header(std::istringstream& fp, const char *imtype, char c1, char c2, 
                  int *width, int *height, int *nbands, int thirdArg)
 {
     // read the header of a pnmfile and initialize width and height
 
     char c;
   
-	if (getc(fp) != c1 || getc(fp) != c2)
+    // if (getc(fp) != c1 || getc(fp) != c2)
+    char g1, g2;
+    fp.get(g1); 
+    fp.get(g2); 
+	if (g1 != c1 || g2 != c2)
 		throw CError("ReadFilePGM: wrong magic code for %s file", imtype);
+
 	skip_space(fp);
 	skip_comment(fp);
 	skip_space(fp);
-	fscanf(fp, "%d", width);
+	// fscanf(fp, "%d", width);
+  std::string width_str;
+  fp >> width_str;
+  *width = std::stoi(width_str);
+  // printf("width=%d", *width);
+
 	skip_space(fp);
-	fscanf(fp, "%d", height);
+	// fscanf(fp, "%d", height);
+  std::string height_str;
+  fp >> height_str;
+  *height = std::stoi(height_str);
+
+  // printf("height=%d", *height);
+
 	if (thirdArg) {
 		skip_space(fp);
-		fscanf(fp, "%d", nbands);
+		// fscanf(fp, "%d", nbands);
+    std::string nbands_str;
+    fp >> nbands_str;
+    *nbands = std::stoi(nbands_str);
 	}
+
+  // printf("nbands=%d", *nbands);
+
     // skip SINGLE newline character after reading image height (or third arg)
-	c = getc(fp);
+	// c = getc(fp);
+  fp.get(c);
     if (c == '\r')      // <cr> in some files before newline
-        c = getc(fp);
+        fp.get(c);
+        // c = getc(fp);
     if (c != '\n') {
         if (c == ' ' || c == '\t' || c == '\r')
             throw CError("newline expected in file after image height");
@@ -354,19 +394,23 @@ void read_header(FILE *fp, const char *imtype, char c1, char c2,
 }
 
 
-void ReadFilePGM(CByteImage& img, const char* filename)
+void ReadFilePGM(CByteImage& img, std::vector<char>& file, const char* filename)
 {
     // Open the file and read the header
-    FILE *stream = fopen(filename, "rb");
-    if (stream == 0) {
-        throw CError("ReadFilePGM: could not open %s", filename);
-    }
+    // FILE *stream = fopen(filename, "rb");
+    std::string file_str(file.begin(), file.end());
+    std::istringstream stream(file_str.c_str());
+
+    // if (stream == 0) {
+    //     throw CError("ReadFilePGM: could not open %s", filename);
+    // }
 
 	int width, height, nBands;
 	const char *dot = strrchr(filename, '.');
 	int isGray = 0, isFloat = 0;
 
     if (strcmp(dot, ".pgm") == 0) {
+		// read_header(stream, "PGM", 'P', '5', &width, &height, &nBands, 1);
 		read_header(stream, "PGM", 'P', '5', &width, &height, &nBands, 1);
 		isGray = 1;
 	}
@@ -378,8 +422,11 @@ void ReadFilePGM(CByteImage& img, const char* filename)
 		read_header(stream, "PMF", 'P', '9', &width, &height, &nBands, 1);
 		isGray = 0;
         isFloat = 1;
-	}
 
+	}
+    // std::cout << stream.tellg() << std::endl;
+    // std::cout << "file.size(): " << file.size() << std::endl;
+    char* file_ptr = file.data() + stream.tellg();
 
     // Determine the image shape
     CShape sh(width, height, (isGray) ? 1 : (isFloat) ? nBands : 4);
@@ -396,19 +443,29 @@ void ReadFilePGM(CByteImage& img, const char* filename)
         int n = isFloat ? width * nBands * sizeof(float) : sh.width;
 		for (int y = 0; y<sh.height; y++) {
 			uchar* ptr = (uchar *) img.PixelAddress(0, y, 0);
-    	    if ((int)fread(ptr, sizeof(uchar), n, stream) != n)
-    	        throw CError("ReadFilePGM(%s): file is too short", filename);
+    	    // if ((int)fread(ptr, sizeof(uchar), n, stream) != n)
+          // stream.read((char*)ptr, n);
+          ::memcpy(ptr, file_ptr, n*sizeof(uchar));
+          file_ptr+=n*sizeof(uchar);
+    	    // if ((int)fread(ptr, sizeof(uchar), n, stream) != n)
+          // if(!stream)
+    	    //     throw CError("ReadFilePGM(%s): file is too short", filename);
 		}
 	}
     else { // read PPM
+
+    // printf("PPM...\n");
 
 		// read the rows
         int n = sh.width*3;
 		std::vector<uchar> rowBuf;
 		rowBuf.resize(n);
 		for (int y = 0; y<sh.height; y++) {
-	   	    if ((int)fread(&rowBuf[0], sizeof(uchar), n, stream) != n)
-    	        throw CError("ReadFilePGM(%s): file is too short", filename);
+          // stream.read((char*)(&rowBuf[0]), n);
+          ::memcpy(&rowBuf[0], file_ptr, n*sizeof(uchar));
+          file_ptr+=n*sizeof(uchar);
+	   	    // if ((int)fread(&rowBuf[0], sizeof(uchar), n, stream) != n)
+    	    //     throw CError("ReadFilePGM(%s): file is too short", filename);
 
 			uchar* ptr = (uchar *) img.PixelAddress(0, y, 0);
 			int x = 0;
@@ -422,8 +479,9 @@ void ReadFilePGM(CByteImage& img, const char* filename)
 		}
 	}
 
-    if (fclose(stream))
-        throw CError("ReadFilePGM(%s): error closing file", filename);
+   // printf("ptr: %08x, back: %08x\n", file_ptr, &stream_vec.back());
+    // if (fclose(stream))
+    //     throw CError("ReadFilePGM(%s): error closing file", filename);
 }
 
 
@@ -517,7 +575,8 @@ void WriteFilePGM(CByteImage img, const char* filename)
 // main dispatch functions
 //
 
-void ReadImage (CImage& img, const char* filename)
+// void ReadImage (CImage& img, const char* filename)
+void ReadImage (CImage& img, std::vector<char>& file, const char* filename)
 {
 	if (filename == NULL)
 		throw CError("ReadImage: empty filename");
@@ -548,7 +607,8 @@ void ReadImage (CImage& img, const char* filename)
         }
         if (img.PixType() == typeid(uchar) ||
             img.PixType() == typeid(float))
-            ReadFilePGM(*(CByteImage *) &img, filename);
+            ReadFilePGM(*(CByteImage *) &img, file, filename);
+            // ReadFilePGM(*(CByteImage *) &img, filename);
         else
            throw CError("ReadImage(%s): wrong image type for PGM/PPM/PMF", filename);
     }
@@ -623,7 +683,7 @@ void WriteImage(CImage& img, const char* filename)
 void ReadImageVerb(CImage& img, const char* filename, int verbose) {
 	if (verbose)
 		fprintf(stderr, "Reading image %s\n", filename);
-	ReadImage(img, filename);
+	// ReadImage(img, filename); // Funky does not support this
 }
 
 // write out an image and perhaps tell the user you're doing so

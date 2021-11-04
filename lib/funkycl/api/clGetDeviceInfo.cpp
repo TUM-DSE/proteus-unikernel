@@ -77,8 +77,8 @@ cl_int update<const char*>(cl_param &param, const char* value)
 
   strncpy((char*)(param.m_value), value, str_size);
 
-  std::cout <<  "size: " << str_size << std::endl;
-  std::cout <<  "char: " << (char*) param.m_value << std::endl;
+  DEBUG_STREAM("size: " << str_size);
+  DEBUG_STREAM("char: " << (char*) param.m_value);
 
   return CL_SUCCESS;
 }

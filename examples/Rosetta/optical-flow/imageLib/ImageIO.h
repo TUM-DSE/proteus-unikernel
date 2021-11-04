@@ -31,7 +31,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 
-void ReadImage (CImage& img, const char* filename);
+// void ReadImage (CImage& img, const char* filename);
+void ReadImage (CImage& img, std::vector<char>& file, const char* filename);
 void WriteImage(CImage& img, const char* filename);
 
 void ReadImageVerb (CImage& img, const char* filename, int verbose);

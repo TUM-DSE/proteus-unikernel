@@ -7,6 +7,7 @@
 /*===============================================================*/
 
 #include <os>
+#include <memdisk/diskio.h>
 
 // standard C/C++ headers
 #include <cstdio>
@@ -40,8 +41,6 @@
   # include "../sw/optical_flow_sw.h"
 #endif
 
-
-
 int main(int argc, char ** argv) 
 {
   printf("Optical Flow Application\n");
@@ -74,16 +73,20 @@ int main(int argc, char ** argv)
   CByteImage imgs[5];
   for (int i = 0; i < 5; i++) 
   {
+    auto img_file  = readfile_vfs_char(frame_files[i]);
+
     CByteImage tmpImg;
-    ReadImage(tmpImg, frame_files[i].c_str());
+    ReadImage(tmpImg, img_file, frame_files[i].c_str());
     imgs[i] = ConvertToGray(tmpImg);
   }
 
   // read in reference flow file
   printf("Reading reference output flow... \n");
+  auto ref_file  = readfile_vfs_char(reference_file);
 
   CFloatImage refFlow;
-  ReadFlowFile(refFlow, reference_file.c_str());
+  // ReadFlowFile(refFlow, ref_file_str, reference_file.c_str());
+  ReadFlowFile(refFlow, ref_file, reference_file.c_str());
 
   // timers
   struct timeval start, end;

@@ -31,6 +31,11 @@
 #include "imageLib.h"
 #include "flowIO.h"
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
 // return whether flow vector is unknown
 bool unknown_flow(float u, float v) {
     return (fabs(u) >  UNKNOWN_FLOW_THRESH) 
@@ -43,7 +48,9 @@ bool unknown_flow(float *f) {
 }
 
 // read a flow file into 2-band image
-void ReadFlowFile(CFloatImage& img, const char* filename)
+// void ReadFlowFile(CFloatImage& img, const char* filename)
+// void ReadFlowFile(CFloatImage& img, std::string& file, const char* filename)
+void ReadFlowFile(CFloatImage& img, std::vector<char>& file, const char* filename)
 {
     if (filename == NULL)
 	throw CError("ReadFlowFile: empty filename");
@@ -52,17 +59,33 @@ void ReadFlowFile(CFloatImage& img, const char* filename)
     if (strcmp(dot, ".flo") != 0)
 	throw CError("ReadFlowFile (%s): extension .flo expected", filename);
 
-    FILE *stream = fopen(filename, "rb");
-    if (stream == 0)
-        throw CError("ReadFlowFile: could not open %s", filename);
+    // FILE *stream = fopen(filename, "rb");
+    // std::istringstream stream(file.c_str());
+    // if (stream == 0)
+    //     throw CError("ReadFlowFile: could not open %s", filename);
     
     int width, height;
     float tag;
 
-    if ((int)fread(&tag,    sizeof(float), 1, stream) != 1 ||
-	(int)fread(&width,  sizeof(int),   1, stream) != 1 ||
-	(int)fread(&height, sizeof(int),   1, stream) != 1)
-	throw CError("ReadFlowFile: problem reading file %s", filename);
+    size_t offset=0;
+    char* file_ptr = file.data();
+    ::memcpy(&tag, file_ptr, sizeof(float));
+    file_ptr+=sizeof(float);
+    ::memcpy(&width, file_ptr, sizeof(int));
+    file_ptr+=sizeof(int);
+    ::memcpy(&height, file_ptr, sizeof(int));
+    file_ptr+=sizeof(int);
+
+    // std::cout << "file.size(): " << file.size() << std::endl;
+
+  // printf("tag   =%f\n", tag);
+  // printf("width =%d\n", width);
+  // printf("height=%d\n", height);
+
+  //   if ((int)fread(&tag,    sizeof(float), 1, stream) != 1 ||
+	// (int)fread(&width,  sizeof(int),   1, stream) != 1 ||
+	// (int)fread(&height, sizeof(int),   1, stream) != 1)
+	// throw CError("ReadFlowFile: problem reading file %s", filename);
 
     if (tag != TAG_FLOAT) // simple test for correct endian-ness
 	throw CError("ReadFlowFile(%s): wrong tag (possibly due to big-endian machine?)", filename);
@@ -82,14 +105,21 @@ void ReadFlowFile(CFloatImage& img, const char* filename)
     int n = nBands * width;
     for (int y = 0; y < height; y++) {
 	float* ptr = &img.Pixel(0, y, 0);
-	if ((int)fread(ptr, sizeof(float), n, stream) != n)
-	    throw CError("ReadFlowFile(%s): file is too short", filename);
+  ::memcpy(ptr, file_ptr, n*sizeof(float));
+  file_ptr+=n*sizeof(float);
+  // stream.read((char*)ptr, n);
+	// if ((int)fread(ptr, sizeof(float), n, stream) != n)
+	//     throw CError("ReadFlowFile(%s): file is too short", filename);
     }
 
-    if (fgetc(stream) != EOF)
-	throw CError("ReadFlowFile(%s): file is too long", filename);
+   // printf("ptr: %08x, back: %08x\n", file_ptr, &file.back());
+    // if(!stream)
+    // if(file_ptr != &file.back())
+	  //   throw CError("ReadFlowFile(%s): file is too long", filename);
+  //   if (fgetc(stream) != EOF)
+	// throw CError("ReadFlowFile(%s): file is too long", filename);
 
-    fclose(stream);
+    // fclose(stream);
 }
 
 // write a 2-band image into flow file 
