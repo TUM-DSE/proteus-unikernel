@@ -36,7 +36,7 @@ ExternalProject_Add(solo5_repo
   # GIT_TAG 285b80aa4da12b628838a78dc79793f4d669ae1b
   GIT_REPOSITORY git@github.com:AtsushiKoshiba/funky-solo5.git
   # GIT_TAG vfpga # branch name is also ok
-  GIT_TAG 7840417c41e022b663f3bfbcc41e47b4d6e43709
+  GIT_TAG eb1979497e8761e64e6b2d39578ff89474c8d337
 
 	CONFIGURE_COMMAND CC=gcc ./configure.sh
 	UPDATE_COMMAND ""
