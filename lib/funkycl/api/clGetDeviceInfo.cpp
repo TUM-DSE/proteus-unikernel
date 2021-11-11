@@ -48,14 +48,14 @@ struct cl_param
 template <typename T>
 cl_int update(cl_param &param, T value)
 {
+  if (param.m_size_ret)
+    *(param.m_size_ret) = sizeof(T);
+
   if(param.m_value == nullptr)
     return CL_SUCCESS;
 
   if( (param.m_size < sizeof(T)) )
     return CL_INVALID_VALUE;
-
-  if (param.m_size_ret)
-    *(param.m_size_ret) = sizeof(T);
 
   // TODO: do a cast if m_value and value has a different type
   *(T*)(param.m_value) = value;
@@ -66,18 +66,32 @@ cl_int update(cl_param &param, T value)
 template <>
 cl_int update<const char*>(cl_param &param, const char* value)
 {
-  if(param.m_value == nullptr)
-    return CL_SUCCESS;
-
-  auto str_size = strlen(value)+1;
+  /* 
+   * param_value_size need to be set before returning. 
+   * param.m_value can be null while param.m_size_ret is valid (e.g., opencl-cpp wrapper) 
+   */
+  size_t str_size = strlen(value)+1;
 
   if (param.m_size_ret)
+  {
+    // memcpy(param.m_size_ret, &str_size, sizeof(str_size));
     *(param.m_size_ret) = str_size;
+    DEBUG_STREAM("size_ret: " << std::dec << *(param.m_size_ret));
+  }
 
+  if(param.m_value == nullptr)
+  {
+    DEBUG_STREAM("success. (m_value is null)");
+    return CL_SUCCESS;
+  }
+
+  if( param.m_size < str_size )
+  {
+    DEBUG_STREAM("Error. (m_value is too small)");
+    return CL_INVALID_VALUE;
+  }
 
   strncpy((char*)(param.m_value), value, str_size);
-
-  DEBUG_STREAM("size: " << str_size);
   DEBUG_STREAM("char: " << (char*) param.m_value);
 
   return CL_SUCCESS;
@@ -287,6 +301,7 @@ clGetDeviceInfo(cl_device_id   device,
     break;
   case CL_DEVICE_NAME:
     ret = update<const char*>(param, "xilinx_u50_gen3x16_xdma_201920_3\0");
+    // ret = update<const char*>(param, "xilinx_u50_gen3x16_xdma_201920_3");
     // buffer.as<char>() = xdevice->get_name();
     break;
   case CL_DEVICE_VENDOR:
