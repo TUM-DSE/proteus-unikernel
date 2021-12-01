@@ -30,8 +30,12 @@ count_loc() {
 
     COMMIT=`git rev-parse HEAD` # get commit hash
     echo "${apps}, ${COMMIT}" >> ${CSV}
-    cloc --quiet ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file | tee ${LOG}
-    cloc --quiet ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file --csv >> ${CSV}
+    # LOC of orig code
+    # cloc --quiet ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file | tee ${LOG}
+    # cloc --quiet ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file --csv >> ${CSV}
+
+    cloc --quiet ${arg_dir}/${app}/${HOSTCODE} ${arg_dir}/${app}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file | tee ${LOG}
+    cloc --quiet ${arg_dir}/${app}/${HOSTCODE} ${arg_dir}/${app}/*.h --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file --csv >> ${CSV}
 
     echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_dir}/${app}/${HOSTCODE} --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file | tee ${LOG}
@@ -43,18 +47,27 @@ count_loc() {
     LOG="${EVAL_SCRIPT_ROOT}/${DIR}/funky_utils.log"
     CSV="${EVAL_SCRIPT_ROOT}/${DIR}/funky_utils.csv"
 
-    cloc --quiet ${arg_orig_dir}/../common/includes --exclude-dir=oclHelper,opencl,simplebmp --by-file | tee ${LOG}
-    cloc --quiet ${arg_orig_dir}/../common/includes --exclude-dir=oclHelper,opencl,simplebmp --by-file --csv >> ${CSV}
+    # LOC of orig code
+    # cloc --quiet ${arg_orig_dir}/../common/includes --exclude-dir=oclHelper,opencl,simplebmp --by-file | tee ${LOG}
+    # cloc --quiet ${arg_orig_dir}/../common/includes --exclude-dir=oclHelper,opencl,simplebmp --by-file --csv >> ${CSV}
 
+    cloc --quiet ${arg_dir}/../funky_utils --exclude-dir=oclHelper,opencl,simplebmp --by-file | tee ${LOG}
+    cloc --quiet ${arg_dir}/../funky_utils --exclude-dir=oclHelper,opencl,simplebmp --by-file --csv >> ${CSV}
+
+    echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../funky_utils --exclude-dir=oclHelper,opencl,simplebmp --exclude-list-file=timer.h --by-file | tee ${LOG}
     cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../funky_utils --exclude-dir=oclHelper,opencl,simplebmp --exclude-list-file=timer.h --by-file --csv >> ${CSV}
   else 
     LOG="${EVAL_SCRIPT_ROOT}/${DIR}/harness.log"
     CSV="${EVAL_SCRIPT_ROOT}/${DIR}/harness.csv"
 
-    cloc --quiet ${arg_orig_dir}/harness/ocl_src --by-file | tee ${LOG}
-    cloc --quiet ${arg_orig_dir}/harness/ocl_src --by-file --csv >> ${CSV}
+    # cloc --quiet ${arg_orig_dir}/harness/ocl_src --by-file | tee ${LOG}
+    # cloc --quiet ${arg_orig_dir}/harness/ocl_src --by-file --csv >> ${CSV}
 
+    cloc --quiet ${arg_dir}/harness --by-file | tee ${LOG}
+    cloc --quiet ${arg_dir}/harness --by-file --csv >> ${CSV}
+
+    echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/harness/ocl_src ${arg_dir}/harness --by-file | tee ${LOG}
     cloc --quiet --diff ${arg_orig_dir}/harness/ocl_src ${arg_dir}/harness --by-file --csv >> ${CSV}
   fi

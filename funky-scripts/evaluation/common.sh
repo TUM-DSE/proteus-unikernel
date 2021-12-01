@@ -19,6 +19,7 @@ VITIS_EXAMPLES_ARGS=("matmul.xclbin" "-x1 ./test_kernel_maxi_256bit.xclbin -x2 .
 
 ##### Rosetta
 ROSETTA_APPS=(3d-rendering digit-recognition optical-flow spam-filter)
+ROSETTA_BINS=(rendering_host.exe DigitRec_host.exe optical_flow_host.exe SgdLR_host.exe)
 ROSETTA_ARGS=("-f rendering.xclbin" "-f DigitRec.hw.xclbin" "-f optical_flow.hw.xclbin -p sintel_alley -o outputs.flo" "-f SgdLR.hw.xclbin -p data/")
 ROSETTA_CODE=("3d_rendering_host.cpp" "digit_recognition.cpp" "optical_flow_host.cpp" "spam_filter.cpp")
 
