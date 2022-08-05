@@ -21,6 +21,11 @@ clCreateProgramWithBinary(cl_context                     context,
 
   // TIMER_START(0);
   auto program = std::make_unique<funkycl::program>(cl_to_funkycl(context), num_devices, device_list, binaries, lengths);
+  if(binary_status) {
+    for(int i=0; i<num_devices; i++) {
+      binary_status[i] = CL_SUCCESS;
+    }
+  }
 
   if(errcode_ret)
     *errcode_ret = CL_SUCCESS;
