@@ -30,8 +30,8 @@ program(context* cntx, cl_uint num_devices, const cl_device_id* devices,
 
     /* The device (vFPGA) is initialized only once unless it is freed. */
     if(!device->is_initialized()) {
-      auto binary = m_binaries.find(device)->second;
-      device->init_vfpga(binary);
+      //auto binary = m_binaries.find(device)->second;
+      device->init_vfpga(m_binaries.find(device)->second);
     }
 
     // TODO: if the device is already initialized but this program context is instantiated with different bitstream, notify to the backend
