@@ -558,7 +558,8 @@ std::string getBoardBinaryFile(const char *prefix, cl_device_id device) {
   // and this should trigger an error later.
   //return std::string(prefix) + ".aocx";
   //return "/home/shu/funky-unikernel/xclbin/aria10/hello_world_emulation/hello_world.aocx";
-  return "../../../xclbin/aria10/hello_world_emulation/hello_world.aocx";
+  return "hello_world.aocx";
+  //return "../../../xclbin/aria10/hello_world_emulation/hello_world.aocx";
 }
 
 // High-resolution timer.
