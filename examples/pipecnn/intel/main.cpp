@@ -1343,9 +1343,7 @@ int main(int argc, char** argv)
 				}
 			#endif
 			else if(layer_config[j][pool_on]==1){
-				printf("wait in\n");
 				status = clWaitForEvents(num_devices, pool_event);
-				printf("wait out\n");
 				checkError(status, "Failed to finish memWR event");
 			}
 			else{
