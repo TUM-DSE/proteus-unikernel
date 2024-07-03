@@ -32,11 +32,8 @@ if (WITH_SOLO5)
 ExternalProject_Add(solo5_repo
 	PREFIX precompiled
 	BUILD_IN_SOURCE 1
-  # GIT_REPOSITORY https://github.com/solo5/solo5.git
-  # GIT_TAG 285b80aa4da12b628838a78dc79793f4d669ae1b
-  GIT_REPOSITORY git@github.com:AtsushiKoshiba/funky-solo5.git
-  # GIT_TAG vfpga # branch name is also ok
-  GIT_TAG f43c728fdff4958c1f064d7e96e882cbe574e702
+  GIT_REPOSITORY git@github.com:TUM-DSE/funky-monitor.git
+  GIT_TAG proteus # branch name or commit hash
 
 	CONFIGURE_COMMAND CC=gcc ./configure.sh
 	UPDATE_COMMAND ""
