@@ -35,7 +35,7 @@ ExternalProject_Add(solo5_repo
   GIT_REPOSITORY git@github.com:TUM-DSE/funky-monitor.git
   GIT_TAG proteus # branch name or commit hash
 
-	CONFIGURE_COMMAND CC=gcc ./configure.sh
+	CONFIGURE_COMMAND CC=gcc CXX=g++ ./configure.sh
 	UPDATE_COMMAND ""
   BUILD_COMMAND make DISABLE_FPGA=${SOLO5_DISABLE_FPGA}
 	INSTALL_COMMAND ""
