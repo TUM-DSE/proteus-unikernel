@@ -30,7 +30,7 @@ our cluster. Firstly we need an up to date version of Solo5 which can easily get
 built running make inside the top directory of the repository. After a
 successful build of SOlo5 we will set the environment variable `UKVM_BIN` to
 point to the ukvm binary which was produced. This variable will be used from the
-daemon in order to execute the tasks. 
+daemon in order to execute the tasks.
 ```
 export UKVM_BIN=<path_to_ukvm_binary>
 ```
@@ -63,7 +63,7 @@ commands:
 
 The syntax to deploy a new command is:
 ```
-echo -n "New: <path_to_binary> priority: <0_or_1> args: <cmd_arguments>" | socat -u - unix-connect:/tmp/front.sock
+echo -n "New: <path_to_binary> num_bitstreams: <num> priority: <0_or_1> args: <cmd_arguments> | <path_to_bitstream_1> <path_to_bitstream_2>" | socat -u - unix-connect:/tmp/front.sock
 ```
 
 where `cmd_arguments` are the arguments of the task we want to deploy.
