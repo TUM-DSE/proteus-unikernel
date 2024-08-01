@@ -63,7 +63,7 @@ commands:
 
 The syntax to deploy a new command is:
 ```
-echo -n "New: <path_to_binary> num_bitstreams: <num> priority: <0_or_1> args: <cmd_arguments> | <path_to_bitstream_1> <path_to_bitstream_2>" | socat -u - unix-connect:/tmp/front.sock
+echo -n "New: <path_to_binary> num_bitstreams: <num> priority: <0_or_1> args: <cmd_arguments> | <path_to_bitstream_1> | <path_to_bitstream_2>" | socat -u - unix-connect:/tmp/front.sock
 ```
 
 where `cmd_arguments` are the arguments of the task we want to deploy.
