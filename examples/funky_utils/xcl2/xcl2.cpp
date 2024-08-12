@@ -107,7 +107,9 @@ std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name)
 */
 
 std::vector<unsigned char> read_binary_file(const std::string& xclbin_file_name) {
-  return readfile_vfs(xclbin_file_name);
+  // Return empty vector because bitstream is handled by the monitor
+  auto v = new std::vector<unsigned char>{};
+  return *v;
 }
 
 bool is_emulation() {

@@ -35,5 +35,5 @@ set(LIBRARIES
 # include service build script
 include($ENV{INCLUDEOS_PREFIX}/includeos/post.service.cmake)
 
-# mount a bitstream file in VFS by using memdisk
-diskbuilder(../../xclbin/u50/hello_world)
+# We do not mount a bitstream file in VFS by using memdisk, bitstream is handled by monitor
+# diskbuilder(/path/to/dir)

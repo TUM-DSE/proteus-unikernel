@@ -22,9 +22,9 @@ void device::init_vfpga(std::vector<unsigned char>& bitstream)
   // std::cout << "GUEST: sending fpga_init hypercall request..." << std::endl;
 
   /* do a hypercall */
-  vfpga.init(bitstream.data(), bitstream.size(),
-      request_q->get_baseaddr(), request_q->get_mmsize(),
-      response_q->get_baseaddr(), response_q->get_mmsize());
+  DEBUG_PRINT("Calling vfpga.init with NULL bitstream");
+  vfpga.init(nullptr, 0, request_q->get_baseaddr(), request_q->get_mmsize(),
+             response_q->get_baseaddr(), response_q->get_mmsize());
 
   init_flag = true;
   return;

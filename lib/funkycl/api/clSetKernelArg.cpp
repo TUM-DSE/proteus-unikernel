@@ -1,5 +1,7 @@
 #include "config.h"
 #include <CL/opencl.h>
+#include <cstdint>
+#include <os>
 #include "object/object.h"
 #include "object/kernel.h"
 
@@ -24,11 +26,14 @@ clSetKernelArg(cl_kernel    kernel,
    * [updated on 25.10.2021] According to the memory map of IncludeOS unikernel, the heap stack address roughly starts at 0x2300000-0x2600000. 
    * As arguments except cl_mem would probably not use heap, we can treat args whose pointer value is less than 0x2300000 as scalar.  
    *
+   * [updated on 12.08.2024] The start address of the heap depends on the size of the binary,
+   * so use the functions heap_begin() and heap_end() to get the exact address range.
    */
 
   // size of a pointer to _cl_mem (8 Bytes)
-  // TODO: get the actual start address of heap region from solo5 kernel
-  if(arg_size == sizeof(cl_mem) && ( *(uint64_t*)arg_value >= 0x2300000))
+  if (arg_size == sizeof(cl_mem) &&
+      *(uintptr_t *)arg_value >= OS::heap_begin() &&
+      *(uintptr_t *)arg_value <= OS::heap_end())
   {
     DEBUG_STREAM("clmem arg value (base): " << std::hex << *(uint64_t*) arg_value);
     f_kernel->create_clmem_argument(arg_index);

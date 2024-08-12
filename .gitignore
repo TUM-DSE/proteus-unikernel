@@ -25,7 +25,7 @@ dummy.disk
 callgraph.svg
 massif.out.*
 .vscode
-/.cache
+.cache
 
 !Dockerfile
 
