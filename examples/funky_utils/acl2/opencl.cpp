@@ -433,33 +433,13 @@ cl_device_id *getDevices(cl_platform_id pid, cl_device_type dev_type, cl_uint *n
 
 // Create a program for all devices associated with the context.
 cl_program createProgramFromBinary(cl_context context, const char *binary_file_name, const cl_device_id *devices, unsigned num_devices) {
-  // Early exit for potentially the most common way to fail: AOCX does not exist.
-  /*
-  if(!fileExists(binary_file_name)) {
-    printf("AOCX file '%s' does not exist.\n", binary_file_name);
-    checkError(CL_INVALID_PROGRAM, "Failed to load binary file");
-  }*/
-  // Load the binary.
-  size_t binary_size;
-  scoped_array<unsigned char> binary(loadBinaryFile(binary_file_name, &binary_size));
-  if(binary == NULL) {
-    checkError(CL_INVALID_PROGRAM, "Failed to load binary file");
-  }
-
-  scoped_array<size_t> binary_lengths(num_devices);
-  scoped_array<unsigned char *> binaries(num_devices);
-  for(unsigned i = 0; i < num_devices; ++i) {
-    binary_lengths[i] = binary_size;
-    binaries[i] = binary;
-  }
-
   cl_int status;
   scoped_array<cl_int> binary_status(num_devices);
 
-  cl_program program = clCreateProgramWithBinary(context, num_devices, devices, binary_lengths,
-      (const unsigned char **) binaries.get(), binary_status, &status);
+  cl_program program = clCreateProgramWithBinary(
+      context, num_devices, devices, NULL, NULL, binary_status, &status);
   checkError(status, "Failed to create program with binary");
-  for(unsigned i = 0; i < num_devices; ++i) {
+  for (unsigned i = 0; i < num_devices; ++i) {
     checkError(binary_status[i], "Failed to load binary for device");
   }
 
@@ -530,36 +510,9 @@ bool fileExists(const char *file_name) {
 }
 
 std::string getBoardBinaryFile(const char *prefix, cl_device_id device) {
-  // First check if <prefix>.aocx exists. Use it if it does.
-  std::string file_name = std::string(prefix) + ".aocx";
-  /* //delete
-  if(fileExists(file_name.c_str())) {
-    return file_name;
-  }*/
-  
-  // Now get the name of the board. For Intel(R) FPGA SDK for OpenCL(TM) boards,
-  // the name of the device is presented as:
-  //  <board name> : ...
-  std::string device_name = getDeviceName(device);
-  
-  // Now search for the " :" in the device name.
-  size_t end = device_name.find(" :");
-  if(end != std::string::npos) {
-    std::string board_name(device_name, 0, end);
-
-    // Look for a AOCX with the name <prefix>_<board_name>_<version>.aocx.
-    file_name = std::string(prefix) + "_" + board_name + "_" + VERSION_STR + ".aocx";
-    if(fileExists(file_name.c_str())) {
-      return file_name;
-    }
-  }
-
-  // At this point just use <prefix>.aocx. This file doesn't exist
-  // and this should trigger an error later.
-  //return std::string(prefix) + ".aocx";
-  //return "/home/shu/funky-unikernel/xclbin/aria10/hello_world_emulation/hello_world.aocx";
-  return "hello_world.aocx";
-  //return "../../../xclbin/aria10/hello_world_emulation/hello_world.aocx";
+  // Return empty string because bitstream is handled by the monitor
+  auto s = new std::string{};
+  return *s;
 }
 
 // High-resolution timer.
