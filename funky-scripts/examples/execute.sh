@@ -26,6 +26,8 @@ Options:
   -u <ukvm-bin>         set path to ukvm-bin 
                         (default: ${UKVM_BIN})
 
+  -t <fpga>             FPGA type (arria10, u50, or u280)
+
   -n <network device>   set tap device 
                         (default: ${TAP_IF})
 
@@ -46,7 +48,7 @@ GDB_FLAG=false
 MON_FLAG=false
 LOAD_FLAG=false
 
-while getopts hgmlb:u:n:s:f:a: OPT
+while getopts hgmlb:u:t:n:s:f:a: OPT
 do
   case $OPT in
     "h" )
@@ -62,6 +64,8 @@ do
       USER_BUILD_DIR=${OPTARG} ;;
     "u" )
       USER_UKVM_BIN=${OPTARG} ;;
+    "t" )
+      USER_FPGA=${OPTARG} ;;
     "n" )
       USER_TAP_IF=${OPTARG} ;;
     "s" )
@@ -70,6 +74,8 @@ do
       USER_MIG_FILE=${OPTARG} ;;
     "a" )
       USER_ARGS=${OPTARG} ;;
+    * )
+      echo "WARNING: ignoring unknown flag ${OPTARG}" ;;
   esac
 done
 
@@ -84,13 +90,18 @@ if [ ! -z ${USER_UKVM_BIN} ]; then
   UKVM_BIN=${USER_UKVM_BIN}
 fi
 
+if [ ! -z ${USER_FPGA} ]; then
+  echo "INFO: ${USER_FPGA} is used as the FPGA type."
+  FPGA=${USER_FPGA}
+fi
+
 if [ ! -z ${USER_SOCKET_IF} ]; then
   echo "INFO: ${USER_SOCKET_IF} is used as a socket interface."
   SOCKET_IF=${USER_SOCKET_IF}
 fi
 
 if [ ! -z ${USER_MIG_FILE} ]; then
-  echo "INFO: ${USER_MIG_FILE} is used as a socket interface."
+  echo "INFO: ${USER_MIG_FILE} is used as a migration file."
   MIG_FILE=${USER_MIG_FILE}
 fi
 
@@ -123,6 +134,10 @@ if [ -z ${INCLUDEOS_PREFIX} ]; then
   exit -1
 fi
 
+if [ -z ${FPGA} ]; then
+  echo "Error: FPGA type is not set, use -t <fpga>."
+  exit -1
+fi
 
 ########### Execute app #############
 # apply exec permission to ukvm bin
@@ -139,10 +154,10 @@ if "${LOAD_FLAG}" ; then
 fi
 
 if "${GDB_FLAG}" ; then
-  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
-  echo "Press the Enter to start gdb..."
+  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
+  echo "Press Enter to start gdb..."
   read Wait
   gdb -tui ${UKVM_BIN} 
 else 
-  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
+  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
 fi
