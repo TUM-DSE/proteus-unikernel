@@ -4,6 +4,9 @@ UKVM_BIN=${INCLUDEOS_PREFIX}/includeos/x86_64/lib/ukvm-bin
 TAP_IF=tap100
 SOCKET_IF=/tmp/solo5_socket
 MIG_FILE=mig_file
+# The monitor expects the bitstream file at this location.
+# In the full system, it is saved there by the scheduler.
+BITSTREAM=/tmp/bitstream_0.ukvm
 
 function usage {
   cat <<EOF
@@ -28,6 +31,9 @@ Options:
 
   -t <fpga>             FPGA type (arria10, u50, or u280)
 
+  -i <bitstream>        Bitstream for programming FPGA
+                        (default: ${BITSTREAM})
+
   -n <network device>   set tap device 
                         (default: ${TAP_IF})
 
@@ -48,7 +54,7 @@ GDB_FLAG=false
 MON_FLAG=false
 LOAD_FLAG=false
 
-while getopts hgmlb:u:t:n:s:f:a: OPT
+while getopts hgmlb:u:t:i:n:s:f:a: OPT
 do
   case $OPT in
     "h" )
@@ -66,6 +72,8 @@ do
       USER_UKVM_BIN=${OPTARG} ;;
     "t" )
       USER_FPGA=${OPTARG} ;;
+    "i" )
+      USER_BITSTREAM=${OPTARG} ;;
     "n" )
       USER_TAP_IF=${OPTARG} ;;
     "s" )
@@ -75,37 +83,44 @@ do
     "a" )
       USER_ARGS=${OPTARG} ;;
     * )
-      echo "WARNING: ignoring unknown flag ${OPTARG}" ;;
+      echo "WARNING: ignoring unknown option" ;;
   esac
 done
 
 ########### set arguments #############
-if [ ! -z ${USER_BUILD_DIR} ]; then
+if [ -n "${USER_BUILD_DIR}" ]; then
   echo "INFO: ${USER_BUILD_DIR} is specified as the build directory."
   BUILD_DIR=${USER_BUILD_DIR}
 fi
 
-if [ ! -z ${USER_UKVM_BIN} ]; then
+if [ -n "${USER_UKVM_BIN}" ]; then
   echo "INFO: ${USER_UKVM_BIN} is used as the backend monitor."
   UKVM_BIN=${USER_UKVM_BIN}
 fi
 
-if [ ! -z ${USER_FPGA} ]; then
+if [ -n "${USER_FPGA}" ]; then
   echo "INFO: ${USER_FPGA} is used as the FPGA type."
   FPGA=${USER_FPGA}
 fi
 
-if [ ! -z ${USER_SOCKET_IF} ]; then
+if [ -n "${USER_BITSTREAM}" ]; then
+  ln -sf "$(realpath "$USER_BITSTREAM")" ${BITSTREAM}
+  echo "INFO: ${USER_BITSTREAM} is used as the bitstream."
+else
+  echo "INFO: ${BITSTREAM} is used as the bitstream"
+fi
+
+if [ -n "${USER_SOCKET_IF}" ]; then
   echo "INFO: ${USER_SOCKET_IF} is used as a socket interface."
   SOCKET_IF=${USER_SOCKET_IF}
 fi
 
-if [ ! -z ${USER_MIG_FILE} ]; then
+if [ -n "${USER_MIG_FILE}" ]; then
   echo "INFO: ${USER_MIG_FILE} is used as a migration file."
   MIG_FILE=${USER_MIG_FILE}
 fi
 
-if [ ! -z ${USER_TAP_IF} ]; then
+if [ -n "${USER_TAP_IF}" ]; then
   echo "INFO: ${USER_TAP_IF} is used as a tap interface."
   TAP_IF=${USER_TAP_IF}
 fi
@@ -136,6 +151,11 @@ fi
 
 if [ -z ${FPGA} ]; then
   echo "Error: FPGA type is not set, use -t <fpga>."
+  exit -1
+fi
+
+if [ -z ${USER_BITSTREAM} ] && [ ! -f ${BITSTREAM} ]; then
+  echo "Error: no bitstream at ${BITSTREAM} or provided with -i <bitstream>."
   exit -1
 fi
 
