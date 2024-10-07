@@ -24,7 +24,7 @@ size_t brk_bytes_used();
 size_t mmap_bytes_used();
 size_t mmap_allocation_end();
 
-static constexpr size_t default_max_mem = 2_GiB;
+static constexpr size_t default_max_mem = 4_GiB;
 
 uintptr_t OS::heap_begin_ = 0;
 uintptr_t OS::heap_max_   = default_max_mem;
