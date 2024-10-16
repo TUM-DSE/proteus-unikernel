@@ -300,9 +300,7 @@ clGetDeviceInfo(cl_device_id   device,
     // buffer.as<cl_platform_id>() = xdevice->get_platform();
     break;
   case CL_DEVICE_NAME:
-    // Intel OpenCL code doesn't seem to care if it also gets this device name
-    // ret = update<const char*>(param, "xilinx_u50_gen3x16_xdma_201920_3\0");
-    ret = update<const char*>(param, "xilinx_u50_gen3x16_xdma_5_202210_1\0");
+    ret = update<const char*>(param, "Funky FPGA\0");
     // buffer.as<char>() = xdevice->get_name();
     break;
   case CL_DEVICE_VENDOR:
