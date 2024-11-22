@@ -67,6 +67,13 @@ void verify(vector<int, aligned_allocator<int> >& gold, vector<int, aligned_allo
     }
 }
 
+void print_time_summary(const std::string& app_name, const std::vector<uint64_t>& times) {
+    uint64_t avg_time = std::accumulate(times.begin(), times.end(), 0) / times.size();
+
+    std::cout << "app_name,iterations,avg_time\n";
+    std::cout << app_name << "," << times.size() << "," << avg_time << "\n";
+}
+
 // This example illustrates how to use array partitioning attributes in OpenCL
 // kernels for FPGA devices using matmul.
 int main(int argc, char** argv) {
@@ -155,10 +162,10 @@ int main(int argc, char** argv) {
     OCL_CHECK(err,
               cl::Buffer buffer_f(context, CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY, array_size_bytes, F.data(), &err));
 
-    printf(
-        "|-------------------------+-------------------------|\n"
-        "| Kernel                  |    Wall-Clock Time (ns) |\n"
-        "|-------------------------+-------------------------|\n");
+    // printf(
+    //     "|-------------------------+-------------------------|\n"
+    //     "| Kernel                  |    Wall-Clock Time (ns) |\n"
+    //     "|-------------------------+-------------------------|\n");
 
     OCL_CHECK(err, cl::Kernel matmul_kernel(program, "matmul", &err));
     OCL_CHECK(err, err = matmul_kernel.setArg(0, buffer_a));
@@ -169,18 +176,32 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_a, buffer_b}, 0 /* 0 means from host*/));
 
     cl::Event event;
-    uint64_t nstimestart, nstimeend;
+    const int num_iterations = 10000;
+    std::vector<uint64_t> nstimestart(num_iterations, 0);
+    std::vector<uint64_t> nstimeend(num_iterations, 0);
+    std::vector<uint64_t> nstimes(num_iterations, 0);
 
-    OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
-    q.finish();
+    // warm up
+    for (int i = 0; i < 5; i++) {
+        OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
+    }
 
-    OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
-    OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-    auto matmul_time = nstimeend - nstimestart;
+    for (int i = 0; i < num_iterations; i++) {
+        OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
 
-    verify(gold1, C);
-    printf("| %-23s | %23lu |\n", "matmul: ", matmul_time);
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
+        nstimes[i] = nstimeend[i] - nstimestart[i];
+
+        verify(gold1, C);
+        // printf("| %-23s | %23lu |\n", "matmul: ", nstimes[i]);
+    }
+
+    print_time_summary("cl_array_partition-matmul", nstimes);
 
     OCL_CHECK(err, cl::Kernel matmul_partition_kernel(program, "matmul_partition", &err));
 
@@ -190,25 +211,37 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = matmul_partition_kernel.setArg(3, columns));
 
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/));
-    OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
-    q.finish();
 
-    OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
-    OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-    auto matmul_partition_time = nstimeend - nstimestart;
+    // warm up
+    for (int i = 0; i < 5; i++) {
+        OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
+    }
 
-    verify(gold2, F);
+    for (int i = 0; i < num_iterations; i++) {
+        OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
 
-    printf("| %-23s | %23lu |\n", "matmul: partition", matmul_partition_time);
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
+        nstimes[i] = nstimeend[i] - nstimestart[i];
 
-    printf("|-------------------------+-------------------------|\n");
-    printf(
-        "Note: Wall Clock Time is meaningful for real hardware execution "
-        "only, not for emulation.\n");
-    printf(
-        "Please refer to profile summary for kernel execution time for "
-        "hardware emulation.\n");
+        verify(gold2, F);
+
+        // printf("| %-23s | %23lu |\n", "matmul: partition", nstimes[i]);
+    }
+
+    print_time_summary("cl_array_partition-matmul-partition", nstimes);
+
+    // printf("|-------------------------+-------------------------|\n");
+    // printf(
+    //     "Note: Wall Clock Time is meaningful for real hardware execution "
+    //     "only, not for emulation.\n");
+    // printf(
+    //     "Please refer to profile summary for kernel execution time for "
+    //     "hardware emulation.\n");
     printf("TEST PASSED\n\n");
 
     return EXIT_SUCCESS;

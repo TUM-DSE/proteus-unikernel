@@ -68,6 +68,13 @@ void verify(vector<int, aligned_allocator<int> >& gold, vector<int, aligned_allo
     }
 }
 
+void print_time_summary(const std::string& app_name, const std::vector<uint64_t>& times) {
+    uint64_t avg_time = std::accumulate(times.begin(), times.end(), 0) / times.size();
+
+    std::cout << "app_name,iterations,avg_time\n";
+    std::cout << app_name << "," << times.size() << "," << avg_time << "\n";
+}
+
 // This example illustrates how to use array partitioning attributes in OpenCL
 // kernels for FPGA devices using matmul.
 int main(int argc, char** argv) {
@@ -84,7 +91,7 @@ int main(int argc, char** argv) {
     cl::Program program;
 
     /* less iteration for emulation mode */
-    int iteration = xcl::is_emulation() ? 2 : 100;
+    int iteration = xcl::is_emulation() ? 2 : 10000;
 
     vector<int, aligned_allocator<int> > A(dims * dims);
     vector<int, aligned_allocator<int> > B(dims * dims);
@@ -208,6 +215,9 @@ int main(int argc, char** argv) {
         iteration);
     printf("| %-23s | %23lu |\n", "matmul: naive", matmul_time);
     printf("| %-23s | %23lu |\n", "matmul: partition", matmul_partition_time);
+    printf("app_name,iterations,avg_time\n");
+    printf("cl_partition_cyclicblock-matmul,%d,%lu\n", iteration, matmul_time / iteration);
+    printf("cl_partition_cyclicblock-matmul-partition,%d,%lu\n", iteration, matmul_partition_time / iteration);
     printf("|-------------------------+-------------------------|\n");
     printf(
         "Note: Wall Clock Time is meaningful for real hardware execution "

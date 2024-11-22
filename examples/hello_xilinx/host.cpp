@@ -24,6 +24,13 @@ static const std::string error_message =
     "Error: Result mismatch:\n"
     "i = %d CPU result = %d Device result = %d\n";
 
+void print_time_summary(std::string app_name, std::vector<uint64_t> times) {
+    uint64_t avg_time = std::accumulate(times.begin(), times.end(), 0) / times.size();
+
+    std::cout << "app_name,iterations,avg_time\n";
+    std::cout << app_name << "," << times.size() << "," << avg_time << "\n";
+}
+
 // This example illustrates the very simple OpenCL example that performs
 // an addition on two vectors
 int main(int argc, char** argv) {
@@ -102,36 +109,57 @@ int main(int argc, char** argv) {
     // DDR memory.
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_a, buffer_b}, 0 /* 0 means from host*/));
 
-    long count = 0;
-    long max_count = 100;
-    long max_ticks = max_count * 100'000'000;
+    // long count = 0;
+    // long max_count = 100;
+    // long max_ticks = max_count * 100'000'000;
 
-    std::cout << "Before launching kernel: counting to " << max_count - 1 << ":\n";
-    for (long i = 0; i < max_ticks ; i++) {
-        if (i % 100'000'000 == 0) {
-            std::cout << std::dec << count << "\n";
-            count++;
-        }
+    // std::cout << "Before launching kernel: counting to " << max_count - 1 << ":\n";
+    // for (long i = 0; i < max_ticks ; i++) {
+    //     if (i % 100'000'000 == 0) {
+    //         std::cout << std::dec << count << "\n";
+    //         count++;
+    //     }
+    // }
+
+    cl::Event event;
+    const int num_iterations = 10000;
+    std::vector<uint64_t> nstimestart(num_iterations, 0);
+    std::vector<uint64_t> nstimeend(num_iterations, 0);
+    std::vector<uint64_t> nstimes(num_iterations, 0);
+
+    // warm up
+    for (int i = 0; i < 5; i++) {
+        OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_result}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
     }
 
-    // Launch the Kernel
-    OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add));
+    for (int i = 0; i < num_iterations; i++) {
+        // Launch the Kernel
+        OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event));
 
-    // The result of the previous kernel execution will need to be retrieved in
-    // order to view the results. This call will write the data from the
-    // buffer_result cl_mem object to the source_results vector
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_result}, CL_MIGRATE_MEM_OBJECT_HOST));
-    q.finish();
+        // The result of the previous kernel execution will need to be retrieved in
+        // order to view the results. This call will write the data from the
+        // buffer_result cl_mem object to the source_results vector
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_result}, CL_MIGRATE_MEM_OBJECT_HOST));
+        q.finish();
 
-    count = 0;
-
-    std::cout << "After finishing kernel: counting to " << max_count - 1 << ":\n";
-    for (long i = 0; i < max_ticks ; i++) {
-        if (i % 100'000'000 == 0) {
-            std::cout << std::dec << count << "\n";
-            count++;
-        }
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
+        nstimes[i] = nstimeend[i] - nstimestart[i];
     }
+
+    print_time_summary("cl_helloworld", nstimes);
+
+    // count = 0;
+
+    // std::cout << "After finishing kernel: counting to " << max_count - 1 << ":\n";
+    // for (long i = 0; i < max_ticks ; i++) {
+    //     if (i % 100'000'000 == 0) {
+    //         std::cout << std::dec << count << "\n";
+    //         count++;
+    //     }
+    // }
 
     int match = 0;
     printf("Result = \n");
