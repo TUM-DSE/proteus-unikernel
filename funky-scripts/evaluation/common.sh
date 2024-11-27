@@ -2,7 +2,7 @@ DATE=`date "+%m%d%Y_%H%M%S"`
 
 ##### directory paths
 EVAL_SCRIPT_ROOT=$(readlink -f $(dirname ${BASH_SOURCE:-$0}))
-VITIS_EXAMPLES_DIR=${EVAL_SCRIPT_ROOT}/../../examples/Vitis_Accel_Examples
+VITIS_EXAMPLES_DIR=${EVAL_SCRIPT_ROOT}/../../examples/Vitis_Accel_Examples/ocl_kernels
 ROSETTA_DIR=${EVAL_SCRIPT_ROOT}/../../examples/Rosetta
 
 ##### params for unikernel execution
@@ -14,8 +14,9 @@ APP_BIN=build/funkycl-app
 UKVM_EXEC_CMD="${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
 
 ##### Vitis_Accel_Examples
-VITIS_EXAMPLES_APPS=(array_partition axi_burst_performance bind_op_storage burst_rw critical_path custom_datatype dataflow_stream dataflow_stream_array dependence_inter kernel_chain lmem_2rw loop_pipeline loop_reorder partition_cyclicblock port_width_widening shift_register simple_vadd systolic_array wide_mem_rw)
-VITIS_EXAMPLES_ARGS=("matmul.xclbin" "-x1 ./test_kernel_maxi_256bit.xclbin -x2 ./test_kernel_maxi_512bit.xclbin" "vadd.xclbin" "vadd.xclbin" "-x apply_watermark_GOOD.xclbin -i xilinx_img.bmp -c golden.bmp" "-x rgb_to_hsv.xclbin -i xilinx_logo.bmp" "adder.xclbin" "N_stage_Adders.xclbin" "vconv.xclbin" "krnl_mmult.xclbin" "vadd.xclbin" "vector_addition.xclbin" "mmult.xclbin" "matmul.xclbin" "krnl_port_widen.xclbin" "fir.xclbin" "krnl_vadd.xclbin" "mmult.xclbin" "vadd.xclbin")
+VITIS_EXAMPLES_APPS=(cl_array_partition cl_burst_rw cl_dataflow_func cl_dataflow_subfunc cl_gmem_2banks cl_helloworld cl_lmem_2rw cl_loop_reorder cl_partition_cyclicblock cl_shift_register cl_systolic_array cl_wide_mem_rw)
+# We pass dummy args instead of the bitstream because the monitor handles bitstreams
+VITIS_EXAMPLES_ARGS=(a a a a a a a a a a a a)
 
 ##### Rosetta
 ROSETTA_APPS=(3d-rendering digit-recognition optical-flow spam-filter)
