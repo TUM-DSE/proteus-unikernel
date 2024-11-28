@@ -67,13 +67,6 @@ void verify(vector<int, aligned_allocator<int> >& gold, vector<int, aligned_allo
     }
 }
 
-void print_time_summary(const std::string& app_name, const std::vector<uint64_t>& times) {
-    uint64_t avg_time = std::accumulate(times.begin(), times.end(), 0) / times.size();
-
-    std::cout << "app_name,iterations,avg_time\n";
-    std::cout << app_name << "," << times.size() << "," << avg_time << "\n";
-}
-
 // This example illustrates how to use array partitioning attributes in OpenCL
 // kernels for FPGA devices using matmul.
 int main(int argc, char** argv) {
@@ -177,31 +170,26 @@ int main(int argc, char** argv) {
 
     cl::Event event;
     const int num_iterations = 10000;
-    std::vector<uint64_t> nstimestart(num_iterations, 0);
-    std::vector<uint64_t> nstimeend(num_iterations, 0);
-    std::vector<uint64_t> nstimes(num_iterations, 0);
-
-    // warm up
-    for (int i = 0; i < 5; i++) {
-        OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
-        q.finish();
-    }
+    uint64_t nstimestart = 0;
+    uint64_t nstimeend = 0;
+    uint64_t nstime = 0;
 
     for (int i = 0; i < num_iterations; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
 
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
-        nstimes[i] = nstimeend[i] - nstimestart[i];
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime += nstimeend - nstimestart;
 
         verify(gold1, C);
         // printf("| %-23s | %23lu |\n", "matmul: ", nstimes[i]);
     }
 
-    print_time_summary("cl_array_partition-matmul", nstimes);
+    std::cout << "app, iterations, avg-time\n";
+    std::cout << "cl_array_partition-matmul" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
+    nstime = 0;
 
     OCL_CHECK(err, cl::Kernel matmul_partition_kernel(program, "matmul_partition", &err));
 
@@ -212,28 +200,21 @@ int main(int argc, char** argv) {
 
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/));
 
-    // warm up
-    for (int i = 0; i < 5; i++) {
-        OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
-        q.finish();
-    }
-
     for (int i = 0; i < num_iterations; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
 
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
-        nstimes[i] = nstimeend[i] - nstimestart[i];
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime += nstimeend - nstimestart;
 
         verify(gold2, F);
 
         // printf("| %-23s | %23lu |\n", "matmul: partition", nstimes[i]);
     }
 
-    print_time_summary("cl_array_partition-matmul-partition", nstimes);
+    std::cout << "cl_array_partition-matmul-partition" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
 
     // printf("|-------------------------+-------------------------|\n");
     // printf(

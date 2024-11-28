@@ -162,9 +162,9 @@ int main(int argc, char** argv) {
     }
     printf("Example Testdata Signal_Length=%u for %d iteration\n", signal_size, iterations);
     print_summary("fir_naive", "fir_shift_register", fir_naive_time, fir_sr_time, iterations);
-    printf("app_name,iterations,avg_time\n");
-    printf("cl_shift_register-naive,%d,%lu\n", iterations, fir_naive_time / iterations);
-    printf("cl_shift_register-shift-reg,%d,%lu\n", iterations, fir_sr_time / iterations);
+    printf("app, iterations, avg-time\n");
+    printf("cl_shift_register-naive, %d, %lu\n", iterations, fir_naive_time / iterations);
+    printf("cl_shift_register-shift-reg, %d, %lu\n", iterations, fir_sr_time / iterations);
     printf("TEST PASSED\n");
     return EXIT_SUCCESS;
 }

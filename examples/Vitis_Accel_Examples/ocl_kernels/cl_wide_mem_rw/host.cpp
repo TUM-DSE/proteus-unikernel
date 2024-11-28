@@ -23,13 +23,6 @@
 // will read 16 integers value.
 #define DATA_SIZE 16384
 
-void print_time_summary(const std::string& app_name, const std::vector<uint64_t>& times) {
-    uint64_t avg_time = std::accumulate(times.begin(), times.end(), 0) / times.size();
-
-    std::cout << "app_name,iterations,avg_time\n";
-    std::cout << app_name << "," << times.size() << "," << avg_time << "\n";
-}
-
 int main(int argc, char** argv) {
     if (argc != 2) {
         std::cout << "Usage: " << argv[0] << " <XCLBIN File>" << std::endl;
@@ -108,16 +101,9 @@ int main(int argc, char** argv) {
 
     cl::Event event;
     const int num_iterations = 10000;
-    std::vector<uint64_t> nstimestart(num_iterations, 0);
-    std::vector<uint64_t> nstimeend(num_iterations, 0);
-    std::vector<uint64_t> nstimes(num_iterations, 0);
-
-    // warm up
-    for (int i = 0; i < 5; i++) {
-        OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event));
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST));
-        OCL_CHECK(err, err = q.finish());
-    }
+    uint64_t nstimestart = 0;
+    uint64_t nstimeend = 0;
+    uint64_t nstime = 0;
 
     for (int i = 0; i < num_iterations; i++) {
         // Launch the Kernel
@@ -127,12 +113,13 @@ int main(int argc, char** argv) {
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST));
         OCL_CHECK(err, err = q.finish());
 
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart[i]));
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend[i]));
-        nstimes[i] = nstimeend[i] - nstimestart[i];
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime += nstimeend - nstimestart;
     }
 
-    print_time_summary("cl_wide_mem_rw", nstimes);
+    std::cout << "app, iterations, avg-time\n";
+    std::cout << "cl_wide_mem_rw" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
 
     // OPENCL HOST CODE AREA END
 
