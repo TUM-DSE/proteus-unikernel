@@ -21,4 +21,4 @@ build_benchmark() {
 }
 
 build_benchmark ${VITIS_EXAMPLES_DIR} VITIS_EXAMPLES_APPS
-build_benchmark ${ROSETTA_DIR} ROSETTA_APPS
+#build_benchmark ${ROSETTA_DIR} ROSETTA_APPS
