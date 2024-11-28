@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 BUILD_DIR=build/
 
 function usage {
@@ -54,7 +55,7 @@ fi
 
 mkdir ${BUILD_DIR}
 pushd ${BUILD_DIR}
-PLATFORM=x86_solo5 cmake -DCMAKE_BUILD_TYPE=Debug ..
+PLATFORM=x86_solo5 cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ..
 make -j 8
 popd
 
