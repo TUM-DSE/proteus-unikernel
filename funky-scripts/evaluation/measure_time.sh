@@ -71,5 +71,5 @@ DIR="time_$DATE"
 mkdir -p ${EVAL_SCRIPT_ROOT}/$DIR
 
 measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis.csv" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
-#measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta.csv" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
+measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta.csv" /share/felix/bitstreams/rosetta-funky ${FPGA} ${SPEED}
 
