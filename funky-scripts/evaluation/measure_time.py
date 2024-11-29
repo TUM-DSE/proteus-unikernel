@@ -12,7 +12,10 @@ result_dir = sys.argv[1]
 out_csv = open(sys.argv[2], 'a')
 in_csv = open(sys.argv[3], 'r')
 repeat = int(sys.argv[4])
-exec_cmd_base = sys.argv[5:]
+bitstream_dir = sys.argv[5]
+fpga = sys.argv[6]
+speed = sys.argv[7]
+exec_cmd_base = sys.argv[8:]
 
 # print("dir ", result_dir)
 # print("out csv ", sys.argv[2])
@@ -45,6 +48,9 @@ for cnt in range(repeat):
         # prepare exec command
         exec_cmd = exec_cmd_base.copy()
         exec_cmd.append(exec_cmd_arg)
+
+        # link the bitstream to /tmp/bitstream_0.ukvm
+        subprocess.run(["ln", "-sf", f"{bitstream_dir}/{app_name}/{fpga}-{speed}/bitstream", "/tmp/bitstream_0.ukvm"])
 
         # measure time
         print(app_name, end=", ")

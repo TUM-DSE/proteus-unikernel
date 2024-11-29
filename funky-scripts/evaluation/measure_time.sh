@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 source ./common.sh
 
@@ -6,9 +7,12 @@ function usage {
   cat <<EOF
 
 Usage: 
-  $(basename ${0}) <repeat>
+  $(basename ${0}) <repeat> <fpga> <speed>
 
-  Measure the end-to-end execution time of workloads in Vitis_Accel_Examples/ and Rosetta/.
+  <fpga>  u50, u280, arria10
+  <speed> 300mhz, faster
+
+  Measure the end-to-end execution time of workloads in Vitis_Accel_Examples/ocl_kernels and Rosetta/.
   clock_gettime() with MONOTONIC timer is used for the measurement. 
 
 EOF
@@ -23,6 +27,9 @@ measure_time() {
   arg_repeat=$2
   arg_ifile=$3
   arg_ofile=$4
+  bitstream_dir=$5
+  fpga=$6
+  speed=$7
 
   ### create dir where the results are saved
   RESULTS_DIR="${EVAL_SCRIPT_ROOT}/time_$DATE"
@@ -42,7 +49,8 @@ measure_time() {
   pushd ${arg_benchdir}
 
   # python3 ${EVAL_SCRIPT_ROOT}/measure_time.py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${UKVM_EXEC_CMD}
-  measure_ukvm_exec_time_py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${UKVM_EXEC_CMD}
+  measure_ukvm_exec_time_py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${bitstream_dir} ${fpga} ${speed} \
+    "${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${fpga} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
 
   popd
   echo "back to $(pwd)."
@@ -51,15 +59,17 @@ measure_time() {
 set_ukvm_permission # make ukvm-bin executable
 
 REPEAT=$1
+FPGA=$2
+SPEED=$3
 
-if [ -z ${REPEAT} ]; then
+if [ -z "$REPEAT" ] || [ -z "$FPGA" ] || [ -z "$SPEED" ]; then
   usage
-  exit -1
+  exit 1
 fi
 
 DIR="time_$DATE"
 mkdir -p ${EVAL_SCRIPT_ROOT}/$DIR
 
-measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis.csv"
-measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta.csv"
+measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis.csv" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
+#measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta.csv" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
 
