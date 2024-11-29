@@ -24,7 +24,7 @@ typedef unsigned char      LabelType;
   // target device
   // change here to map to a different device
   // const std::string TARGET_DEVICE = "xilinx_aws-vu9p-f1-04261818_dynamic_5_0";
-  const std::string TARGET_DEVICE = "xilinx_u50_gen3x16_xdma_201920_3";
+  const std::string TARGET_DEVICE = "Funky FPGA";
 #endif
 
 #ifdef SDSOC

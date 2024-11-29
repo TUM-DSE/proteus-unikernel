@@ -53,7 +53,7 @@ typedef struct{
   #include <string>
   // change the target device here
   // const std::string TARGET_DEVICE = "xilinx_aws-vu9p-f1-04261818_dynamic_5_0";
-  const std::string TARGET_DEVICE = "xilinx_u50_gen3x16_xdma_201920_3";
+  const std::string TARGET_DEVICE = "Funky FPGA";
 #endif
 
 #endif

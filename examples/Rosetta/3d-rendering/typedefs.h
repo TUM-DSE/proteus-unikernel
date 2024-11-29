@@ -15,7 +15,7 @@ const int MAX_Y = 256;
 
 // number of values in frame buffer: 32 bits
 const int NUM_FB = MAX_X * MAX_Y / 4;
-// dataset information 
+// dataset information
 const int NUM_3D_TRI = 3192;
 
 #ifdef OCL
@@ -23,7 +23,7 @@ const int NUM_3D_TRI = 3192;
   // target device
   // change here to map to a different device
   // const std::string TARGET_DEVICE = "xilinx_aws-vu9p-f1-04261818_dynamic_5_0";
-  const std::string TARGET_DEVICE = "xilinx_u50_gen3x16_xdma_201920_3";
+  const std::string TARGET_DEVICE = "Funky FPGA";
 #endif
 
 #ifndef SW

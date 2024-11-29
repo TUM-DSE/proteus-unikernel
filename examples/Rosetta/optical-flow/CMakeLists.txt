@@ -57,4 +57,4 @@ set(LIBRARIES
 include($ENV{INCLUDEOS_PREFIX}/includeos/post.service.cmake)
 
 # mount a bitstream file in VFS by using memdisk
-diskbuilder(../../../xclbin/u50/optical-flow)
+diskbuilder(data)
