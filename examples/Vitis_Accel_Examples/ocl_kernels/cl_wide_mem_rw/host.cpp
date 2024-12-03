@@ -118,8 +118,8 @@ int main(int argc, char** argv) {
         nstime += nstimeend - nstimestart;
     }
 
-    std::cout << "app, iterations, avg-time\n";
-    std::cout << "cl_wide_mem_rw" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
+    std::cout << "cl_wide_mem_rw" << "," << vector_size_bytes * 2 << "," << num_iterations << "," << nstime / num_iterations << "\n";
 
     // OPENCL HOST CODE AREA END
 

@@ -151,8 +151,8 @@ int main(int argc, char** argv) {
         nstime += nstimeend - nstimestart;
     }
 
-    std::cout << "app, iterations, avg-time\n";
-    std::cout << "cl_loop_reorder" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
+    std::cout << "cl_loop_reorder" << "," << matrix_size_bytes * 2 << "," << num_iterations << "," << nstime / num_iterations << "\n";
 
     // OPENCL HOST CODE AREA END
 

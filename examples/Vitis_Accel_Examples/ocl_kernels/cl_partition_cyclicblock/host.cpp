@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     cl::Event event;
     uint64_t nstimestart, nstimeend;
     uint64_t matmul_time = 0;
-    for (int i = 0; i < iteration; i++) {
+    for (int i = 0; i < iteration / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -190,7 +190,7 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/));
 
     uint64_t matmul_partition_time = 0;
-    for (int i = 0; i < iteration; i++) {
+    for (int i = 0; i < iteration / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -208,9 +208,11 @@ int main(int argc, char** argv) {
         iteration);
     printf("| %-23s | %23lu |\n", "matmul: naive", matmul_time);
     printf("| %-23s | %23lu |\n", "matmul: partition", matmul_partition_time);
-    printf("app, iterations, avg-time\n");
+
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
+    std::cout << "cl_partition_cyclicblock" << "," << array_size_bytes * 2 << "," << iteration << (matmul_time + matmul_partition_time) / iteration << "\n";
+
     printf("cl_partition_cyclicblock-matmul, %d, %lu\n", iteration, matmul_time / iteration);
-    printf("cl_partition_cyclicblock-matmul-partition, %d, %lu\n", iteration, matmul_partition_time / iteration);
     printf("|-------------------------+-------------------------|\n");
     printf(
         "Note: Wall Clock Time is meaningful for real hardware execution "

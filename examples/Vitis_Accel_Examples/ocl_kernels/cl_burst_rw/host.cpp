@@ -105,10 +105,10 @@ int main(int argc, char** argv) {
         OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
         nstime += nstimeend - nstimestart;
     }
-
-    std::cout << "app, iterations, avg-time\n";
-    std::cout << "cl_burst_rw" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
     // OPENCL HOST CODE AREA END
+
+    std::cout << "app_name,kernel_input_data_size,iterations,avg-time\n";
+    std::cout << "cl_burst_rw" << "," << vector_size_bytes << "," << num_iterations << "," << nstime / num_iterations << "\n";
 
     // Compare the results of the Device to the simulation
     int match = 0;

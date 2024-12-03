@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
     uint64_t nstimeend = 0;
     uint64_t nstime = 0;
 
-    for (int i = 0; i < num_iterations; i++) {
+    for (int i = 0; i < num_iterations / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -187,10 +187,6 @@ int main(int argc, char** argv) {
         // printf("| %-23s | %23lu |\n", "matmul: ", nstimes[i]);
     }
 
-    std::cout << "app, iterations, avg-time\n";
-    std::cout << "cl_array_partition-matmul" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
-    nstime = 0;
-
     OCL_CHECK(err, cl::Kernel matmul_partition_kernel(program, "matmul_partition", &err));
 
     OCL_CHECK(err, err = matmul_partition_kernel.setArg(0, buffer_d));
@@ -200,7 +196,7 @@ int main(int argc, char** argv) {
 
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/));
 
-    for (int i = 0; i < num_iterations; i++) {
+    for (int i = 0; i < num_iterations / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -214,7 +210,8 @@ int main(int argc, char** argv) {
         // printf("| %-23s | %23lu |\n", "matmul: partition", nstimes[i]);
     }
 
-    std::cout << "cl_array_partition-matmul-partition" << ", " << num_iterations << ", " << nstime / num_iterations << "\n";
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
+    std::cout << "cl_array_partition" << "," << array_size_bytes * 2 << "," << num_iterations << "," << nstime / num_iterations << "\n";
 
     // printf("|-------------------------+-------------------------|\n");
     // printf(

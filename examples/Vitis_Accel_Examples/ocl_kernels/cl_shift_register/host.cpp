@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
     int iterations = xcl::is_emulation() ? 2 : 100;
     uint64_t fir_naive_time = 0;
     // Running naive kernel iterations times
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < iterations / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(fir_naive_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output_A}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
 
     uint64_t fir_sr_time = 0;
     // Running Shift Register FIR iterations times
-    for (int i = 0; i < iterations; i++) {
+    for (int i = 0; i < iterations / 2; i++) {
         OCL_CHECK(err, err = q.enqueueTask(fir_sr_kernel, nullptr, &event));
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output_B}, CL_MIGRATE_MEM_OBJECT_HOST));
         q.finish();
@@ -162,9 +162,10 @@ int main(int argc, char** argv) {
     }
     printf("Example Testdata Signal_Length=%u for %d iteration\n", signal_size, iterations);
     print_summary("fir_naive", "fir_shift_register", fir_naive_time, fir_sr_time, iterations);
-    printf("app, iterations, avg-time\n");
-    printf("cl_shift_register-naive, %d, %lu\n", iterations, fir_naive_time / iterations);
-    printf("cl_shift_register-shift-reg, %d, %lu\n", iterations, fir_sr_time / iterations);
+
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
+    std::cout << "cl_shift_register" << "," << size_in_bytes + coeff_size_in_bytes << "," << iterations << "," << (fir_naive_time + fir_sr_time) / iterations << "\n";
+
     printf("TEST PASSED\n");
     return EXIT_SUCCESS;
 }
