@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
     }
     // OPENCL HOST CODE AREA END
 
-    std::cout << "app_name,kernel_input_data_size,iterations,avg-time\n";
+    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
     std::cout << "cl_burst_rw" << "," << vector_size_bytes << "," << num_iterations << "," << nstime / num_iterations << "\n";
 
     // Compare the results of the Device to the simulation
