@@ -35,7 +35,8 @@ measure_time() {
   RESULTS_DIR="${EVAL_SCRIPT_ROOT}/time_$DATE"
   mkdir -p ${RESULTS_DIR}
   APPLIST_CSV="${EVAL_SCRIPT_ROOT}/${arg_ifile}"
-  RESULTS_CSV="${RESULTS_DIR}/${arg_ofile}"
+  RESULTS_CSV="${RESULTS_DIR}/${arg_ofile}.csv"
+  KERNEL_RESULTS_CSV="$RESULTS_DIR"/"$arg_ofile"-kernel.csv
 
   ### add label to csv 
   echo -n "app_name, " >> ${RESULTS_CSV}
@@ -43,6 +44,8 @@ measure_time() {
     echo -n "${loop}, " >> ${RESULTS_CSV}
   done
   echo "average, stdev, " >> ${RESULTS_CSV}
+
+  echo "app_name,kernel_input_data_size,iterations,avg_time" >> "$KERNEL_RESULTS_CSV"
 
   ### execution
   echo "move into ${arg_benchdir}..."
@@ -54,6 +57,10 @@ measure_time() {
 
   popd
   echo "back to $(pwd)."
+
+  for log_file in "$RESULTS_DIR"/cl_*; do
+    grep -A 1 "app_name,kernel_input_data_size,iterations,avg_time" "$log_file" | head -n 2 | tail -n 1 >> "$KERNEL_RESULTS_CSV" || echo "Failed to find kernel performance data in $log_file"
+  done
 }
 
 set_ukvm_permission # make ukvm-bin executable
@@ -70,6 +77,6 @@ fi
 DIR="time_$DATE"
 mkdir -p ${EVAL_SCRIPT_ROOT}/$DIR
 
-measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis.csv" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
-measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta.csv" /share/felix/bitstreams/rosetta-funky ${FPGA} ${SPEED}
+measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
+measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky ${FPGA} ${SPEED}
 
