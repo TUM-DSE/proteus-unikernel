@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
     printf("| %-23s | %23lu |\n", "matmul: partition", matmul_partition_time);
 
     std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
-    std::cout << "cl_partition_cyclicblock" << "," << array_size_bytes * 2 << "," << iteration << (matmul_time + matmul_partition_time) / iteration << "\n";
+    std::cout << "cl_partition_cyclicblock" << "," << array_size_bytes * 2 << "," << iteration << "," << (matmul_time + matmul_partition_time) / iteration << "\n";
 
     printf("cl_partition_cyclicblock-matmul, %d, %lu\n", iteration, matmul_time / iteration);
     printf("|-------------------------+-------------------------|\n");
