@@ -37,6 +37,7 @@ measure_time() {
   APPLIST_CSV="${EVAL_SCRIPT_ROOT}/${arg_ifile}"
   RESULTS_CSV="${RESULTS_DIR}/${arg_ofile}.csv"
   KERNEL_RESULTS_CSV="$RESULTS_DIR"/"$arg_ofile"-kernel.csv
+  KERNEL_RESULTS_HEADER="app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time"
 
   ### add label to csv 
   echo -n "app_name, " >> ${RESULTS_CSV}
@@ -45,7 +46,7 @@ measure_time() {
   done
   echo "average, stdev, " >> ${RESULTS_CSV}
 
-  echo "app_name,kernel_input_data_size,iterations,avg_time" >> "$KERNEL_RESULTS_CSV"
+  echo "$KERNEL_RESULTS_HEADER" >> "$KERNEL_RESULTS_CSV"
 
   ### execution
   echo "move into ${arg_benchdir}..."
@@ -59,7 +60,10 @@ measure_time() {
   echo "back to $(pwd)."
 
   for log_file in "$RESULTS_DIR"/cl_*; do
-    grep -A 1 "app_name,kernel_input_data_size,iterations,avg_time" "$log_file" | head -n 2 | tail -n 1 >> "$KERNEL_RESULTS_CSV" || echo "Failed to find kernel performance data in $log_file"
+    # Each application prints the header followed by the data in the next line
+    grep -A 1 "$KERNEL_RESULTS_HEADER" "$log_file" \
+      | head -n 2 | tail -n 1 >> "$KERNEL_RESULTS_CSV" \
+      || echo "Failed to find kernel performance data in $log_file"
   done
 }
 

@@ -166,26 +166,38 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = matmul_kernel.setArg(2, buffer_c));
     OCL_CHECK(err, err = matmul_kernel.setArg(3, columns));
 
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_a, buffer_b}, 0 /* 0 means from host*/));
-
-    cl::Event event;
-    const int num_iterations = 10000;
+    cl::Event event_kernel;
+    cl::Event event_data_to_fpga;
+    cl::Event event_data_to_host;
+    const int iterations = 10000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
-    uint64_t nstime = 0;
+    uint64_t nstime_kernel = 0;
+    uint64_t nstime_data_to_fpga = 0;
+    uint64_t nstime_data_to_host = 0;
 
-    for (int i = 0; i < num_iterations / 2; i++) {
-        OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event));
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST));
+    for (int i = 0; i < iterations / 2; i++) {
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_a, buffer_b}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
+        OCL_CHECK(err, err = q.enqueueTask(matmul_kernel, nullptr, &event_kernel));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_c}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
         q.finish();
 
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime += nstimeend - nstimestart;
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_fpga += nstimeend - nstimestart;
 
-        verify(gold1, C);
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_kernel += nstimeend - nstimestart;
+
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_host += nstimeend - nstimestart;
+
         // printf("| %-23s | %23lu |\n", "matmul: ", nstimes[i]);
     }
+
+    verify(gold1, C);
 
     OCL_CHECK(err, cl::Kernel matmul_partition_kernel(program, "matmul_partition", &err));
 
@@ -194,24 +206,36 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = matmul_partition_kernel.setArg(2, buffer_f));
     OCL_CHECK(err, err = matmul_partition_kernel.setArg(3, columns));
 
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/));
-
-    for (int i = 0; i < num_iterations / 2; i++) {
-        OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event));
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST));
+    for (int i = 0; i < iterations / 2; i++) {
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_d, buffer_e}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
+        OCL_CHECK(err, err = q.enqueueTask(matmul_partition_kernel, nullptr, &event_kernel));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_f}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
         q.finish();
 
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
-        OCL_CHECK(err, err = event.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime += nstimeend - nstimestart;
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_fpga += nstimeend - nstimestart;
 
-        verify(gold2, F);
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_kernel += nstimeend - nstimestart;
+
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_host += nstimeend - nstimestart;
 
         // printf("| %-23s | %23lu |\n", "matmul: partition", nstimes[i]);
     }
 
-    std::cout << "app_name,kernel_input_data_size,iterations,avg_time\n";
-    std::cout << "cl_array_partition" << "," << array_size_bytes * 2 << "," << num_iterations << "," << nstime / num_iterations << "\n";
+    verify(gold2, F);
+
+    std::cout << "app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time\n";
+    std::cout << "cl_array_partition,"
+              << array_size_bytes * 2 << ","
+              << iterations << ","
+              << nstime_data_to_fpga / iterations << ","
+              << nstime_kernel / iterations << ","
+              << nstime_data_to_host / iterations << "\n";
 
     // printf("|-------------------------+-------------------------|\n");
     // printf(
