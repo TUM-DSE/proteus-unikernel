@@ -77,14 +77,14 @@ int main(int argc, char** argv) {
     }
 
     std::string binaryFile = argv[1];
-    static const int dims = 64;
+    static const int dims = 64; // columns * rows * sizeof(int) * 2 = 32 KB
     cl_int err;
     cl::Context context;
     cl::CommandQueue q;
     cl::Program program;
 
     /* less iteration for emulation mode */
-    int iterations = xcl::is_emulation() ? 2 : 10000;
+    int iterations = xcl::is_emulation() ? 2 : 1000;
 
     vector<int, aligned_allocator<int> > A(dims * dims);
     vector<int, aligned_allocator<int> > B(dims * dims);

@@ -76,8 +76,9 @@ int main(int argc, char** argv) {
     }
 
     std::string binaryFile = argv[1];
-    static const int columns = 16;
-    static const int rows = 16;
+    // Total data size = columns * rows * sizeof(int) * 2 = 32 KB
+    static const int columns = 64;
+    static const int rows = 64;
     cl_int err;
     cl::Program program;
     cl::CommandQueue q;
@@ -169,7 +170,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;

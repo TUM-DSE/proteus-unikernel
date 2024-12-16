@@ -29,10 +29,10 @@ Description:
 #include <vector>
 
 // Array Size to access
-#define DATA_SIZE 12
+#define DATA_SIZE 24 // columns * rows * sizeof(int) * 2 = 4608 B
 
 // Maximum Array Size
-#define MAX_SIZE 12
+#define MAX_SIZE 24
 
 // Software implementation of Matrix Multiplication
 // The inputs are of the size (DATA_SIZE x DATA_SIZE)
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;

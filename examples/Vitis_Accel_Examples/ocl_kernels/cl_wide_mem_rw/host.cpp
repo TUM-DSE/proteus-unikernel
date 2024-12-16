@@ -21,7 +21,9 @@
 // datatype
 // to read the operands from Global Memory. So every read/write to global memory
 // will read 16 integers value.
-#define DATA_SIZE 16384
+// As the other examples only read 1 int from memory at once, we use 16 times the
+// data size of the other examples
+#define DATA_SIZE (1024 * 1024) // * 2 * sizeof(int) = 8 MB
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -99,7 +101,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;

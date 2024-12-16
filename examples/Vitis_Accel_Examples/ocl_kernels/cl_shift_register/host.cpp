@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#define SIGNAL_SIZE (1024 * 1024)
+#define SIGNAL_SIZE (128 * 1024) // * sizeof(int) = 512 KB
 #define SIGNAL_SIZE_IN_EMU 1024
 
 using std::default_random_engine;

@@ -19,7 +19,7 @@
 
 using std::vector;
 
-static const int DATA_SIZE = 1024;
+static const int DATA_SIZE = 64 * 1024; // * 2 * sizeof(int) = 512 KB
 static const std::string error_message =
     "Error: Result mismatch:\n"
     "i = %d CPU result = %d Device result = %d\n";
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;

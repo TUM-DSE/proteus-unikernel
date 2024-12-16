@@ -21,7 +21,7 @@ Description: Vitis Vector Addition to utilize both Ports of BRAM memory
 #include "xcl2/xcl2.hpp"
 #include <vector>
 
-#define DATA_SIZE 4096
+#define DATA_SIZE (64 * 1024) // * 2 * sizeof(int) = 512 KB
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;

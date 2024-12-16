@@ -18,7 +18,7 @@
 #include "xcl2/xcl2.hpp"
 #include <vector>
 
-#define DATA_SIZE 4096
+#define DATA_SIZE (128 * 1024) // * sizeof(int) = 512 KB
 #define INCR_VALUE 10
 
 int main(int argc, char** argv) {
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 10000;
+    const int iterations = 1000;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
     uint64_t nstime_kernel = 0;
