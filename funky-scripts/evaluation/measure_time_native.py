@@ -29,7 +29,8 @@ for cnt in range(repeat):
     for i,row in enumerate(app_list):
         app_name = row[0]
 
-        log = open(result_dir+"/"+app_name+".log", 'a')
+        log_filename = f"{result_dir}/{app_name}-{fpga}-{speed}.log"
+        log = open(log_filename, 'a')
         os.chdir(app_name)
         # print("current app dir: ", os.getcwd())
 
@@ -58,25 +59,45 @@ for cnt in range(repeat):
 
         os.chdir("../")
 
-print(dict_results)
-
-# Write results to csv
+# Add detailed timing data from applications' stdout and write results to csv.
+# Each application prints the header followed by the data in the next line.
+detailed_times_header = "app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time\n"
 in_csv.seek(0)
 for i,row in enumerate(app_list):
     writer = csv.writer(out_csv)
     app_name = row[0]
+    detailed_times = None
+    log_filename = f"{result_dir}/{app_name}-{fpga}-{speed}.log"
+    log = open(log_filename, 'r')
+    lines = log.readlines()
 
     # calculate avg, stdev
     times = dict_results[app_name].copy();
 
-    if len(times) > 1:
+    if len(times) == 1:
+        times.append(times[-1]) # average is just the one measurement
+        times.append(0) # stddev
+    else:
         avg_time = sum(times)/len(times)
         stddev   = stat.stdev(times)
         times.append(avg_time)
         times.append(stddev)
 
+    for i in range(len(lines)):
+        if lines[i] == detailed_times_header:
+            detailed_times = lines[i+1]
+            break
+
+    if detailed_times is None:
+        print(f"Failed to find detailed time measurements in {log_filename}")
+        for _ in range(5):
+            times.append(float("NaN"))
+    else:
+        values = detailed_times.split(",")
+        for val in values[1:]:
+            times.append(val.strip())
+
     # write values to csv
     times.insert(0, app_name)
-    print(times)
     writer.writerow(times)
 
