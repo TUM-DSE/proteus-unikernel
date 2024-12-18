@@ -7,7 +7,7 @@ function usage {
   cat <<EOF
 
 Usage:
-  $(basename ${0}) <repeat> <fpga> <speed>
+  $(basename ${0}) <repeat> <fpga>-<speed>...
 
   <fpga>  u50, u280, arria10
   <speed> slow, fast, ddr-slow, ddr-fast
@@ -50,15 +50,21 @@ measure_time() {
 
 set_ukvm_permission # make ukvm-bin executable
 
-REPEAT=$1
-FPGA=$2
-SPEED=$3
-
-if [ -z "$REPEAT" ] || [ -z "$FPGA" ] || [ -z "$SPEED" ]; then
+repeat=$1
+if [ -z "$repeat" ]; then
   usage
   exit 1
 fi
 
-measure_time /home/felix/Projects/vitis-accel-examples/ocl_kernels ${REPEAT} "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
-#measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky ${FPGA} ${SPEED}
+for fpga in "${@:2}"; do
+  model=${fpga%-*}
+  speed=${fpga#*-}
+  if [ -z "$model" ] || [ -z "$speed" ]; then
+    usage
+    exit 1
+  fi
 
+  echo ["$(date +%T)"] "$fpga":
+  measure_time /home/felix/Projects/vitis-accel-examples/ocl_kernels "$repeat" "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
+  #measure_time ${ROSETTA_DIR} "$repeat" "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky "$model" "$speed"
+done
