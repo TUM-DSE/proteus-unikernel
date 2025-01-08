@@ -57,7 +57,7 @@ if [ -z "$repeat" ]; then
 fi
 
 for fpga in "${@:2}"; do
-  model=${fpga%-*}
+  model=${fpga%%-*}
   speed=${fpga#*-}
   if [ -z "$model" ] || [ -z "$speed" ]; then
     usage
