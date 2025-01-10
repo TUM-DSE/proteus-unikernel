@@ -49,6 +49,13 @@ for cnt in range(repeat):
         # prepare exec command
         exec_cmd = [f"./{app_name}", bitstream]
 
+        # memory type argument
+        if app_name in ["cl_wide_mem_rw_2x", "cl_wide_mem_rw_4x"]:
+            mem_arg = "0"
+            if "ddr" in speed:
+                mem_arg = "1"
+            exec_cmd.append(mem_arg)
+
         # measure time
         print(app_name, end=", ")
         t1  = time.clock_gettime(clk)
