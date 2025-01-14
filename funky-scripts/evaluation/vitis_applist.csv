@@ -9,3 +9,6 @@ cl_partition_cyclicblock, a
 cl_shift_register, a
 cl_systolic_array, a
 cl_wide_mem_rw, a
+cl_wide_mem_rw_strm, a
+cl_wide_mem_rw_2x, a
+cl_wide_mem_rw_4x, a
