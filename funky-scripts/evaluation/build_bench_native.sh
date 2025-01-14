@@ -11,8 +11,8 @@ build_benchmark() {
     echo "build ${arg_apps[$i]}..."
     cd ${arg_dir}/${arg_apps[$i]}
 
-    make "${arg_apps[$i]}" &> /dev/null || echo "building ${arg_apps[$i]} failed" &
-  done 
+    make host &> /dev/null || echo "building ${arg_apps[$i]} failed" &
+  done
 
   for job in $(jobs -p); do
     wait "$job"
