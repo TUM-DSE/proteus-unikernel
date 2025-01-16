@@ -38,7 +38,7 @@ measure_time() {
   for loop in $(seq 1 ${arg_repeat}); do
     echo -n "${loop}," >> ${RESULTS_CSV}
   done
-  echo "average,stddev,kernel_input_data_size,kernel_iterations,time_cpu,data_to_fpga_ocl,kernel_ocl,data_to_host_ocl" >> ${RESULTS_CSV}
+  echo "average,stddev,kernel_input_data_size,kernel_output_data_size,kernel_iterations,time_cpu,data_to_fpga_ocl,kernel_ocl,data_to_host_ocl" >> ${RESULTS_CSV}
 
   ### execution
   pushd ${arg_benchdir} > /dev/null

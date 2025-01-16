@@ -68,7 +68,7 @@ for cnt in range(repeat):
 
 # Add detailed timing data from applications' stdout and write results to csv.
 # Each application prints the header followed by the data in the next line.
-detailed_times_header = "app_name,kernel_input_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
+detailed_times_header = "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
 in_csv.seek(0)
 for i,row in enumerate(app_list):
     writer = csv.writer(out_csv)
