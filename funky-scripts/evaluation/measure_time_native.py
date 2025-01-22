@@ -63,8 +63,6 @@ for cnt in range(repeat):
                 mem_arg = "1"
             exec_cmd.append(mem_arg)
 
-        print(exec_cmd)
-
         # measure time
         print(app_name, end=", ")
         t1  = time.clock_gettime(clk)
