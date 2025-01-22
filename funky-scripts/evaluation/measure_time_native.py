@@ -46,8 +46,15 @@ for cnt in range(repeat):
             os.chdir("../")
             continue
 
-        # prepare exec command
-        exec_cmd = [f"./{app_name}", bitstream]
+        # prepare exec command, gmem_2banks requires -x before the bitstream
+        if app_name == "cl_gmem_2banks":
+            exec_cmd = [f"./{app_name}", "-x", bitstream]
+        else:
+            exec_cmd = [f"./{app_name}", bitstream]
+        # arg can be empty
+        for arg in row[1:]:
+            if arg:
+                exec_cmd.append(arg)
 
         # memory type argument
         if app_name in ["cl_wide_mem_rw_2x", "cl_wide_mem_rw_4x"]:
@@ -55,6 +62,8 @@ for cnt in range(repeat):
             if "ddr" in speed:
                 mem_arg = "1"
             exec_cmd.append(mem_arg)
+
+        print(exec_cmd)
 
         # measure time
         print(app_name, end=", ")
