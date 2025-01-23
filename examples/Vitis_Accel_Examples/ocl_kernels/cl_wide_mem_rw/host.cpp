@@ -13,9 +13,12 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
+
 #include <os>
 #include "xcl2/xcl2.hpp"
 #include <vector>
+#include <chrono>
+#include <iomanip>
 
 // DATA_SIZE should be multiple of 16 as Kernel Code is using int16 vector
 // datatype
@@ -23,7 +26,7 @@
 // will read 16 integers value.
 // As the other examples only read 1 int from memory at once, we use 16 times the
 // data size of the other examples
-#define DATA_SIZE (1024 * 1024) // * 2 * sizeof(int) = 8 MB
+#define DATA_SIZE (4 * 1024 * 1024) // 4 * 2 * sizeof(int) = 32 MB
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -102,40 +105,54 @@ int main(int argc, char** argv) {
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
     const int iterations = 1000;
+    std::chrono::high_resolution_clock::time_point start_time, end_time;
+    std::chrono::duration<double> duration;
+    int64_t nstime_cpu = 0;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
-    uint64_t nstime_kernel = 0;
-    uint64_t nstime_data_to_fpga = 0;
-    uint64_t nstime_data_to_host = 0;
+    uint64_t nstime_kernel_ocl = 0;
+    uint64_t nstime_data_to_fpga_ocl = 0;
+    uint64_t nstime_data_to_host_ocl = 0;
+
+    start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_in1, buffer_in2}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
+        OCL_CHECK(err, err = q.finish());
         OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event_kernel));
+        OCL_CHECK(err, err = q.finish());
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
         OCL_CHECK(err, err = q.finish());
 
         OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_data_to_fpga += nstimeend - nstimestart;
+        nstime_data_to_fpga_ocl += nstimeend - nstimestart;
 
         OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_kernel += nstimeend - nstimestart;
+        nstime_kernel_ocl += nstimeend - nstimestart;
 
         OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_data_to_host += nstimeend - nstimestart;
+        nstime_data_to_host_ocl += nstimeend - nstimestart;
     }
+    // OPENCL HOST CODE AREA END
 
-    std::cout << "app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time\n";
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration<double>(end_time - start_time);
+    nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+
+    // CPU time: measured in host code, OCL time: measured using OpenCL profiling, all times in seconds
+    std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
     std::cout << "cl_wide_mem_rw,"
               << vector_size_bytes * 2 << ","
+              << vector_size_bytes << ","
               << iterations << ","
-              << nstime_data_to_fpga / iterations << ","
-              << nstime_kernel / iterations << ","
-              << nstime_data_to_host / iterations << "\n";
-
-    // OPENCL HOST CODE AREA END
+              << std::setprecision(std::numeric_limits<double>::digits10)
+              << nstime_cpu / (double)1'000'000'000 << ","
+              << nstime_data_to_fpga_ocl / (double)1'000'000'000 << ","
+              << nstime_kernel_ocl / (double)1'000'000'000 << ","
+              << nstime_data_to_host_ocl / (double)1'000'000'000 << "\n";
 
     // Compare the results of the Device to the simulation
     int match = 0;

@@ -13,7 +13,7 @@ build_benchmark() {
 
     # build
     ./build.sh -d build -f &> /dev/null || echo "building ${arg_apps[$i]} failed" &
-  done 
+  done
 
   for job in $(jobs -p); do
     wait "$job"
@@ -21,4 +21,4 @@ build_benchmark() {
 }
 
 build_benchmark ${VITIS_EXAMPLES_DIR} VITIS_EXAMPLES_APPS
-build_benchmark ${ROSETTA_DIR} ROSETTA_APPS
+#build_benchmark ${ROSETTA_DIR} ROSETTA_APPS

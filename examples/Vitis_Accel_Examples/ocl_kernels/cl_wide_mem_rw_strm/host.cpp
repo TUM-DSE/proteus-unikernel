@@ -13,15 +13,19 @@
 * License for the specific language governing permissions and limitations
 * under the License.
 */
-// OpenCL utility layer include
+
 #include <os>
 #include "xcl2/xcl2.hpp"
 #include <vector>
-#include <chrono>
 #include <iomanip>
 
-#define DATA_SIZE (128 * 1024) // * sizeof(int) = 512 KB
-#define INCR_VALUE 10
+// DATA_SIZE should be multiple of 16 as Kernel Code is using int16 vector
+// datatype
+// to read the operands from Global Memory. So every read/write to global memory
+// will read 16 integers value.
+// As the other examples only read 1 int from memory at once, we use 16 times the
+// data size of the other examples
+#define DATA_SIZE (4 * 1024 * 1024) // 4 * 2 * sizeof(int) = 32 MB
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -29,26 +33,28 @@ int main(int argc, char** argv) {
         return EXIT_FAILURE;
     }
 
-    auto binaryFile = argv[1];
+    std::string binaryFile = argv[1];
 
     // Allocate Memory in Host Memory
-    cl_int err;
-    cl::CommandQueue q;
-    cl::Context context;
-    cl::Kernel krnl_adder;
     size_t vector_size_bytes = sizeof(int) * DATA_SIZE;
-    std::vector<int, aligned_allocator<int> > source_input(DATA_SIZE);
+    std::vector<int, aligned_allocator<int> > source_in1(DATA_SIZE);
+    std::vector<int, aligned_allocator<int> > source_in2(DATA_SIZE);
     std::vector<int, aligned_allocator<int> > source_hw_results(DATA_SIZE);
     std::vector<int, aligned_allocator<int> > source_sw_results(DATA_SIZE);
 
     // Create the test data and Software Result
     for (int i = 0; i < DATA_SIZE; i++) {
-        source_input[i] = i;
-        source_sw_results[i] = i + INCR_VALUE;
+        source_in1[i] = i;
+        source_in2[i] = i * i;
+        source_sw_results[i] = i * i + i;
         source_hw_results[i] = 0;
     }
 
     // OPENCL HOST CODE AREA START
+    cl_int err;
+    cl::CommandQueue q;
+    cl::Context context;
+    cl::Kernel krnl_vector_add;
     auto devices = xcl::get_xil_devices();
 
     // read_binary_file() is a utility API which will load the binaryFile
@@ -68,7 +74,7 @@ int main(int argc, char** argv) {
             std::cout << "Failed to program device[" << i << "] with xclbin file!\n";
         } else {
             std::cout << "Device[" << i << "]: program successful!\n";
-            OCL_CHECK(err, krnl_adder = cl::Kernel(program, "adder", &err));
+            OCL_CHECK(err, krnl_vector_add = cl::Kernel(program, "vadd", &err));
             valid_device = true;
             break; // we break because we found a valid device
         }
@@ -79,20 +85,20 @@ int main(int argc, char** argv) {
     }
 
     // Allocate Buffer in Global Memory
-    OCL_CHECK(err, cl::Buffer buffer_input(context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, vector_size_bytes,
-                                           source_input.data(), &err));
+    OCL_CHECK(err, cl::Buffer buffer_in1(context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, vector_size_bytes,
+                                         source_in1.data(), &err));
+    OCL_CHECK(err, cl::Buffer buffer_in2(context, CL_MEM_USE_HOST_PTR | CL_MEM_READ_ONLY, vector_size_bytes,
+                                         source_in2.data(), &err));
     OCL_CHECK(err, cl::Buffer buffer_output(context, CL_MEM_USE_HOST_PTR | CL_MEM_WRITE_ONLY, vector_size_bytes,
                                             source_hw_results.data(), &err));
 
-    int inc = INCR_VALUE;
     int size = DATA_SIZE;
-
     // Set the Kernel Arguments
-    int narg = 0;
-    OCL_CHECK(err, err = krnl_adder.setArg(narg++, buffer_input));
-    OCL_CHECK(err, err = krnl_adder.setArg(narg++, buffer_output));
-    OCL_CHECK(err, err = krnl_adder.setArg(narg++, inc));
-    OCL_CHECK(err, err = krnl_adder.setArg(narg++, size));
+    int nargs = 0;
+    OCL_CHECK(err, err = krnl_vector_add.setArg(nargs++, buffer_in1));
+    OCL_CHECK(err, err = krnl_vector_add.setArg(nargs++, buffer_in2));
+    OCL_CHECK(err, err = krnl_vector_add.setArg(nargs++, buffer_output));
+    OCL_CHECK(err, err = krnl_vector_add.setArg(nargs++, size));
 
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
@@ -110,9 +116,9 @@ int main(int argc, char** argv) {
     start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {
-        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_input}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_in1, buffer_in2}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
         OCL_CHECK(err, err = q.finish());
-        OCL_CHECK(err, err = q.enqueueTask(krnl_adder, nullptr, &event_kernel));
+        OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event_kernel));
         OCL_CHECK(err, err = q.finish());
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
         OCL_CHECK(err, err = q.finish());
@@ -133,12 +139,12 @@ int main(int argc, char** argv) {
 
     end_time = std::chrono::high_resolution_clock::now();
     duration = std::chrono::duration<double>(end_time - start_time);
-    nstime_cpu += std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+    nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 
     // CPU time: measured in host code, OCL time: measured using OpenCL profiling, all times in seconds
     std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
-    std::cout << "cl_dataflow_subfunc,"
-              << vector_size_bytes << ","
+    std::cout << "cl_wide_mem_rw,"
+              << vector_size_bytes * 2 << ","
               << vector_size_bytes << ","
               << iterations << ","
               << std::setprecision(std::numeric_limits<double>::digits10)
@@ -147,19 +153,20 @@ int main(int argc, char** argv) {
               << nstime_kernel_ocl / (double)1'000'000'000 << ","
               << nstime_data_to_host_ocl / (double)1'000'000'000 << "\n";
 
+    // std::cout << "kernel_time_cpuclock," << kernel_time.count() / iterations << "," << std::endl;
 
     // Compare the results of the Device to the simulation
-    bool match = true;
+    int match = 0;
     for (int i = 0; i < DATA_SIZE; i++) {
         if (source_hw_results[i] != source_sw_results[i]) {
             std::cout << "Error: Result mismatch" << std::endl;
             std::cout << "i = " << i << " CPU result = " << source_sw_results[i]
                       << " Device result = " << source_hw_results[i] << std::endl;
-            match = false;
+            match = 1;
             break;
         }
     }
 
-    std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl;
-    return (match ? EXIT_SUCCESS : EXIT_FAILURE);
+    std::cout << "TEST " << (match ? "FAILED" : "PASSED") << std::endl;
+    return (match ? EXIT_FAILURE : EXIT_SUCCESS);
 }

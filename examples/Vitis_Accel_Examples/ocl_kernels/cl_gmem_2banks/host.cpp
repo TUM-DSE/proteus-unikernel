@@ -14,10 +14,11 @@
 * under the License.
 */
 #include <os>
-#include "bitmap/bitmap.h"
-#include "cmdparser/cmdlineparser.h"
-#include "xcl2/xcl2.hpp"
+#include "bitmap.h"
+#include "cmdlineparser.h"
+#include "xcl2.hpp"
 #include <vector>
+#include <iomanip>
 
 int main(int argc, char* argv[]) {
     // Command Line Parser
@@ -44,9 +45,6 @@ int main(int argc, char* argv[]) {
     cl::Context context;
     cl::Kernel krnl_applyWatermark;
 
-    std::cout << "bitmap filename: " << bitmapFilename << "\n";
-    std::cout << "golden filename: " << goldenFilename << "\n";
-
     // Read the input bit map file into memory
     BitmapInterface image(bitmapFilename.data());
     bool result = image.readBitmapFile();
@@ -69,6 +67,7 @@ int main(int argc, char* argv[]) {
     // OPENCL HOST CODE AREA START
     auto devices = xcl::get_xil_devices();
 
+    auto reconf_start = std::chrono::high_resolution_clock::now();
     // read_binary_file() is a utility API which will load the binaryFile
     // and will return the pointer to file buffer.
     auto fileBuf = xcl::read_binary_file(binaryFile);
@@ -95,6 +94,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to program any device found, exit!\n";
         exit(EXIT_FAILURE);
     }
+    auto reconf_end = std::chrono::high_resolution_clock::now();
+    auto reconf_time = std::chrono::duration<double>(reconf_end - reconf_start);
 
     OCL_CHECK(err, cl::Buffer buffer_inImage(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, image_size_bytes,
                                              inputImage.data(), &err));
@@ -114,16 +115,83 @@ int main(int argc, char* argv[]) {
     krnl_applyWatermark.setArg(2, width);
     krnl_applyWatermark.setArg(3, height);
 
-    // Copy input Image to device global memory
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_inImage}, 0 /* 0 means from host*/));
+    // for time measurement
+    cl::Event event_kernel;
+    cl::Event event_data_to_fpga;
+    cl::Event event_data_to_host;
+    const int iterations = 500;
+    uint64_t nstimestart = 0;
+    uint64_t nstimeend = 0;
+    uint64_t nstime_kernel = 0;
+    uint64_t nstime_data_to_fpga = 0;
+    uint64_t nstime_data_to_host = 0;
 
-    // Launch the Kernel
-    OCL_CHECK(err, err = q.enqueueTask(krnl_applyWatermark));
+    std::chrono::duration<double> to_fpga_time(0);
+    std::chrono::duration<double> kernel_time(0);
+    std::chrono::duration<double> from_fpga_time(0);
 
-    // Copy Result from Device Global Memory to Host Local Memory
-    OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_outImage}, CL_MIGRATE_MEM_OBJECT_HOST));
-    OCL_CHECK(err, err = q.finish());
+    auto loop_start = std::chrono::high_resolution_clock::now();
+    for (int i = 0; i < iterations; i++) {
+
+        auto to_fpga_start = std::chrono::high_resolution_clock::now();
+        // Copy input Image to device global memory
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_inImage}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
+        OCL_CHECK(err, err = q.finish());
+        auto to_fpga_end = std::chrono::high_resolution_clock::now();
+
+        auto kernel_start = std::chrono::high_resolution_clock::now();
+        // Launch the Kernel
+        OCL_CHECK(err, err = q.enqueueTask(krnl_applyWatermark, nullptr, &event_kernel));
+        OCL_CHECK(err, err = q.finish());
+        auto kernel_end = std::chrono::high_resolution_clock::now();
+
+        auto from_fpga_start = std::chrono::high_resolution_clock::now();
+        // Copy Result from Device Global Memory to Host Local Memory
+        OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_outImage}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
+        OCL_CHECK(err, err = q.finish());
+        auto from_fpga_end = std::chrono::high_resolution_clock::now();
+
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_fpga += nstimeend - nstimestart;
+
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_kernel += nstimeend - nstimestart;
+
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
+        OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
+        nstime_data_to_host += nstimeend - nstimestart;
+
+        to_fpga_time += std::chrono::duration<double>(to_fpga_end - to_fpga_start);
+        kernel_time += std::chrono::duration<double>(kernel_end - kernel_start);
+        from_fpga_time += std::chrono::duration<double>(from_fpga_end - from_fpga_start);
+    }
     // OPENCL HOST CODE AREA END
+    auto loop_end   = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> total_loop_time(0);
+    auto total_loop_time = std::chrono::duration<double>(loop_end - loop_start);
+
+    std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
+    std::cout << "cl_gmem_2banks,"
+              << image_size_bytes << ","
+              << image_size_bytes << ","
+              << iterations << ","
+              << std::setprecision(std::numeric_limits<double>::digits10)
+              << total_loop_time.count() << ","
+              << nstime_data_to_fpga / (double)1'000'000'000 << ","
+              << nstime_kernel / (double)1'000'000'000 << ","
+              << nstime_data_to_host / (double)1'000'000'000 << "\n";
+
+    // Throughputs
+    std::cout << "app_name,PCIe_Wr[GB/s],Kernel[GB/s],PCIe_Rd[GB/s],FPGA_exec_time[s],FPGA_reconf_time[s]\n";
+    std::cout << "cl_gmem_2banks,"
+              << std::setprecision(3) << std::fixed << (image_size_bytes * iterations / to_fpga_time.count())   / 1000000000 << ","
+              << std::setprecision(3) << std::fixed << (image_size_bytes * iterations * 2 / kernel_time.count()) / 1000000000 << ","
+              << std::setprecision(3) << std::fixed << (image_size_bytes * iterations / from_fpga_time.count()) / 1000000000 << ","
+              << total_loop_time.count() << ","
+              << reconf_time.count() << ","
+              << std::endl;
 
     // Compare Golden Image with Output image
     bool match = 1;
@@ -147,7 +215,7 @@ int main(int argc, char* argv[]) {
         }
     }
     // Write the final image to disk
-    image.writeBitmapFile(outImage.data());
+    // image.writeBitmapFile(outImage.data());
 
     std::cout << "TEST " << (match ? "PASSED" : "FAILED") << std::endl;
     return (match ? EXIT_SUCCESS : EXIT_FAILURE);

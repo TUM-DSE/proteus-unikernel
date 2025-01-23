@@ -16,6 +16,8 @@
 #include <os>
 #include "xcl2/xcl2.hpp"
 #include <vector>
+#include <chrono>
+#include <iomanip>
 
 using std::vector;
 
@@ -96,72 +98,57 @@ int main(int argc, char** argv) {
     OCL_CHECK(err, err = krnl_vector_add.setArg(narg++, buffer_b));
     OCL_CHECK(err, err = krnl_vector_add.setArg(narg++, DATA_SIZE));
 
-    // long count = 0;
-    // long max_count = 100;
-    // long max_ticks = max_count * 100'000'000;
-
-    // std::cout << "Before launching kernel: counting to " << max_count - 1 << ":\n";
-    // for (long i = 0; i < max_ticks ; i++) {
-    //     if (i % 100'000'000 == 0) {
-    //         std::cout << std::dec << count << "\n";
-    //         count++;
-    //     }
-    // }
-
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
     const int iterations = 1000;
+    std::chrono::high_resolution_clock::time_point start_time, end_time;
+    std::chrono::duration<double> duration;
+    int64_t nstime_cpu = 0;
     uint64_t nstimestart = 0;
     uint64_t nstimeend = 0;
-    uint64_t nstime_kernel = 0;
-    uint64_t nstime_data_to_fpga = 0;
-    uint64_t nstime_data_to_host = 0;
+    uint64_t nstime_kernel_ocl = 0;
+    uint64_t nstime_data_to_fpga_ocl = 0;
+    uint64_t nstime_data_to_host_ocl = 0;
+
+    start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {
-        // These commands will load the source_a and source_b vectors from the host
-        // application and into the buffer_a and buffer_b cl::Buffer objects. The data
-        // will be be transferred from system memory over PCIe to the FPGA on-board
-        // DDR memory.
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_a, buffer_b}, 0 /* 0 means from host*/, nullptr, &event_data_to_fpga));
-        // Launch the Kernel
+        OCL_CHECK(err, err = q.finish());
         OCL_CHECK(err, err = q.enqueueTask(krnl_vector_add, nullptr, &event_kernel));
-        // The result of the previous kernel execution will need to be retrieved in
-        // order to view the results. This call will write the data from the
-        // buffer_result cl_mem object to the source_results vector
+        OCL_CHECK(err, err = q.finish());
         OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_result}, CL_MIGRATE_MEM_OBJECT_HOST, nullptr, &event_data_to_host));
-        q.finish();
+        OCL_CHECK(err, err = q.finish());
 
         OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_data_to_fpga.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_data_to_fpga += nstimeend - nstimestart;
+        nstime_data_to_fpga_ocl += nstimeend - nstimestart;
 
         OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_kernel.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_kernel += nstimeend - nstimestart;
+        nstime_kernel_ocl += nstimeend - nstimestart;
 
         OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_START, &nstimestart));
         OCL_CHECK(err, err = event_data_to_host.getProfilingInfo<uint64_t>(CL_PROFILING_COMMAND_END, &nstimeend));
-        nstime_data_to_host += nstimeend - nstimestart;
+        nstime_data_to_host_ocl += nstimeend - nstimestart;
     }
 
-    std::cout << "app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time\n";
+    end_time = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration<double>(end_time - start_time);
+    nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+
+    // CPU time: measured in host code, OCL time: measured using OpenCL profiling, all times in seconds
+    std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
     std::cout << "cl_helloworld,"
-              << size_in_bytes * 2
-              << "," << iterations << ","
-              << nstime_data_to_fpga / iterations << ","
-              << nstime_kernel / iterations << ","
-              << nstime_data_to_host / iterations << "\n";
-
-    // count = 0;
-
-    // std::cout << "After finishing kernel: counting to " << max_count - 1 << ":\n";
-    // for (long i = 0; i < max_ticks ; i++) {
-    //     if (i % 100'000'000 == 0) {
-    //         std::cout << std::dec << count << "\n";
-    //         count++;
-    //     }
-    // }
+              << size_in_bytes * 2 << ","
+              << size_in_bytes << ","
+              << iterations << ","
+              << std::setprecision(std::numeric_limits<double>::digits10)
+              << nstime_cpu / (double)1'000'000'000 << ","
+              << nstime_data_to_fpga_ocl / (double)1'000'000'000 << ","
+              << nstime_kernel_ocl / (double)1'000'000'000 << ","
+              << nstime_data_to_host_ocl / (double)1'000'000'000 << "\n";
 
     int match = 0;
     printf("Result = \n");
@@ -172,8 +159,8 @@ int main(int argc, char** argv) {
             match = 1;
             break;
         } else {
-            printf("%d ", source_results[i]);
-            if (((i + 1) % 16) == 0) printf("\n");
+            // printf("%d ", source_results[i]);
+            // if (((i + 1) % 16) == 0) printf("\n");
         }
     }
 
