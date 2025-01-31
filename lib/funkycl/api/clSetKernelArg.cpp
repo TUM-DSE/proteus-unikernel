@@ -13,6 +13,13 @@ clSetKernelArg(cl_kernel    kernel,
                size_t       arg_size,
                const void * arg_value)
 {
+  /* Set KERNEL to the current kernel the first time clSetKernelArg is called on it */
+  if (KERNEL != kernel) {
+    KERNEL = kernel;
+    KERNEL_CREATED = false;
+    DEBUG_STREAM("KERNEL set to " << KERNEL);
+  }
+
   auto f_kernel = cl_to_funkycl(kernel);
   DEBUG_STREAM("arg id: " << arg_index <<  ", size: " << arg_size << ", addr: " << arg_value);
 

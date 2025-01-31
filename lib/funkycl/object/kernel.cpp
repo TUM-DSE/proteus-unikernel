@@ -25,6 +25,9 @@
 
 namespace funkycl {
 
+cl_kernel KERNEL = nullptr;
+bool KERNEL_CREATED = false;
+
 void
 kernel::clmem_argument::
 set(size_t size, const void* arg)

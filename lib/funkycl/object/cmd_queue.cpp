@@ -135,48 +135,62 @@ cmd_queue::vfpga_send_transfer_request(cl_uint cmdq_id, cl_uint num_mem_objects,
   return true;
 }
 
-
-bool 
-cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, const size_t* ndrange, funky_msg::event_info* einfo)
+bool
+cmd_queue::vfpga_send_kernel_request(cl_uint cmdq_id, cl_kernel kernel)
 {
-  /* create args_info for exec request */
-  exec_args_info_type  args_info;
+  /* create args_info for kernel request */
+  exec_args_info_type args_info;
   auto f_kernel = cl_to_funkycl(kernel);
+  auto kernel_name = f_kernel->get_name();
   auto num_args = f_kernel->get_argnum();
 
-  for (int idx=0; idx < num_args; idx++)
-  {
+  DEBUG_STREAM("kernel: " << kernel_name << ", num_args: " << num_args);
+
+  for (int idx = 0; idx < num_args; idx++) {
     auto arg = f_kernel->get_argument(idx);
     auto arg_type = arg->get_argtype();
 
-    if(arg_type == kernel::argtype::CLMEM)
-    {
-      auto mem = (memory*) arg->get_value();
-      auto mem_id = (int) mem->get_id();
+    if (arg_type == kernel::argtype::CLMEM) {
+      auto mem = (memory*)arg->get_value();
+      auto mem_id = (int)mem->get_id();
 
       funky_msg::arg_info ainfo(idx, mem_id);
       args_info.emplace_back(ainfo);
-    }
-    else if(arg_type == kernel::argtype::SCALAR)
-    {
+    } else if (arg_type == kernel::argtype::SCALAR) {
       funky_msg::arg_info ainfo(idx, -1, const_cast<void*>(arg->get_value()), arg->get_size());
       args_info.emplace_back(ainfo);
     }
-      
-    DEBUG_STREAM("arg[" << idx << "], mem_id: " << (args_info.back()).mem_id << ", size: " << arg->get_size() );
+
+    DEBUG_STREAM("kernel: " << kernel_name << ", arg[" << idx << "], mem_id: "
+                            << (args_info.back()).mem_id << ", size: " << arg->get_size());
   }
 
   /* save the args_info and keep it until the request has been handled */
   exec_args_list.emplace_back(std::make_unique<exec_args_info_type>(args_info));
   auto exec_args_info = exec_args_list.back().get();
 
+  /* send a KERNEL request */
+  funky_msg::request kernel_req(funky_msg::KERNEL, kernel_name->c_str(), kernel_name->length(),
+                                num_args, (void*)(&(exec_args_info->front())), cmdq_id);
+  auto device = m_device.get();
+  device->vfpga_send_request(kernel_req);
 
-  DEBUG_STREAM("offset=" << ndrange[0] << ", global=" << ndrange[1] << ", local=" << ndrange[2]);
+  return true;
+}
+
+bool cmd_queue::vfpga_send_exec_request(cl_uint cmdq_id, cl_kernel kernel, const size_t* ndrange,
+                                        funky_msg::event_info* einfo)
+{
+  auto f_kernel = cl_to_funkycl(kernel);
+  auto kernel_name = f_kernel->get_name();
+
+  DEBUG_STREAM("kernel=" << kernel_name << ", offset=" << ndrange[0] << ", global=" << ndrange[1]
+                         << ", local=" << ndrange[2]);
 
   /* send an EXECUTE request */
-  auto kernel_name = f_kernel->get_name();
-  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(), num_args, (void *)(&(exec_args_info->front())), cmdq_id, ndrange, einfo);
-  auto device  = m_device.get();
+  funky_msg::request exec_req(funky_msg::EXECUTE, kernel_name->c_str(), kernel_name->length(),
+                              cmdq_id, ndrange, einfo);
+  auto device = m_device.get();
   device->vfpga_send_request(exec_req);
 
   return true;
