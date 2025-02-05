@@ -6,24 +6,20 @@ source ./common.sh
 function usage {
   cat <<EOF
 
-Usage: 
-  $(basename ${0}) <repeat> <fpga> <speed>
+Usage:
+  $(basename ${0}) <repeat> <fpga>-<speed>...
 
   <fpga>  u50, u280, arria10
-  <speed> 300mhz, faster
+  <speed> slow, fast, ddr-slow, ddr-fast
 
   Measure the end-to-end execution time of workloads in Vitis_Accel_Examples/ocl_kernels and Rosetta/.
-  clock_gettime() with MONOTONIC timer is used for the measurement. 
+  clock_gettime() with MONOTONIC timer is used for the measurement.
 
 EOF
 }
 
 measure_time() {
   arg_benchdir=$1
-  # arg_apps_array=$2[@]
-  # arg_apps=("${!arg_apps_array}")
-  # arg_args_array=$3[@]
-  # arg_args=("${!arg_args_array}")
   arg_repeat=$2
   arg_ifile=$3
   arg_ofile=$4
@@ -35,52 +31,41 @@ measure_time() {
   RESULTS_DIR="${EVAL_SCRIPT_ROOT}/time_$DATE"
   mkdir -p ${RESULTS_DIR}
   APPLIST_CSV="${EVAL_SCRIPT_ROOT}/${arg_ifile}"
-  RESULTS_CSV="${RESULTS_DIR}/${arg_ofile}.csv"
-  KERNEL_RESULTS_CSV="$RESULTS_DIR"/"$arg_ofile"-kernel.csv
-  KERNEL_RESULTS_HEADER="app_name,kernel_input_data_size,iterations,data_to_fpga_avg_time,kernel_avg_time,data_to_host_avg_time"
+  RESULTS_CSV="$RESULTS_DIR/$fpga-$speed-$arg_ofile.csv"
 
-  ### add label to csv 
-  echo -n "app_name, " >> ${RESULTS_CSV}
+  ### add label to csv
+  echo -n "app_name," >> ${RESULTS_CSV}
   for loop in $(seq 1 ${arg_repeat}); do
-    echo -n "${loop}, " >> ${RESULTS_CSV}
+    echo -n "${loop}," >> ${RESULTS_CSV}
   done
-  echo "average, stdev, " >> ${RESULTS_CSV}
-
-  echo "$KERNEL_RESULTS_HEADER" >> "$KERNEL_RESULTS_CSV"
+  echo "average,stddev,kernel_input_data_size,kernel_output_data_size,kernel_iterations,time_cpu,data_to_fpga_ocl,kernel_ocl,data_to_host_ocl" >> ${RESULTS_CSV}
 
   ### execution
-  echo "move into ${arg_benchdir}..."
-  pushd ${arg_benchdir}
+  pushd ${arg_benchdir} > /dev/null
 
-  # python3 ${EVAL_SCRIPT_ROOT}/measure_time.py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${UKVM_EXEC_CMD}
-  measure_ukvm_exec_time_py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${bitstream_dir} ${fpga} ${speed} \
-    "${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${fpga} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+  python3 ${EVAL_SCRIPT_ROOT}/measure_time.py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${bitstream_dir} ${fpga} ${speed} \
+    ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${fpga} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}
 
-  popd
-  echo "back to $(pwd)."
-
-  for log_file in "$RESULTS_DIR"/cl_*; do
-    # Each application prints the header followed by the data in the next line
-    grep -A 1 "$KERNEL_RESULTS_HEADER" "$log_file" \
-      | head -n 2 | tail -n 1 >> "$KERNEL_RESULTS_CSV" \
-      || echo "Failed to find kernel performance data in $log_file"
-  done
+  popd > /dev/null
 }
 
 set_ukvm_permission # make ukvm-bin executable
 
-REPEAT=$1
-FPGA=$2
-SPEED=$3
-
-if [ -z "$REPEAT" ] || [ -z "$FPGA" ] || [ -z "$SPEED" ]; then
+repeat=$1
+if [ -z "$repeat" ]; then
   usage
   exit 1
 fi
 
-DIR="time_$DATE"
-mkdir -p ${EVAL_SCRIPT_ROOT}/$DIR
+for fpga in "${@:2}"; do
+  model=${fpga%%-*}
+  speed=${fpga#*-}
+  if [ -z "$model" ] || [ -z "$speed" ]; then
+    usage
+    exit 1
+  fi
 
-measure_time ${VITIS_EXAMPLES_DIR} ${REPEAT} "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples ${FPGA} ${SPEED}
-measure_time ${ROSETTA_DIR} ${REPEAT} "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky ${FPGA} ${SPEED}
-
+  echo ["$(date +%T)"] "$fpga":
+  measure_time "$VITIS_EXAMPLES_DIR" "$repeat" "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
+  #measure_time "$ROSETTA_DIR" "$repeat" "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky "$model" "$speed"
+done

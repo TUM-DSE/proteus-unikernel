@@ -17,12 +17,6 @@ fpga = sys.argv[6]
 speed = sys.argv[7]
 exec_cmd_base = sys.argv[8:]
 
-# print("dir ", result_dir)
-# print("out csv ", sys.argv[2])
-# print("in csv ", sys.argv[3])
-# print("repeat ", repeat)
-# print("cmd_base ", exec_cmd_base)
-
 app_list = csv.reader(in_csv)
 clk = time.CLOCK_MONOTONIC
 dict_results = dict()
@@ -35,9 +29,9 @@ for cnt in range(repeat):
     # otherwise, FPGA reconfiguration is skipped from the second execution
     for i,row in enumerate(app_list):
         app_name = row[0]
-        exec_cmd_arg = row[1]
 
-        log = open(result_dir+"/"+app_name+".log", 'a')
+        log_filename = f"{result_dir}/{app_name}-{fpga}-{speed}.log"
+        log = open(log_filename, 'a')
         os.chdir(app_name)
         # print("current app dir: ", os.getcwd())
 
@@ -45,12 +39,34 @@ for cnt in range(repeat):
         if app_name not in dict_results:
             dict_results.update({app_name: list()})
 
+        bitstream = f"{bitstream_dir}/{app_name}/{fpga}-{speed}/bitstream"
+
+        if not os.path.isfile(bitstream):
+            print(f"Found no bitstream for {app_name}")
+            dict_results[app_name].append(float("NaN"))
+            os.chdir("../")
+            continue
+
         # prepare exec command
         exec_cmd = exec_cmd_base.copy()
-        exec_cmd.append(exec_cmd_arg)
+        if app_name == "cl_gmem_2banks":
+            exec_cmd.append("-x")
+        # virtual bitstream (see below), so the program just gets some dummy bitstream path
+        exec_cmd.append("dummy-bitstream")
+        # arg can be empty
+        for arg in row[1:]:
+            if arg:
+                exec_cmd.append(arg)
 
-        # link the bitstream to /tmp/bitstream_0.ukvm
-        subprocess.run(["ln", "-sf", f"{bitstream_dir}/{app_name}/{fpga}-{speed}/bitstream", "/tmp/bitstream_0.ukvm"])
+        # memory type argument
+        if app_name in ["cl_wide_mem_rw_2x", "cl_wide_mem_rw_4x"]:
+            mem_arg = "0"
+            if "ddr" in speed:
+                mem_arg = "1"
+            exec_cmd.append(mem_arg)
+
+        # link the bitstream to /tmp/bitstream_0.ukvm, expected location by funky-monitor
+        subprocess.run(["ln", "-sf", f"{bitstream}", "/tmp/bitstream_0.ukvm"])
 
         # measure time
         print(app_name, end=", ")
@@ -62,25 +78,44 @@ for cnt in range(repeat):
     
         os.chdir("../")
 
-print(dict_results)
-
-# Write results to csv
+# Add detailed timing data from applications' stdout and write results to csv.
+# Each application prints the header followed by the data in the next line.
+detailed_times_header = "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
 in_csv.seek(0)
 for i,row in enumerate(app_list):
     writer = csv.writer(out_csv)
     app_name = row[0]
+    detailed_times = None
+    log_filename = f"{result_dir}/{app_name}-{fpga}-{speed}.log"
+    log = open(log_filename, 'r')
+    lines = log.readlines()
 
     # calculate avg, stdev
     times = dict_results[app_name].copy();
 
-    if len(times) > 1: 
+    if len(times) == 1:
+        times.append(times[-1]) # average is just the one measurement
+        times.append(0) # stddev
+    else:
         avg_time = sum(times)/len(times)
         stddev   = stat.stdev(times)
         times.append(avg_time)
         times.append(stddev)
 
+    for i in range(len(lines)):
+        if lines[i] == detailed_times_header:
+            detailed_times = lines[i+1]
+            break
+
+    if detailed_times is None:
+        print(f"Failed to find detailed time measurements in {log_filename}")
+        for _ in range(7):
+            times.append(float("NaN"))
+    else:
+        values = detailed_times.split(",")
+        for val in values[1:]:
+            times.append(val.strip())
+
     # write values to csv
     times.insert(0, app_name)
-    print(times)
     writer.writerow(times)
-

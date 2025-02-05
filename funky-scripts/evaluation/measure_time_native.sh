@@ -33,7 +33,7 @@ measure_time() {
   APPLIST_CSV="${EVAL_SCRIPT_ROOT}/${arg_ifile}"
   RESULTS_CSV="$RESULTS_DIR/$fpga-$speed-$arg_ofile.csv"
 
-  ### add label to csvd
+  ### add label to csv
   echo -n "app_name," >> ${RESULTS_CSV}
   for loop in $(seq 1 ${arg_repeat}); do
     echo -n "${loop}," >> ${RESULTS_CSV}
