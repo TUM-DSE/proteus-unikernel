@@ -104,7 +104,7 @@ for i,row in enumerate(app_list):
 
     if detailed_times is None:
         print(f"Failed to find detailed time measurements in {log_filename}")
-        for _ in range(5):
+        for _ in range(7):
             times.append(float("NaN"))
     else:
         values = detailed_times.split(",")
