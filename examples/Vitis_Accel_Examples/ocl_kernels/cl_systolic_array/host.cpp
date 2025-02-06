@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
     cl::Event event_kernel;
     cl::Event event_data_to_fpga;
     cl::Event event_data_to_host;
-    const int iterations = 114000;
+    const int iterations = 65400; // TODO: find out why this is the current limit for Proteus to not segfault
     std::chrono::high_resolution_clock::time_point start_time, end_time;
     std::chrono::duration<double> duration;
     int64_t nstime_cpu = 0;
