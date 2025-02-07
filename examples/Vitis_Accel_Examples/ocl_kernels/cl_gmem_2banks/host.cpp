@@ -174,6 +174,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
     std::cout << "cl_gmem_2banks,"
+              << std::dec
               << image_size_bytes << ","
               << image_size_bytes << ","
               << iterations << ","

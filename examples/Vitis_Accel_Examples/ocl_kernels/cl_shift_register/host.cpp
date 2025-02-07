@@ -220,6 +220,7 @@ int main(int argc, char** argv) {
     // CPU time: measured in host code, OCL time: measured using OpenCL profiling, all times in seconds
     std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n";
     std::cout << "cl_shift_register,"
+              << std::dec
               << size_in_bytes + coeff_size_in_bytes << ","
               << size_in_bytes << ","
               << iterations << ","
