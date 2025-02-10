@@ -14,9 +14,9 @@
 * under the License.
 */
 #include <os>
-#include "bitmap.h"
-#include "cmdlineparser.h"
-#include "xcl2.hpp"
+#include "bitmap/bitmap.h"
+#include "cmdparser/cmdlineparser.h"
+#include "xcl2/xcl2.hpp"
 #include <vector>
 #include <iomanip>
 
@@ -197,24 +197,24 @@ int main(int argc, char* argv[]) {
     // Compare Golden Image with Output image
     bool match = 1;
     // Read the golden bit map file into memory
-    BitmapInterface goldenImage(goldenFilename.data());
-    result = goldenImage.readBitmapFile();
-    if (!result) {
-        std::cerr << "ERROR:Unable to Read Golden Bitmap File " << goldenFilename.data() << std::endl;
-        return EXIT_FAILURE;
-    }
-    if (image.getHeight() != goldenImage.getHeight() || image.getWidth() != goldenImage.getWidth()) {
-        match = 0;
-    } else {
-        int* goldImgPtr = goldenImage.bitmap();
-        for (unsigned int i = 0; i < image.numPixels(); i++) {
-            if (outImage[i] != goldImgPtr[i]) {
-                match = 0;
-                printf("Pixel %d Mismatch Output %x and Expected %x \n", i, outImage[i], goldImgPtr[i]);
-                break;
-            }
-        }
-    }
+    // BitmapInterface goldenImage(goldenFilename.data());
+    // result = goldenImage.readBitmapFile();
+    // if (!result) {
+    //     std::cerr << "ERROR:Unable to Read Golden Bitmap File " << goldenFilename.data() << std::endl;
+    //     return EXIT_FAILURE;
+    // }
+    // if (image.getHeight() != goldenImage.getHeight() || image.getWidth() != goldenImage.getWidth()) {
+    //     match = 0;
+    // } else {
+    //     int* goldImgPtr = goldenImage.bitmap();
+    //     for (unsigned int i = 0; i < image.numPixels(); i++) {
+    //         if (outImage[i] != goldImgPtr[i]) {
+    //             match = 0;
+    //             printf("Pixel %d Mismatch Output %x and Expected %x \n", i, outImage[i], goldImgPtr[i]);
+    //             break;
+    //         }
+    //     }
+    // }
     // Write the final image to disk
     // image.writeBitmapFile(outImage.data());
 

@@ -66,6 +66,6 @@ for fpga in "${@:2}"; do
   fi
 
   echo ["$(date +%T)"] "$fpga":
-  measure_time "$VITIS_EXAMPLES_DIR" "$repeat" "vitis_applist.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
+  measure_time "$VITIS_EXAMPLES_DIR" "$repeat" "vitis_applist_proteus.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
   #measure_time "$ROSETTA_DIR" "$repeat" "rosetta_applist.csv" "rosetta" /share/felix/bitstreams/rosetta-funky "$model" "$speed"
 done
