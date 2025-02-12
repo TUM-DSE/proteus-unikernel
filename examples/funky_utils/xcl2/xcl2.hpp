@@ -33,7 +33,7 @@
 #include <CL/opencl.hpp>
 
 // #include <CL/cl2.hpp>
-// #include <CL/cl_ext_xilinx.h>
+#include <CL/cl_ext_xilinx.h>
 #include <fstream>
 #include <iostream>
 // When creating a buffer with user pointer (CL_MEM_USE_HOST_PTR), under the

@@ -17,6 +17,7 @@ set(FUNKY_UTILS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../funky_utils)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0")
 # set(MAX_MEM 128)
 
+include_directories(/opt/xilinx/xrt/include)
 include_directories(${FUNKY_UTILS_DIR})
 
 set(SOURCES

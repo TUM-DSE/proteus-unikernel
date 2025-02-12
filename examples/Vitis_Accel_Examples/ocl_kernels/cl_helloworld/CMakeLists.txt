@@ -15,6 +15,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(FUNKY_UTILS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../funky_utils)
 # set(MAX_MEM 128)
 
+include_directories(/opt/xilinx/xrt/include)
 include_directories(${FUNKY_UTILS_DIR})
 
 set(SOURCES 
