@@ -33,11 +33,9 @@
 
 namespace funkycl {
 
-/* Used to access the current kernel in clEnqueueMigrateMemObjects to send a KERNEL request to the
- * backend. Set the first time clSetKernelArg is called on a kernel. */
-extern cl_kernel KERNEL;
-/* True after a KERNEL request has been sent to the backend for the current kernel */
-extern bool KERNEL_CREATED;
+/* Used to access kernels in clEnqueueMigrateMemObjects to send a KERNEL request to the backend.
+ * After the request has been sent, the flag is true. */
+extern std::vector<std::tuple<cl_kernel, bool>> KERNELS;
 
 // FIXME: compute_unit class is not necessary in guest?
 // class compute_unit;

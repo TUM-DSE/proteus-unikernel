@@ -13,11 +13,18 @@ clSetKernelArg(cl_kernel    kernel,
                size_t       arg_size,
                const void * arg_value)
 {
-  /* Set KERNEL to the current kernel the first time clSetKernelArg is called on it */
-  if (KERNEL != kernel) {
-    KERNEL = kernel;
-    KERNEL_CREATED = false;
-    DEBUG_STREAM("KERNEL set to " << KERNEL);
+  /* Add kernel to KERNELS the first time clSetKernelArg is called on it */
+  bool found = false;
+  for (auto k: KERNELS) {
+    if (std::get<0>(k) == kernel) {
+      DEBUG_STREAM("kernel " << kernel << " already in KERNELS");
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    DEBUG_STREAM("Adding kernel " << kernel << " to KERNELS");
+    KERNELS.push_back(std::tuple{kernel, false});
   }
 
   auto f_kernel = cl_to_funkycl(kernel);

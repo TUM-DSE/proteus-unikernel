@@ -25,8 +25,7 @@
 
 namespace funkycl {
 
-cl_kernel KERNEL = nullptr;
-bool KERNEL_CREATED = false;
+std::vector<std::tuple<cl_kernel, bool>> KERNELS{};
 
 void
 kernel::clmem_argument::
