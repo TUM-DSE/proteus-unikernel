@@ -34,7 +34,7 @@ clEnqueueMigrateMemObjects(cl_command_queue       command_queue,
   /* Send a request for creating all kernels. The kernels have to be created before issuing the
    * enqueueMigrateMemObjects command in the backend if multiple memory banks are used on the FPGA.
    * Otherwise, the runtime does not know where to save each memory object. */
-  for (auto kernel : KERNELS) {
+  for (auto& kernel : KERNELS) {
     bool kernel_created = std::get<1>(kernel);
     if (!kernel_created) {
       cmd_queue->vfpga_send_kernel_request(cmd_queue->get_id(), std::get<0>(kernel));
