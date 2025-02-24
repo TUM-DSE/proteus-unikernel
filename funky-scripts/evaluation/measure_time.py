@@ -21,7 +21,7 @@ app_list = csv.reader(in_csv)
 clk = time.CLOCK_MONOTONIC
 dict_results = dict()
 
-# repeat execution 
+# repeat execution
 for cnt in range(repeat):
     in_csv.seek(0)
 
@@ -35,7 +35,7 @@ for cnt in range(repeat):
         os.chdir(app_name)
         # print("current app dir: ", os.getcwd())
 
-        # add time_list for each app to the dict only once 
+        # add time_list for each app to the dict only once
         if app_name not in dict_results:
             dict_results.update({app_name: list()})
 
@@ -75,7 +75,7 @@ for cnt in range(repeat):
         t2  = time.clock_gettime(clk)
         print(t2-t1, end=", \n")
         dict_results[app_name].append(t2-t1)
-    
+
         os.chdir("../")
 
 # Add detailed timing data from applications' stdout and write results to csv.
@@ -85,7 +85,7 @@ in_csv.seek(0)
 for i,row in enumerate(app_list):
     writer = csv.writer(out_csv)
     app_name = row[0]
-    detailed_times = None
+    detailed_times = []
     log_filename = f"{result_dir}/{app_name}-{fpga}-{speed}.log"
     log = open(log_filename, 'r')
     lines = log.readlines()
@@ -104,17 +104,35 @@ for i,row in enumerate(app_list):
 
     for i in range(len(lines)):
         if lines[i] == detailed_times_header:
-            detailed_times = lines[i+1]
-            break
+            detailed_times.append(lines[i+1])
 
-    if detailed_times is None:
+    if not detailed_times:
         print(f"Failed to find detailed time measurements in {log_filename}")
         for _ in range(7):
             times.append(float("NaN"))
     else:
-        values = detailed_times.split(",")
-        for val in values[1:]:
+        # data sizes and iterations are the same for each run
+        values = detailed_times[0].split(",")
+        for val in values[1:4]:
             times.append(val.strip())
+
+        times_cpu = []
+        times_to_fpga = []
+        times_kernel = []
+        times_to_host = []
+
+        # calculate avg and stddev for FPGA times
+        for line in detailed_times:
+            values = line.split(",")
+            times_cpu.append(float(values[4]))
+            times_to_fpga.append(float(values[5]))
+            times_kernel.append(float(values[6]))
+            times_to_host.append(float(values[7]))
+
+        times.append(sum(times_cpu)/len(times_cpu))
+        times.append(sum(times_to_fpga)/len(times_to_fpga))
+        times.append(sum(times_kernel)/len(times_kernel))
+        times.append(sum(times_to_host)/len(times_to_host))
 
     # write values to csv
     times.insert(0, app_name)
