@@ -130,9 +130,13 @@ for i,row in enumerate(app_list):
             times_to_host.append(float(values[7]))
 
         times.append(sum(times_cpu)/len(times_cpu))
+        times.append(stat.stdev(times_cpu))
         times.append(sum(times_to_fpga)/len(times_to_fpga))
+        times.append(stat.stdev(times_to_fpga))
         times.append(sum(times_kernel)/len(times_kernel))
+        times.append(stat.stdev(times_kernel))
         times.append(sum(times_to_host)/len(times_to_host))
+        times.append(stat.stdev(times_to_host))
 
     # write values to csv
     times.insert(0, app_name)
