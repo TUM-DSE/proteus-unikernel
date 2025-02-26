@@ -23,6 +23,8 @@ Options:
 
   -l                    load VM from migration file
 
+  -o                    enable out-of-order execution for the OpenCL commmand queue
+
   -b <build_dir>        set path to dir including binary 
                         (default: ${BUILD_DIR})
 
@@ -53,8 +55,9 @@ EOF
 GDB_FLAG=false
 MON_FLAG=false
 LOAD_FLAG=false
+OOO_FLAG=false
 
-while getopts hgmlb:u:t:i:n:s:f:a: OPT
+while getopts hgmlob:u:t:i:n:s:f:a: OPT
 do
   case $OPT in
     "h" )
@@ -66,6 +69,8 @@ do
       MON_FLAG=true ;;
     "l" )
       LOAD_FLAG=true ;;
+    "o" )
+      OOO_FLAG=true ;;
     "b" )
       USER_BUILD_DIR=${OPTARG} ;;
     "u" )
@@ -173,11 +178,15 @@ if "${LOAD_FLAG}" ; then
   LOAD_OPT="--load=${MIG_FILE}"
 fi
 
+if "${OOO_FLAG}" ; then
+  OOO_OPT="--ooo"
+fi
+
 if "${GDB_FLAG}" ; then
-  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}"
+  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}"
   echo "Press Enter to start gdb..."
   read Wait
   gdb -tui ${UKVM_BIN} 
 else 
-  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${USER_ARGS}
+  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}
 fi
