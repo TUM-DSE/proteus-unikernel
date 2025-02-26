@@ -8,6 +8,15 @@ import subprocess
 import statistics as stat
 import csv
 
+def avg(nums):
+    return sum(nums)/len(nums)
+
+def stddev(nums):
+    if (len(nums) <= 1):
+        return 0.0
+
+    return stat.stdev(nums)
+
 result_dir = sys.argv[1]
 out_csv = open(sys.argv[2], 'a')
 in_csv = open(sys.argv[3], 'r')
@@ -88,14 +97,8 @@ for i,row in enumerate(app_list):
     # calculate avg, stdev
     times = dict_results[app_name].copy();
 
-    if len(times) == 1:
-        times.append(times[-1]) # average is just the one measurement
-        times.append(0) # stddev
-    else:
-        avg_time = sum(times)/len(times)
-        stddev   = stat.stdev(times)
-        times.append(avg_time)
-        times.append(stddev)
+    times.append(avg(times))
+    times.append(stddev(times))
 
     for i in range(len(lines)):
         if lines[i] == detailed_times_header:
@@ -124,14 +127,14 @@ for i,row in enumerate(app_list):
             times_kernel.append(float(values[6]))
             times_to_host.append(float(values[7]))
 
-        times.append(sum(times_cpu)/len(times_cpu))
-        times.append(stat.stdev(times_cpu))
-        times.append(sum(times_to_fpga)/len(times_to_fpga))
-        times.append(stat.stdev(times_to_fpga))
-        times.append(sum(times_kernel)/len(times_kernel))
-        times.append(stat.stdev(times_kernel))
-        times.append(sum(times_to_host)/len(times_to_host))
-        times.append(stat.stdev(times_to_host))
+        times.append(avg(times_cpu))
+        times.append(stddev(times_cpu))
+        times.append(avg(times_to_fpga))
+        times.append(stddev(times_to_fpga))
+        times.append(avg(times_kernel))
+        times.append(stddev(times_kernel))
+        times.append(avg(times_to_host))
+        times.append(stddev(times_to_host))
 
     # write values to csv
     times.insert(0, app_name)
