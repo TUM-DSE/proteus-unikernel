@@ -188,6 +188,10 @@ int main(int argc, char** argv) {
     std::chrono::duration<double> kernel_time(0);
     std::chrono::duration<double> from_fpga_time(0);
 
+    // Wait for backend to finish programming the FPGA to get time measurements
+    // that are comparable to native execution
+    q.finish();
+
     start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {

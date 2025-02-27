@@ -107,6 +107,10 @@ int main(int argc, char** argv) {
     uint64_t nstime_data_to_fpga_ocl = 0;
     uint64_t nstime_data_to_host_ocl = 0;
 
+    // Wait for backend to finish programming the FPGA to get time measurements
+    // that are comparable to native execution
+    q.finish();
+
     start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {
