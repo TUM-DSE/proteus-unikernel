@@ -38,7 +38,7 @@ def parse_times(config, reps, buf_size, mem_limit, log_filename, csv_writer):
 
     if not detailed_times:
         print(f"Failed to find detailed time measurements in {log_filename}")
-        for _ in range(13):
+        for _ in range(11):
             out_data.append(float("NaN"))
     else:
         values = detailed_times[0].split(",")
@@ -85,9 +85,12 @@ fpgas = ["u280-fast", "u280-ddr-fast"]
 app = "cl_wide_mem_rw_strm_oversub"
 # First run is ignored, just to have the bitstream already programmed for subsequent runs
 args = {
-    "buf_sizes": [1, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048],
-    "mem_limits": [10, 1000000000, 2048, 1024, 512, 256, 128, 64, 2048, 1024, 512, 256, 128, 64],
-    "flags": ["", "", "", "", "", "", "", "", "-o", "-o", "-o", "-o", "-o", "-o"]
+    "buf_sizes": [1, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+                  2048, 2048, 2048, 2048, 2048, 2048, 2048],
+    "mem_limits": [10, 1000000000, 4096, 2048, 1024, 512, 256, 128, 64,
+                   4096, 2048, 1024, 512, 256, 128, 64],
+    "flags": ["", "", "", "", "", "", "", "", "",
+              "-o", "-o", "-o", "-o", "-o", "-o", "-o"]
 }
 app_dir = "/home/felix/Projects/vitis-accel-examples/ocl_kernels"
 print(f"Application: {app_dir}/{app}")
