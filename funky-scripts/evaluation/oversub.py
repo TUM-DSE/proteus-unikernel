@@ -80,7 +80,7 @@ if len(sys.argv) != 2:
 
 
 reps = int(sys.argv[1])
-fpgas = ["u280-fast", "u280-ddr-fast"]
+fpgas = ["u280-fast", "u280-ddr-fast", "u280-ddr-opt-fast"]
 
 app = "cl_wide_mem_rw_strm_oversub"
 # First run is ignored, just to have the bitstream already programmed for subsequent runs
@@ -115,6 +115,10 @@ for fpga in fpgas:
     print(f"{fpga}:")
 
     for i in range(len(args["buf_sizes"])):
+        # Optimized DDR version always uses -o, run warmup run 0, skip run 1 - 8
+        if fpga == "u280-ddr-opt-fast" and i > 0 and i < 9:
+            continue
+
         buf_size = args["buf_sizes"][i]
         mem_limit = args["mem_limits"][i]
         flags = args["flags"][i]
@@ -126,6 +130,8 @@ for fpga in fpgas:
         exec_cmd = [f"./{app}", bitstream, "-s", str(buf_size), "-m", str(mem_limit)]
         if args["flags"][i]:
             exec_cmd.append(flags)
+            if fpga == "u280-ddr-opt-fast":
+                exec_cmd.append("-d")
 
         # First run for programming bitstream only
         if i == 0:
