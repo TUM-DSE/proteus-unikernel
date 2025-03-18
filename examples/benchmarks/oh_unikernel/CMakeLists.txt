@@ -6,25 +6,14 @@ if (NOT DEFINED ENV{INCLUDEOS_PREFIX})
 endif()
 
 include($ENV{INCLUDEOS_PREFIX}/includeos/pre.service.cmake)
-project (hello_xilinx)
+project (funkycl)
 
 # set(SERVICE_NAME "Service with no Service::start, only main")
-set(SERVICE_NAME "Overhead benchmark")
+set(SERVICE_NAME "Test for Funky OpenCL lib")
 set(BINARY       "funkycl-app")
-set(CMAKE_BUILD_TYPE Debug)
-set(FUNKY_UTILS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../funky_utils)
-
-# set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0")
 # set(MAX_MEM 128)
 
-include_directories(/opt/xilinx/xrt/include)
-include_directories(${FUNKY_UTILS_DIR})
-
-set(SOURCES
-  ${FUNKY_UTILS_DIR}/xcl2/xcl2.cpp
-  ${FUNKY_UTILS_DIR}/memdisk/diskio.cpp
-  host.cpp)
+set(SOURCES main.cpp)
 
 if ("$ENV{PLATFORM}" STREQUAL "x86_solo5")
   set(DRIVERS
@@ -40,4 +29,4 @@ set(LIBRARIES
 include($ENV{INCLUDEOS_PREFIX}/includeos/post.service.cmake)
 
 # mount a bitstream file in VFS by using memdisk
-# diskbuilder(../../../xclbin/u50/hello_world)
+# diskbuilder(disk)
