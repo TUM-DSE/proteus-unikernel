@@ -233,29 +233,36 @@ int main(int argc, char** argv) {
     TIMER_STOP_ID(9); // end total time
     TIMER_STOP_ID(0); // end total time
 
-    printf("------------------------------------------------------\n");
-    printf("  Performance Summary                                 \n");
-    printf("------------------------------------------------------\n");
-    // printf("  Input data generation      : %12.4f ms\n", TIMER_REPORT_MS(9));
-    printf("  File I/O (memdisk)              : %12.4f ms\n", TIMER_REPORT_MS(1));
-    // printf("  Close a bitstream file (memdisk): %12.4f ms\n", TIMER_REPORT_MS(10));
-    // printf("  open, close memdisk             : %7.9f, %7.9f s\n", TIMER_REPORT_MS(1)/1000, TIMER_REPORT_MS(10)/1000);
-    printf("  Writing Bitstream (init Funky)  : %12.4f ms\n", TIMER_REPORT_MS(2));
-    printf("  Kernel Allocation               : %12.4f ms\n", TIMER_REPORT_MS(3));
-    // printf("  Buffer Allocation               : %12.4f ms\n", TIMER_REPORT_MS(4));
-    printf("  Set Kernel arguments            : %12.4f ms\n", TIMER_REPORT_MS(5));
-    printf("  Buffer Allocation               : %12.4f ms\n", TIMER_REPORT_MS(4) / 3);
-    // printf("  Input Data transfer             : %12.4f ms\n", TIMER_REPORT_MS(6));
-    printf("  Initial Data transfer           : %12.4f ms\n", TIMER_REPORT_MS(8));
-    printf("  Funky setup overhead            : %12.4f ms\n", TIMER_REPORT_MS(8) - (TIMER_REPORT_MS(6) / 2));
-    printf("  Data transfer                   : %12.4f ms\n", TIMER_REPORT_MS(6) / 2);
-    printf("  Enqueue Kernel                  : %12.4f ms\n", TIMER_REPORT_MS(7) / 1);
-    printf("  Sync cmd queue                  : %12.4f ms\n", TIMER_REPORT_MS(10) / 1);
-    // printf("  Output Data transfer            : %12.4f ms\n", TIMER_REPORT_MS(8));
-    printf("  Total execution time            : %12.4f ms\n", TIMER_REPORT_MS(0));
-    printf("  Total execution time w/o open   : %12.4f ms\n", TIMER_REPORT_MS(9));
-    printf("  looped OpenCL APIs              : %12.4f ms\n", TIMER_REPORT_MS(11));
-    printf("------------------------------------------------------\n");
+    printf("csv (times in ms, everything buffer related is per buffer):\n");
+    printf("buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc,init_transfer,transfer,finish,total\n");
+    printf("%zu,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+           vector_size_bytes,TIMER_REPORT_MS(2),TIMER_REPORT_MS(3),TIMER_REPORT_MS(5),
+           TIMER_REPORT_MS(7),TIMER_REPORT_MS(4) / 3,TIMER_REPORT_MS(8),TIMER_REPORT_MS(6) / 2,
+           TIMER_REPORT_MS(10),TIMER_REPORT_MS(0));
+
+    // printf("------------------------------------------------------\n");
+    // printf("  Performance Summary                                 \n");
+    // printf("------------------------------------------------------\n");
+    // // printf("  Input data generation      : %12.4f ms\n", TIMER_REPORT_MS(9));
+    // // printf("  File I/O (memdisk)              : %12.4f ms\n", TIMER_REPORT_MS(1));
+    // // printf("  Close a bitstream file (memdisk): %12.4f ms\n", TIMER_REPORT_MS(10));
+    // // printf("  open, close memdisk             : %7.9f, %7.9f s\n", TIMER_REPORT_MS(1)/1000, TIMER_REPORT_MS(10)/1000);
+    // printf("  Writing Bitstream (init Funky)  : %12.4f ms\n", TIMER_REPORT_MS(2));
+    // printf("  Kernel Allocation               : %12.4f ms\n", TIMER_REPORT_MS(3));
+    // // printf("  Buffer Allocation               : %12.4f ms\n", TIMER_REPORT_MS(4));
+    // printf("  Set Kernel arguments            : %12.4f ms\n", TIMER_REPORT_MS(5));
+    // printf("  Buffer Allocation               : %12.4f ms\n", TIMER_REPORT_MS(4) / 3);
+    // // printf("  Input Data transfer             : %12.4f ms\n", TIMER_REPORT_MS(6));
+    // printf("  Initial Data transfer           : %12.4f ms\n", TIMER_REPORT_MS(8));
+    // printf("  Funky setup overhead            : %12.4f ms\n", TIMER_REPORT_MS(8) - (TIMER_REPORT_MS(6) / 2));
+    // printf("  Data transfer                   : %12.4f ms\n", TIMER_REPORT_MS(6) / 2);
+    // printf("  Enqueue Kernel                  : %12.4f ms\n", TIMER_REPORT_MS(7) / 1);
+    // printf("  Sync cmd queue                  : %12.4f ms\n", TIMER_REPORT_MS(10) / 1);
+    // // printf("  Output Data transfer            : %12.4f ms\n", TIMER_REPORT_MS(8));
+    // printf("  Total execution time            : %12.4f ms\n", TIMER_REPORT_MS(0));
+    // printf("  Total execution time w/o open   : %12.4f ms\n", TIMER_REPORT_MS(9));
+    // printf("  looped OpenCL APIs              : %12.4f ms\n", TIMER_REPORT_MS(11));
+    // printf("------------------------------------------------------\n");
 
     return (match ? EXIT_SUCCESS : EXIT_FAILURE);
 }
