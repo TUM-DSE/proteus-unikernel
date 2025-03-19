@@ -39,7 +39,10 @@ os.mkdir(out_dir)
 
 benchmark_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
     "init_transfer,transfer,finish,total\n"
-out_csv_header = "fpga,runs," + benchmark_csv_header.rstrip()
+out_csv_header = "fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
+    "kernel_alloc_stddev,kernel_setarg,kernel_setarg_stddev,kernel_enqueue,kernel_enqueue_stddev," \
+    "buf_alloc,buf_alloc_stddev,init_transfer,init_transfer_stddev,transfer,transfer_stddev," \
+    "finish,finish_stddev,total,total_stddev"
 out_csv = open(f"{out_dir}/overheads.csv", 'a')
 csv_writer = csv.writer(out_csv)
 csv_writer.writerow(out_csv_header.split(','))
@@ -83,9 +86,11 @@ for fpga in fpgas:
             for j, num in enumerate(lines[i + 1].split(',')):
                 log_data[j].append(float(num))
 
-    # TODO: stddev
     for i in range(len(benchmark_csv_header.split(','))):
         out_data.append(avg(log_data[i]))
+        # No stddev for buf_size at i == 0
+        if i > 0:
+            out_data.append(stddev(log_data[i]))
 
     csv_writer.writerow(out_data)
     log.close()
