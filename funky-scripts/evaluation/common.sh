@@ -5,14 +5,18 @@ EVAL_SCRIPT_ROOT=$(readlink -f $(dirname ${BASH_SOURCE:-$0}))
 VITIS_EXAMPLES_DIR=${EVAL_SCRIPT_ROOT}/../../examples/Vitis_Accel_Examples/ocl_kernels
 BENCHMARK_DIR=${EVAL_SCRIPT_ROOT}/../../examples/benchmarks
 ROSETTA_DIR=${EVAL_SCRIPT_ROOT}/../../examples/Rosetta
+MICROBENCHMARKS_DIR=${EVAL_SCRIPT_ROOT}/../../examples/benchmarks
 
 ##### params for unikernel execution
 UKVM_BIN=${INCLUDEOS_PREFIX}/includeos/x86_64/lib/ukvm-bin
+if [ -z "${GUEST_MEM_SIZE}" ]; then
+  GUEST_MEM_SIZE=1024
+fi
 TAP_IF=tap100
 SOCKET_IF=/tmp/solo5_socket
 MIG_FILE=mig_file
 APP_BIN=build/funkycl-app
-UKVM_EXEC_CMD="${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+UKVM_EXEC_CMD="${UKVM_BIN} --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
 
 ##### Vitis_Accel_Examples
 VITIS_EXAMPLES_APPS=(cl_array_partition cl_burst_rw cl_dataflow_func cl_dataflow_subfunc cl_helloworld cl_lmem_2rw cl_loop_reorder cl_partition_cyclicblock cl_shift_register cl_systolic_array cl_gmem_2banks cl_wide_mem_rw cl_wide_mem_rw_strm cl_wide_mem_rw_2x cl_wide_mem_rw_4x)
@@ -26,7 +30,7 @@ ROSETTA_ARGS=("-f rendering.xclbin" "-f DigitRec.hw.xclbin" "-f optical_flow.hw.
 ROSETTA_CODE=("3d_rendering_host.cpp" "digit_recognition.cpp" "optical_flow_host.cpp" "spam_filter.cpp")
 
 ##### Benchmarks
-BENCHMARK_APPS=(oh_funkycl)
+BENCHMARK_APPS=(mig_fpga mig_shift_reg mig_sync_oh mig_vadd oh_funkycl oh_unikernel)
 
 find_binary() {
   build_dir=$1
