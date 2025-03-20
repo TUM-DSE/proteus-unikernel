@@ -26,7 +26,9 @@ if len(sys.argv) != 2:
 
 reps = int(sys.argv[1])
 fpgas = ["u50-fast", "u280-fast", "u280-ddr-fast"]
-app_dir = "/home/felix/Projects/proteus/funky-unikernel/examples/benchmarks/oh_funkycl"
+settings = ["proteus", "native"]
+app_dirs = {"proteus": "/home/felix/Projects/proteus/funky-unikernel/examples/benchmarks/oh_funkycl",
+            "native": "/home/felix/Projects/vitis-accel-examples/ocl_kernels/oh_funkycl"}
 
 bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_helloworld"
 dummy_bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_burst_rw"
@@ -39,7 +41,7 @@ os.mkdir(out_dir)
 
 benchmark_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
     "init_transfer,transfer,finish,total\n"
-out_csv_header = "fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
+out_csv_header = "setting,fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
     "kernel_alloc_stddev,kernel_setarg,kernel_setarg_stddev,kernel_enqueue,kernel_enqueue_stddev," \
     "buf_alloc,buf_alloc_stddev,init_transfer,init_transfer_stddev,transfer,transfer_stddev," \
     "finish,finish_stddev,total,total_stddev"
@@ -47,50 +49,54 @@ out_csv = open(f"{out_dir}/overheads.csv", 'a')
 csv_writer = csv.writer(out_csv)
 csv_writer.writerow(out_csv_header.split(','))
 
-for fpga in fpgas:
-    bitstream = f"{bitstream_dir}/{fpga}/bitstream"
-    dummy_bitstream = f"{dummy_bitstream_dir}/{fpga}/bitstream"
+for setting in settings:
+    for fpga in fpgas:
+        bitstream = f"{bitstream_dir}/{fpga}/bitstream"
+        dummy_bitstream = f"{dummy_bitstream_dir}/{fpga}/bitstream"
 
-    print(f"{fpga}:")
+        print(f"{setting}, {fpga}:")
 
-    log_filename = f"{out_dir}/overheads_{fpga}.log"
-    log = open(log_filename, 'a')
+        log_filename = f"{out_dir}/overheads_{setting}_{fpga}.log"
+        log = open(log_filename, 'a')
 
-    os.chdir(app_dir)
+        os.chdir(app_dirs[setting])
 
-    # For programming a different bitstream between runs
-    dummy_bitstream_exec_cmd = ["./execute.sh", "-b", "build", "-t",
-                                f"{fpga.split('-')[0]}", "-i", dummy_bitstream,
-                                "-a", "funcycl-app a"]
+        if setting == "proteus":
+            dummy_bitstream_exec_cmd = ["./execute.sh", "-b", "build", "-t",
+                                        f"{fpga.split('-')[0]}", "-i", dummy_bitstream,
+                                        "-a", "funcycl-app a"]
+            exec_cmd = ["./execute.sh", "-b", "build", "-t",
+                        f"{fpga.split('-')[0]}", "-i", bitstream, "-a", "funcycl-app a"]
+        else:
+            dummy_bitstream_exec_cmd = ["./main", dummy_bitstream]
+            exec_cmd = ["./main", bitstream]
 
-    exec_cmd = ["./execute.sh", "-b", "build", "-t",
-                f"{fpga.split('-')[0]}", "-i", bitstream, "-a", "funcycl-app a"]
+        for _ in range(reps):
+            # Program a different bitstream between runs
+            subprocess.run(dummy_bitstream_exec_cmd, stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+            print(f"[{datetime.datetime.now()}]", ' '.join(str(s) for s in exec_cmd))
+            subprocess.run(exec_cmd, stdout=log, stderr=log)
 
-    for _ in range(reps):
-        subprocess.run(dummy_bitstream_exec_cmd, stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL)
-        print(f"[{datetime.datetime.now()}]", ' '.join(str(s) for s in exec_cmd))
-        subprocess.run(exec_cmd, stdout=log, stderr=log)
+        os.chdir(script_dir)
+        log.close()
 
-    os.chdir(script_dir)
-    log.close()
+        # Parse data from log
+        log = open(log_filename, 'r')
+        log_data = [[] for i in range(len(benchmark_csv_header.split(',')))]
+        out_data = [setting, fpga, reps]
+        lines = log.readlines()
 
-    # Parse data from log
-    log = open(log_filename, 'r')
-    log_data = [[] for i in range(len(benchmark_csv_header.split(',')))]
-    out_data = [fpga, reps]
-    lines = log.readlines()
+        for i in range(len(lines)):
+            if lines[i] == benchmark_csv_header:
+                for j, num in enumerate(lines[i + 1].split(',')):
+                    log_data[j].append(float(num))
 
-    for i in range(len(lines)):
-        if lines[i] == benchmark_csv_header:
-            for j, num in enumerate(lines[i + 1].split(',')):
-                log_data[j].append(float(num))
+        for i in range(len(benchmark_csv_header.split(','))):
+            out_data.append(avg(log_data[i]))
+            # No stddev for buf_size at i == 0
+            if i > 0:
+                out_data.append(stddev(log_data[i]))
 
-    for i in range(len(benchmark_csv_header.split(','))):
-        out_data.append(avg(log_data[i]))
-        # No stddev for buf_size at i == 0
-        if i > 0:
-            out_data.append(stddev(log_data[i]))
-
-    csv_writer.writerow(out_data)
-    log.close()
+        csv_writer.writerow(out_data)
+        log.close()

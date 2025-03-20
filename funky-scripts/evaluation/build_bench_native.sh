@@ -20,4 +20,5 @@ build_benchmark() {
 }
 
 build_benchmark /home/felix/Projects/vitis-accel-examples/ocl_kernels VITIS_EXAMPLES_APPS
+build_benchmark /home/felix/Projects/vitis-accel-examples/ocl_kernels BENCHMARK_APPS
 #build_benchmark ${ROSETTA_DIR} ROSETTA_APPS
