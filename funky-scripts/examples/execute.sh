@@ -183,10 +183,10 @@ if "${OOO_FLAG}" ; then
 fi
 
 if "${GDB_FLAG}" ; then
-  echo "Usage: run --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}"
+  echo "Usage: run --mem=4096 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}"
   echo "Press Enter to start gdb..."
   read Wait
   gdb -tui ${UKVM_BIN} 
 else 
-  ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}
+  ${UKVM_BIN} --mem=4096 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}
 fi
