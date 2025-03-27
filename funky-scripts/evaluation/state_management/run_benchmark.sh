@@ -36,8 +36,8 @@ run_benchmark() {
   echo "back to $(pwd)."
 }
 
-ln -sf /share/felix/bitstreams/vitis-accel-examples/cl_shift_register/u280-ddr-fast/bitstream /tmp/bitstream_0.ukvm
-UKVM_EXEC_CMD="${UKVM_BIN} --fpga=u280 --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+ln -sf /share/felix/bitstreams/vitis-accel-examples/cl_shift_register/u50-fast/bitstream /tmp/bitstream_0.ukvm
+UKVM_EXEC_CMD="${UKVM_BIN} --fpga=u50 --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
 
 BENCH_TYPE=$1
 case "${BENCH_TYPE}" in
@@ -52,7 +52,7 @@ case "${BENCH_TYPE}" in
   "vm_state_oh")
   bench_name=mig_shift_reg
   py_script=measure_vmstate_oh.py
-  UKVM_EXEC_CMD="${UKVM_BIN} --fpga=u280 --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} --checkpoint ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+  UKVM_EXEC_CMD="${UKVM_BIN} --fpga=u50 --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} --checkpoint ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
   ;;
   "migration_oh")
   bench_name=mig_shift_reg
