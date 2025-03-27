@@ -18,12 +18,20 @@ def stddev(nums):
 
     return stat.stdev(nums)
 
-async def async_issue_state_cmds(socket_path):
+async def async_issue_state_cmds(socket_path, log_filename):
     save_fpga_cmd = f"echo save_fpga | socat -u - unix-connect:{socket_path}"
     load_fpga_cmd = f"echo load_fpga | socat -u - unix-connect:{socket_path}"
 
+    log = open(log_filename, "r")
+    log_line = ""
+
     print("subprocess is running...")
-    await asyncio.sleep(10) # manually adjusted for the benchmark
+    while not log_line.startswith("wait for migration"):
+        log_line = log.readline()
+        if not log_line:
+            await asyncio.sleep(0.001)
+
+    await asyncio.sleep(1)
 
     print("writing save_fpga cmd...")
     save_fpga_process = await asyncio.create_subprocess_shell(
@@ -48,7 +56,7 @@ async def main():
     repeat = int(sys.argv[3])
     exec_cmd_base = sys.argv[4:]
     
-    signal_size_list = [1, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
+    signal_size_list = [1000, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
     clk = time.CLOCK_MONOTONIC
     dict_results = dict()
@@ -73,7 +81,7 @@ async def main():
         # repeat execution
         for cnt in range(repeat):
             print(signal_size, end=", ")
-            socket_task = asyncio.create_task(async_issue_state_cmds(socket)) 
+            socket_task = asyncio.create_task(async_issue_state_cmds(socket, log_filename)) 
             t1  = time.clock_gettime(clk)
 
             print("spawning ukvm...")

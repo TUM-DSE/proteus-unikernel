@@ -18,11 +18,19 @@ def stddev(nums):
 
     return stat.stdev(nums)
 
-async def async_issue_state_cmds(socket_path, snapshot_file):
+async def async_issue_state_cmds(socket_path, snapshot_file, log_filename):
     save_fpga_cmd = f"echo savevm {snapshot_file} | socat -u - unix-connect:{socket_path}"
 
+    log = open(log_filename, "r")
+    log_line = ""
+
     print("subprocess is running...")
-    await asyncio.sleep(10) # manually adjusted for the benchmark
+    while not log_line.startswith("wait for migration"):
+        log_line = log.readline()
+        if not log_line:
+            await asyncio.sleep(0.001)
+
+    await asyncio.sleep(1)
 
     print("writing savevm cmd...")
     save_fpga_process = await asyncio.create_subprocess_shell(
@@ -76,7 +84,7 @@ async def main():
         # repeat execution
         for cnt in range(repeat):
             # spawn an async thread to issue savevm command
-            socket_task = asyncio.create_task(async_issue_state_cmds(socket, snapshot_file)) 
+            socket_task = asyncio.create_task(async_issue_state_cmds(socket, snapshot_file, log_savevm_filename)) 
 
             # run benchmark
             print(signal_size, end=", ")
