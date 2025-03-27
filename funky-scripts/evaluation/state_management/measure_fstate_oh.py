@@ -56,7 +56,7 @@ async def main():
     repeat = int(sys.argv[3])
     exec_cmd_base = sys.argv[4:]
     
-    signal_size_list = [1000, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
+    signal_size_list = [1, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
     clk = time.CLOCK_MONOTONIC
     dict_results = dict()
