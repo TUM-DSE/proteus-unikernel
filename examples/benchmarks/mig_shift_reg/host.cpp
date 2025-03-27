@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
 
     printf("wait for migration...\n");
     uint64_t cnt=0;
-    while(cnt < 8000000000)
+    while(cnt < 4000000000)
       cnt++;
 
     OCL_CHECK(err, err = q.enqueueMigrateMemObjects({buffer_output}, CL_MIGRATE_MEM_OBJECT_HOST));
