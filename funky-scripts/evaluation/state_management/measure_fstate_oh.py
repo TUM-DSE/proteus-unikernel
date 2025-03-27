@@ -18,18 +18,24 @@ def stddev(nums):
 
     return stat.stdev(nums)
 
-async def async_issue_state_cmds(socket_path, log_filename):
+async def async_issue_state_cmds(socket_path, log_filename, rep):
     save_fpga_cmd = f"echo save_fpga | socat -u - unix-connect:{socket_path}"
     load_fpga_cmd = f"echo load_fpga | socat -u - unix-connect:{socket_path}"
 
+    # Wait for the line that starts with 'wait for migration' 
+    # to appear in the log before sending the save command
     log = open(log_filename, "r")
     log_line = ""
+    line_matches = 0
 
     print("subprocess is running...")
-    while not log_line.startswith("wait for migration"):
+    # In iteration n the file has to contain the line n + 1 times to continue
+    while line_matches < rep + 1:
         log_line = log.readline()
         if not log_line:
             await asyncio.sleep(0.001)
+        elif log_line.startswith("wait for migration"):
+            line_matches += 1
 
     await asyncio.sleep(1)
 
@@ -81,7 +87,7 @@ async def main():
         # repeat execution
         for cnt in range(repeat):
             print(signal_size, end=", ")
-            socket_task = asyncio.create_task(async_issue_state_cmds(socket, log_filename)) 
+            socket_task = asyncio.create_task(async_issue_state_cmds(socket, log_filename, cnt))
             t1  = time.clock_gettime(clk)
 
             print("spawning ukvm...")
