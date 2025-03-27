@@ -27,17 +27,15 @@ run_benchmark() {
   arg_repeat=$3
   arg_resultdir=$4
   arg_ofile=$5
+  arg_fpga=$6
 
   ### execution
   echo "move into ${arg_benchdir}..."
   pushd ${arg_benchdir}
-  python3 ${arg_py_script} ${arg_resultdir} ${arg_resultdir}/${arg_ofile} ${arg_repeat} ${UKVM_EXEC_CMD}
+  python3 ${arg_py_script} ${arg_resultdir} ${arg_resultdir}/${arg_ofile} ${arg_repeat} ${arg_fpga} ${UKVM_EXEC_CMD}
   popd
   echo "back to $(pwd)."
 }
-
-ln -sf /share/felix/bitstreams/vitis-accel-examples/cl_shift_register/u50-fast/bitstream /tmp/bitstream_0.ukvm
-UKVM_EXEC_CMD="${UKVM_BIN} --fpga=u50 --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
 
 BENCH_TYPE=$1
 case "${BENCH_TYPE}" in
@@ -77,5 +75,22 @@ set_ukvm_permission
 RESULTS_DIR="${SCRIPT_DIR}/${BENCH_TYPE}_$DATE"
 mkdir -p ${RESULTS_DIR}
 
-### run benchmark
-run_benchmark ${MICROBENCHMARKS_DIR}/${bench_name} ${SCRIPT_DIR}/${py_script} ${REPEAT} ${RESULTS_DIR} "${BENCH_TYPE}.csv" 
+FPGAS="u50-fast u280-fast u280-ddr-fast"
+
+for fpga in $FPGAS; do
+  fpga_model=${fpga%%-*}
+
+  # UKVM expects the bitstream at /tmp/bitstream_0.ukvm
+  ln -sf "/share/felix/bitstreams/vitis-accel-examples/cl_shift_register/$fpga/bitstream" /tmp/bitstream_0.ukvm
+  UKVM_EXEC_CMD="${UKVM_BIN} --fpga=$fpga_model --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+
+  if [ "$BENCH_TYPE" == "vm_state_oh" ]; then
+    # Add --checkpoint to save VM snapshots to disk instead of RAM
+    UKVM_EXEC_CMD="${UKVM_BIN} --fpga=$fpga_model --mem=${GUEST_MEM_SIZE} --disk=${APP_BIN} --net=${TAP_IF} ${MON_OPT} --checkpoint ${LOAD_OPT} ${APP_BIN} ${APP_BIN}"
+  fi
+
+  echo "[$fpga]"
+
+  ### run benchmark
+  run_benchmark ${MICROBENCHMARKS_DIR}/${bench_name} ${SCRIPT_DIR}/${py_script} ${REPEAT} ${RESULTS_DIR} "${BENCH_TYPE}.csv" ${fpga} 
+done

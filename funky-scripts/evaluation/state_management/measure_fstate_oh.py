@@ -60,7 +60,8 @@ async def main():
     result_dir = sys.argv[1]
     out_csv = open(sys.argv[2], 'a')
     repeat = int(sys.argv[3])
-    exec_cmd_base = sys.argv[4:]
+    fpga_type = sys.argv[4]
+    exec_cmd_base = sys.argv[5:]
     
     signal_size_list = [1, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
@@ -70,7 +71,7 @@ async def main():
     # evaluate different signal sizes
     for row in enumerate(signal_size_list):
         signal_size = row[1]
-        log_filename = f"{result_dir}/signal-{signal_size}mb.log"
+        log_filename = f"{result_dir}/signal-{signal_size}mb-{fpga_type}.log"
         log = open(log_filename, 'a')
     
         # prepare exec command
@@ -105,11 +106,13 @@ async def main():
     #    exit(1)
     
     # First, write a header to the csv file
-    csv_header = ["signal_size[MB]", "save_fpga[s]", "stddev", "load_fpga[s]", "stddev", "sync_fpga[s]", "stddev", 
+    csv_header = ["signal_size[MB]", "fpga", "save_fpga[s]", "stddev", "load_fpga[s]", "stddev", "sync_fpga[s]", "stddev", 
             "save_fpga_state[s]", "stddev", "load_fpga_reconf[s]", "stddev", "worker_init[s]", "stddev", "fpga_reconf[s]", "stddev", 
             "load_fpga_state[s]", "stddev", "loop_num"]
     writer = csv.writer(out_csv)
-    writer.writerow(csv_header)
+    # Only write header if file is empty
+    if out_csv.tell() == 0:
+        writer.writerow(csv_header)
     
     # Add detailed timing data from applications' stdout and write results to csv.
     # Each application prints the header followed by the data in the next line.
@@ -126,13 +129,15 @@ async def main():
         loadfpga_detailed = []
         savefpga = []
         loadfpga = []
-        log_filename = f"{result_dir}/signal-{signal_size}mb.log"
+        log_filename = f"{result_dir}/signal-{signal_size}mb-{fpga_type}.log"
         log = open(log_filename, 'r')
         lines = log.readlines()
     
         # add a list for each data size to the dict
         dict_results.update({signal_size: list()})
         times = dict_results[signal_size].copy();
+
+        times.append(fpga_type)
     
         for i in range(len(lines)):
             if lines[i] == savefpga_detailed_header:

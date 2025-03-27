@@ -58,7 +58,8 @@ async def main():
     result_dir = sys.argv[1]
     out_csv = open(sys.argv[2], 'a')
     repeat = int(sys.argv[3])
-    exec_cmd_base = sys.argv[4:]
+    fpga_type = sys.argv[4]
+    exec_cmd_base = sys.argv[5:]
 
     signal_size_list = [1, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
@@ -75,7 +76,7 @@ async def main():
     for row in enumerate(signal_size_list):
         signal_size = row[1]
         snapshot_file = f"mig_file_{signal_size}mb"
-        log_savevm_filename = f"{result_dir}/savevm-signal-{signal_size}mb.log"
+        log_savevm_filename = f"{result_dir}/savevm-signal-{signal_size}mb-{fpga_type}.log"
         log_savevm = open(log_savevm_filename, 'a')
     
         # prepare exec command
@@ -115,7 +116,7 @@ async def main():
     for row in enumerate(signal_size_list):
         signal_size = row[1]
         snapshot_file = f"mig_file_{signal_size}mb"
-        log_loadvm_filename = f"{result_dir}/loadvm-signal-{signal_size}mb.log"
+        log_loadvm_filename = f"{result_dir}/loadvm-signal-{signal_size}mb-{fpga_type}.log"
         log_loadvm = open(log_loadvm_filename, 'a')
     
         # prepare exec command
@@ -143,11 +144,13 @@ async def main():
     dict_results = dict()
 
     # write a header to the csv file
-    csv_header = ["signal_size[MB]", "saved_page_size[Bytes]", "save_vm[s]", "stddev", "load_vm[s]", "stddev", 
+    csv_header = ["signal_size[MB]", "fpga", "saved_page_size[Bytes]", "save_vm[s]", "stddev", "load_vm[s]", "stddev", 
             "save_fpga[s]", "stddev", "load_fpga[s]", "stddev", "sync_fpga[s]", "stddev", "save_fpga_state[s]", "stddev", 
             "worker_init[s]", "stddev", "fpga_reconf[s]", "stddev", "load_fpga_state[s]", "stddev", "loop_num"]
     writer = csv.writer(out_csv)
-    writer.writerow(csv_header)
+    # Only write header if file is empty
+    if out_csv.tell() == 0:
+        writer.writerow(csv_header)
     
     # Add detailed timing data from applications' stdout and write results to csv.
     # Each application prints the header followed by the data in the next line.
@@ -168,8 +171,8 @@ async def main():
         loadfpga_detailed = []
         savefpga = []
         # loadfpga = []
-        log_savevm_filename = f"{result_dir}/savevm-signal-{signal_size}mb.log"
-        log_loadvm_filename = f"{result_dir}/loadvm-signal-{signal_size}mb.log"
+        log_savevm_filename = f"{result_dir}/savevm-signal-{signal_size}mb-{fpga_type}.log"
+        log_loadvm_filename = f"{result_dir}/loadvm-signal-{signal_size}mb-{fpga_type}.log"
         log_savevm = open(log_savevm_filename, 'r')
         log_loadvm = open(log_loadvm_filename, 'r')
         lines_savevm = log_savevm.readlines()
@@ -178,6 +181,8 @@ async def main():
         # add a list for each data size to the dict
         dict_results.update({signal_size: list()})
         times = dict_results[signal_size].copy();
+
+        times.append(fpga_type)
     
         for i in range(len(lines_savevm)):
             if lines_savevm[i] == savefpga_detailed_header:
