@@ -66,7 +66,7 @@ async def main():
     fpga_type = sys.argv[4]
     exec_cmd_base = sys.argv[5:]
 
-    signal_size_list = [1, 50, 100, 200, 400, 600, 800, 1000] # MB (1024*1024 Bytes)
+    signal_size_list = [100, 500, 1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
     # signal_size_list = [1000] # MB (1024*1024 Bytes)
     clk = time.CLOCK_MONOTONIC
