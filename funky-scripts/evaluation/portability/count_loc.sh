@@ -64,8 +64,8 @@ count_loc() {
     # cloc --quiet ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp --by-file --csv >> ${CSV}
 
     # echo "code changes for Funky" >> ${CSV}
-    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk --by-file | tee ${LOG}
-    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk --by-file --csv | tail -n +2 >> ${CSV}
+    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk,acl2 --by-file | tee ${LOG}
+    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk,acl2 --by-file --csv | tail -n +2 >> ${CSV}
   else 
     LOG="${arg_output_dir}/harness.log"
     CSV="${arg_output_dir}/harness.csv"
