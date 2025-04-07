@@ -3,7 +3,7 @@
 source ../common.sh
 
 VITIS_ORIG_DIR=$1
-ROSETTA_ORIG_DIR=$2
+# ROSETTA_ORIG_DIR=$2
 
 count_loc() {
   arg_dir=$1
@@ -86,5 +86,5 @@ DIR="${EVAL_SCRIPT_ROOT}/portability/loc_$DATE"
 mkdir -p $DIR
 
 count_loc ${VITIS_EXAMPLES_DIR} ${VITIS_ORIG_DIR} VITIS_EXAMPLES_APPS ${DIR}
-count_loc ${ROSETTA_DIR} ${ROSETTA_ORIG_DIR} ROSETTA_APPS ${DIR}
+# count_loc ${ROSETTA_DIR} ${ROSETTA_ORIG_DIR} ROSETTA_APPS ${DIR}
 
