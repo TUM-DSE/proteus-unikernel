@@ -88,3 +88,14 @@ mkdir -p $DIR
 count_loc ${VITIS_EXAMPLES_DIR} ${VITIS_ORIG_DIR} VITIS_EXAMPLES_APPS ${DIR}
 # count_loc ${ROSETTA_DIR} ${ROSETTA_ORIG_DIR} ROSETTA_APPS ${DIR}
 
+# Summarize all csv files in one file
+loc_file="$DIR"/loc.csv
+echo "Saving summary in $loc_file"
+head -n 1 "$DIR"/"${VITIS_EXAMPLES_APPS[0]}".csv > "$loc_file"
+
+for f in "$DIR"/*.csv; do
+  if [ "$f" == "$loc_file" ]; then
+    continue
+  fi
+  tail -n +2 "$f" >> "$loc_file"
+done
