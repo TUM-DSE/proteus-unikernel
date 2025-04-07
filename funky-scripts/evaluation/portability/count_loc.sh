@@ -43,7 +43,8 @@ count_loc() {
 
     # echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_dir}/${app}/${HOSTCODE} --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file | tee ${LOG}
-    cloc --quiet --diff ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_dir}/${app}/${HOSTCODE} --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file --csv >> ${CSV}
+    # First line is empty, skip it with tail -n +2
+    cloc --quiet --diff ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/${HOSTCODE} ${arg_dir}/${app}/${HOSTCODE} --include-lang=C/C++\ Header,C,C++ --exclude-dir=build --by-file --csv | tail -n +2 >> ${CSV}
 
     if [ ${app} = "optical-flow" ]; then
       rm -r ${arg_orig_dir}/${app}/${HOSTCODE_DIR}/imageLib
@@ -64,7 +65,7 @@ count_loc() {
 
     # echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk --by-file | tee ${LOG}
-    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk --by-file --csv >> ${CSV}
+    cloc --quiet --diff ${arg_orig_dir}/../common/includes ${arg_dir}/../../funky_utils --exclude-dir=oclHelper,opencl,simplebmp,memdisk --by-file --csv | tail -n +2 >> ${CSV}
   else 
     LOG="${arg_output_dir}/harness.log"
     CSV="${arg_output_dir}/harness.csv"
@@ -77,7 +78,7 @@ count_loc() {
 
     echo "code changes for Funky" >> ${CSV}
     cloc --quiet --diff ${arg_orig_dir}/harness/ocl_src ${arg_dir}/harness --by-file | tee ${LOG}
-    cloc --quiet --diff ${arg_orig_dir}/harness/ocl_src ${arg_dir}/harness --by-file --csv >> ${CSV}
+    cloc --quiet --diff ${arg_orig_dir}/harness/ocl_src ${arg_dir}/harness --by-file --csv | tail -n +2 >> ${CSV}
   fi
 }
 
