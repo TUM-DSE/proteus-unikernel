@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <unistd.h>
 
-#include "timer.h"
+#include "../timer.h"
 
 #include "xcl2/xcl2.hpp"
 #include <algorithm>

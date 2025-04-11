@@ -25,7 +25,7 @@
 #include <os>
 #include "xcl2/xcl2.hpp"
 
-#include "timer.h"
+#include "../timer.h"
 
 #include <algorithm>
 #include <random>
