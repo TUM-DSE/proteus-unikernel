@@ -44,7 +44,7 @@ measure_time() {
   pushd ${arg_benchdir} > /dev/null
 
   python3 ${EVAL_SCRIPT_ROOT}/measure_time.py ${RESULTS_DIR} ${RESULTS_CSV} ${APPLIST_CSV} ${arg_repeat} ${bitstream_dir} ${fpga} ${speed} \
-    ${UKVM_BIN} --mem=1024 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${fpga} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}
+    ${UKVM_BIN} --mem=4096 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${fpga} ${MON_OPT} ${LOAD_OPT} ${APP_BIN} ${APP_BIN}
 
   popd > /dev/null
 }
