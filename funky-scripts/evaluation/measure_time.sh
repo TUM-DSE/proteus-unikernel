@@ -49,6 +49,10 @@ measure_time() {
   popd > /dev/null
 }
 
+# Increase memory memory limits for Intel FPGA emulation
+export CL_CONFIG_CPU_FORCE_LOCAL_MEM_SIZE=8GB
+export CL_CONFIG_CPU_FORCE_PRIVATE_MEM_SIZE=8GB
+
 set_ukvm_permission # make ukvm-bin executable
 
 repeat=$1
