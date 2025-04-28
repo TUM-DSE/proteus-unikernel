@@ -1,0 +1,6 @@
+cl_burst_rw,
+cl_helloworld,
+cl_lmem_2rw,
+cl_shift_register,
+cl_gmem_2banks,-i,big-pic.bmp,-c,big-pic.bmp
+cl_wide_mem_rw_strm,
