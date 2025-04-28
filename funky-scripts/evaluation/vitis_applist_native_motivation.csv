@@ -1,5 +1,5 @@
 cl_burst_rw,
 cl_helloworld,
-cl_gmem_2banks,-i,big-pic.bmp,-c,big-pic.bmp
+cl_gmem_2banks,-i,/share/felix/bitstreams/vitis-accel-examples/cl_gmem_2banks/pic.bmp,-c,/share/felix/bitstreams/vitis-accel-examples/cl_gmem_2banks/pic.bmp
 cl_wide_mem_rw_strm,
 cl_wide_mem_rw_2x,
