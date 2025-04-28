@@ -1,15 +1,1 @@
-cl_array_partition,
-cl_burst_rw,
-cl_dataflow_func,
-cl_dataflow_subfunc,
-cl_helloworld,
-cl_lmem_2rw,
-cl_loop_reorder,
-cl_partition_cyclicblock,
-cl_shift_register,
-cl_systolic_array,
-cl_gmem_2banks,-i,/share/felix/bitstreams/vitis-accel-examples/cl_gmem_2banks/pic.bmp,-c,/share/felix/bitstreams/vitis-accel-examples/cl_gmem_2banks/pic.bmp
-cl_wide_mem_rw,
-cl_wide_mem_rw_strm,
-cl_wide_mem_rw_2x,
-cl_wide_mem_rw_4x,
+vitis_applist_native_all.csv
