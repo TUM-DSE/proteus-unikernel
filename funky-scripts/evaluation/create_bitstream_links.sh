@@ -4,7 +4,7 @@ set -u
  
 vitis_bs_path=/share/felix/bitstreams/vitis-accel-examples
 rosetta_bs_path=/share/felix/bitstreams/rosetta
-fpga_types="u50-slow u50-fast u280-slow u280-fast u280-ddr-slow u280-ddr-fast"
+fpga_types="u50-slow u50-fast u280-slow u280-fast u280-ddr-slow u280-ddr-fast u50-300 u50-400 u280-300 u280-400 u280-ddr-300 u280-ddr-400"
 
 for base_dir in "$vitis_bs_path"/*; do
   for fpga_type in $fpga_types; do
