@@ -33,6 +33,17 @@ clEnqueueWriteBuffer(cl_command_queue   command_queue,
   else
     DEBUG_STREAM("No memory request is issued. all memobjs are already initialized.");
 
+  /* Send a request for creating all kernels. The kernels have to be created before issuing the
+  * enqueueWriteBuffer command in the backend if multiple memory banks are used on the FPGA.
+  * Otherwise, the runtime does not know where to save each memory object. */
+  for (auto& kernel : KERNELS) {
+    bool kernel_created = std::get<1>(kernel);
+    if (!kernel_created) {
+      cmd_queue->vfpga_send_kernel_request(cmd_queue->get_id(), std::get<0>(kernel));
+      std::get<1>(kernel) = true;
+    }
+  }
+
   bool is_write = true;
   /* create a new event object for this command */
   if(event != nullptr)

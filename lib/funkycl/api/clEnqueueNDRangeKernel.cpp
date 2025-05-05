@@ -24,6 +24,15 @@ clEnqueueNDRangeKernel(cl_command_queue command_queue,
 
   auto ret = cmd_queue->vfpga_send_memory_request();
 
+  // Send a request for creating all kernels if they haven't been created yet
+  for (auto& kernel : KERNELS) {
+    bool kernel_created = std::get<1>(kernel);
+    if (!kernel_created) {
+      cmd_queue->vfpga_send_kernel_request(cmd_queue->get_id(), std::get<0>(kernel));
+      std::get<1>(kernel) = true;
+    }
+  }
+
   // if(work_dim != 1)
   // {
   //   std::cout << "Error: Funky does not support the work dimension greater than 1. Aborted. " << std::endl;
