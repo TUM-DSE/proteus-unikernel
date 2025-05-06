@@ -57,7 +57,7 @@ namespace rosetta
   }
 
   // insert a new memory object
-  int CLWorld::addMemObj(CLMemObj &new_mem_obj, uint64_t &time)
+  int CLWorld::addMemObj(CLMemObj &new_mem_obj)
   {
     int err;
 
@@ -82,22 +82,14 @@ namespace rosetta
     // write the buffer onto the device if needed
     if ((new_mem_obj.flags != CL_MEM_WRITE_ONLY) && (new_mem_obj.mem_data != nullptr))
     {
-      cl_event event;
-      uint64_t time_start;
-      uint64_t time_end;
-
       err = clEnqueueWriteBuffer(cmd_queue, buf, true, 0, new_mem_obj.elt_size * new_mem_obj.length, 
-                                 new_mem_obj.mem_data, 0, NULL, &event);
+                                 new_mem_obj.mem_data, 0, NULL, NULL);
       if (err != CL_SUCCESS)
       {
         printf("Error writing buffer %d onto the device!\n", mem_objs.size()-1);
         printf("Error Code %d\n", err);
         exit(EXIT_FAILURE);
       }
-      
-      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
-      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
-      time += time_end - time_start;
     }
 
     printf("Done!\n");
@@ -105,22 +97,30 @@ namespace rosetta
     return (mem_objs.size() - 1);
   }
 
-  int CLWorld::updateMemObj(int mem_idx)
+  int CLWorld::updateMemObj(int mem_idx, uint64_t &time)
   {
-    printf("Updating mem object %d ... ", mem_idx);
+    // printf("Updating mem object %d ... ", mem_idx);
 
     // write the buffer onto the device if needed
     if (mem_objs[mem_idx].flags != CL_MEM_WRITE_ONLY)
     {
+      cl_event event;
+      uint64_t time_start;
+      uint64_t time_end;
+
       int err = clEnqueueWriteBuffer(cmd_queue, cl_mem_buffers[mem_idx], true, 0, 
                                      mem_objs[mem_idx].elt_size * mem_objs[mem_idx].length, 
-                                     mem_objs[mem_idx].mem_data, 0, NULL, NULL);
+                                     mem_objs[mem_idx].mem_data, 0, NULL, &event);
       if (err != CL_SUCCESS)
       {
         printf("Error writing buffer %d onto the device!\n", mem_idx);
         printf("Error Code %d\n", err);
         exit(EXIT_FAILURE);
       }
+
+      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+      time += time_end - time_start;
     }
     else
       printf("Buffer %d is write_only! Not updating it ... \n", mem_idx);
@@ -130,7 +130,7 @@ namespace rosetta
    
   int CLWorld::readMemObj(int mem_idx, uint64_t &time)
   {
-    printf("Reading mem object %d into host buffers ... ", mem_idx);
+    // printf("Reading mem object %d into host buffers ... ", mem_idx);
 
     cl_event event;
     uint64_t time_start;
@@ -150,7 +150,7 @@ namespace rosetta
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
     time += time_end - time_start;
 
-    printf("Done!\n");
+    // printf("Done!\n");
 
     return err;
   }
@@ -240,12 +240,12 @@ namespace rosetta
   // return error code
   int CLWorld::runKernels(uint64_t &time, bool flush)
   {
-    printf("Start kernel execution ... ");
+    // printf("Start kernel execution ... ");
 
     int err;
 
     // wait for previous write buffer tasks to finish
-    printf("Waiting for queue... \n");
+    // printf("Waiting for queue... \n");
     clFinish(cmd_queue);
 
     // OpenCL profiling doesn't seem to work here in Proteus, use CPU timer instead
@@ -256,7 +256,7 @@ namespace rosetta
     // or the dependency is handled inside kernels (such as pipes, etc. )
     for (int i = 0; i < kernels.size(); i ++ )
     {
-      printf("Start kernel %d!\n", i);
+      // printf("Start kernel %d!\n", i);
       err = clEnqueueNDRangeKernel(cmd_queue, kernels[i].kernel, 3, NULL, kernels[i].global_size, kernels[i].local_size, 
                                    0, NULL, NULL);
       if (err != CL_SUCCESS)
@@ -268,7 +268,7 @@ namespace rosetta
     }
 
     // wait for them to finish
-    printf("Waiting for kernels ... \n");
+    // printf("Waiting for kernels ... \n");
     clFinish(cmd_queue);
 
     auto time_end = std::chrono::high_resolution_clock::now();
@@ -285,7 +285,7 @@ namespace rosetta
         kernels.pop_back();
     }
 
-    printf("Done!\n");
+    // printf("Done!\n");
 
     return err;
   }

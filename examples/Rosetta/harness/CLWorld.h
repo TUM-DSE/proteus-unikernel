@@ -52,10 +52,10 @@ namespace rosetta
       int addKernel(CLKernel &new_kernel);
 
       // insert a memory object
-      int addMemObj(CLMemObj &new_mem_obj, uint64_t &time);
+      int addMemObj(CLMemObj &new_mem_obj);
 
       // update a memory object (write new value)
-      int updateMemObj(int mem_id);
+      int updateMemObj(int mem_id, uint64_t &time);
 
       // read a memory object
       int readMemObj(int mem_id, uint64_t &time);

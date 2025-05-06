@@ -104,19 +104,14 @@ int main(int argc, char ** argv)
     // create mem objects
     CLMemObj input_mem ( (void*)input,  sizeof(bit32), 3 * NUM_3D_TRI, CL_MEM_READ_ONLY);
     CLMemObj output_mem( (void*)output, sizeof(bit32), NUM_FB,         CL_MEM_WRITE_ONLY);
-  
-    auto q = rendering_world.getCmdQueue();
-    clFinish(q);
 
     // start timer
     gettimeofday(&start, 0);
-
-    auto start_time = std::chrono::high_resolution_clock::now();
   
     // add them to the world
     // added in sequence, each of them can be referenced by an index
-    rendering_world.addMemObj(input_mem, nstime_data_to_fpga);
-    rendering_world.addMemObj(output_mem, nstime_data_to_fpga);
+    rendering_world.addMemObj(input_mem);
+    rendering_world.addMemObj(output_mem);
   
     // set work size
     int global_size[3] = {1, 1, 1};
@@ -130,14 +125,25 @@ int main(int argc, char ** argv)
     // set kernel arguments
     rendering_world.setMemKernelArg(0, 0, 0);
     rendering_world.setMemKernelArg(0, 1, 1);
-  
-    // run!
-    rendering_world.runKernels(nstime_kernel);
-  
-    // read the data back
-    rendering_world.readMemObj(1, nstime_data_to_host);
+    
+    const int iterations = 10;
 
+    auto q = rendering_world.getCmdQueue();
     clFinish(q);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < iterations; i++) {
+      rendering_world.updateMemObj(0, nstime_data_to_fpga);
+  
+      // run!
+      rendering_world.runKernels(nstime_kernel);
+    
+      // read the data back
+      rendering_world.readMemObj(1, nstime_data_to_host);
+  
+      clFinish(q);
+    }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double>(end_time - start_time);
@@ -192,7 +198,7 @@ int main(int argc, char ** argv)
             << std::dec
             << input_size << ","
             << output_size << ","
-            << 1 << ","
+            << iterations << ","
             << std::setprecision(std::numeric_limits<double>::digits10)
             << nstime_cpu / (double)1'000'000'000 << ","
             << nstime_data_to_fpga / (double)1'000'000'000 << ","
