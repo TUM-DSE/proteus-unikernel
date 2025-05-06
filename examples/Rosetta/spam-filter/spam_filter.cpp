@@ -16,6 +16,7 @@
 #include <string>
 #include <time.h>
 #include <sys/time.h>
+#include <chrono>
 
 #ifdef OCL
   // opencl harness headers
@@ -127,6 +128,11 @@ int main(int argc, char *argv[])
     VectorDataType* data_points_for_accel = new VectorDataType[NUM_TRAINING * NUM_FEATURES / D_VECTOR_SIZE];
     VectorLabelType* labels_for_accel = new VectorLabelType[NUM_TRAINING / L_VECTOR_SIZE];
     VectorFeatureType* param_for_accel = new VectorFeatureType[NUM_FEATURES / F_VECTOR_SIZE];
+
+    // times in ns
+    uint64_t nstime_data_to_fpga = 0;
+    uint64_t nstime_kernel = 0;
+    uint64_t nstime_data_to_host = 0;
     
     // reorganize data for the accelerator
     // data points
@@ -168,15 +174,20 @@ int main(int argc, char *argv[])
                         sizeof(VectorFeatureType),
                         NUM_FEATURES / F_VECTOR_SIZE, 
                         CL_MEM_READ_WRITE);
+
+    auto q = spam_filter_world.getCmdQueue();
+    clFinish(q);
   
     // start timer
     gettimeofday(&start, 0);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
   
     // add them to the world
     // added in sequence, each of them can be referenced by an index
-    spam_filter_world.addMemObj(data_mem);
-    spam_filter_world.addMemObj(label_mem);
-    spam_filter_world.addMemObj(param_mem);
+    spam_filter_world.addMemObj(data_mem, nstime_data_to_fpga);
+    spam_filter_world.addMemObj(label_mem, nstime_data_to_fpga);
+    spam_filter_world.addMemObj(param_mem, nstime_data_to_fpga);
   
     // set work size
     int global_size[3] = {1, 1, 1};
@@ -194,10 +205,16 @@ int main(int argc, char *argv[])
     spam_filter_world.setMemKernelArg(0, 2, 2);
   
     // run!
-    spam_filter_world.runKernels();
+    spam_filter_world.runKernels(nstime_kernel);
   
     // read the param vector back
-    spam_filter_world.readMemObj(2);
+    spam_filter_world.readMemObj(2, nstime_data_to_host);
+
+    clFinish(q);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration<double>(end_time - start_time);
+    auto nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
   
     // end timer
     gettimeofday(&end, 0);
@@ -252,6 +269,24 @@ int main(int argc, char *argv[])
     SgdLR_sw(data_points, labels, param_vector);
     gettimeofday(&end, NULL);
   #endif 
+
+  // data_mem + label_mem
+  auto input_size = 
+    ((NUM_TRAINING * NUM_FEATURES / D_VECTOR_SIZE) * sizeof(VectorDataType)) +
+    ((NUM_TRAINING / L_VECTOR_SIZE) * sizeof(VectorLabelType));
+  auto output_size = (NUM_FEATURES / F_VECTOR_SIZE) * sizeof(VectorFeatureType);
+
+  std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
+            << "spam_filter,"
+            << std::dec
+            << input_size << ","
+            << output_size << ","
+            << 1 << ","
+            << std::setprecision(std::numeric_limits<double>::digits10)
+            << nstime_cpu / (double)1'000'000'000 << ","
+            << nstime_data_to_fpga / (double)1'000'000'000 << ","
+            << nstime_kernel / (double)1'000'000'000 << ","
+            << nstime_data_to_host / (double)1'000'000'000 << "\n";
 
   // check results
   printf("Checking results:\n");
