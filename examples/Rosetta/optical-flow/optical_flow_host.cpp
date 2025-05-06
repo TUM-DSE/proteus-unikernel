@@ -98,6 +98,11 @@ int main(int argc, char ** argv)
     frames_t*  frames = new frames_t[MAX_HEIGHT * MAX_WIDTH];
     // output
     velocity_t* outputs = new velocity_t[MAX_HEIGHT * MAX_WIDTH];
+
+    // times in ns
+    uint64_t nstime_data_to_fpga = 0;
+    uint64_t nstime_kernel = 0;
+    uint64_t nstime_data_to_host = 0;
    
     // pack the values
     for (int i = 0; i < MAX_HEIGHT; i++) 
@@ -126,14 +131,19 @@ int main(int argc, char ** argv)
     // create mem objects
     CLMemObj frames_mem ( (void*)frames,  sizeof(frames_t),   MAX_HEIGHT * MAX_WIDTH, CL_MEM_READ_ONLY, 0);
     CLMemObj outputs_mem( (void*)outputs, sizeof(velocity_t), MAX_HEIGHT * MAX_WIDTH, CL_MEM_WRITE_ONLY, 0);
-  
+
+    auto q = oflow_world.getCmdQueue();
+    clFinish(q);
+
     // start timer
     gettimeofday(&start, 0);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
   
     // add them to the world
     // added in sequence, each of them can be referenced by an index
-    oflow_world.addMemObj(frames_mem);
-    oflow_world.addMemObj(outputs_mem);
+    oflow_world.addMemObj(frames_mem, nstime_data_to_fpga);
+    oflow_world.addMemObj(outputs_mem, nstime_data_to_fpga);
   
     // set work size
     int global_size[3] = {1, 1, 1};
@@ -149,10 +159,16 @@ int main(int argc, char ** argv)
     oflow_world.setMemKernelArg(0, 1, 1);
    
     // run!
-    oflow_world.runKernels();
+    oflow_world.runKernels(nstime_kernel);
   
     // read the data back
-    oflow_world.readMemObj(1);
+    oflow_world.readMemObj(1, nstime_data_to_host);
+
+    clFinish(q);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration<double>(end_time - start_time);
+    auto nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
   
     // end timer
     gettimeofday(&end, 0);
@@ -201,6 +217,21 @@ int main(int argc, char ** argv)
     optical_flow_sw(frames[0], frames[1], frames[2], frames[3], frames[4], outputs);
     gettimeofday(&end, NULL);
   #endif
+
+  auto input_size = MAX_HEIGHT * MAX_WIDTH * sizeof(frames_t);
+  auto output_size = MAX_HEIGHT * MAX_WIDTH * sizeof(velocity_t);
+
+  std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
+            << "optical_flow,"
+            << std::dec
+            << input_size << ","
+            << output_size << ","
+            << 1 << ","
+            << std::setprecision(std::numeric_limits<double>::digits10)
+            << nstime_cpu / (double)1'000'000'000 << ","
+            << nstime_data_to_fpga / (double)1'000'000'000 << ","
+            << nstime_kernel / (double)1'000'000'000 << ","
+            << nstime_data_to_host / (double)1'000'000'000 << "\n";
 
   // check results
   printf("Checking results:\n");
