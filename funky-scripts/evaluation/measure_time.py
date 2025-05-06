@@ -60,6 +60,8 @@ for cnt in range(repeat):
         exec_cmd = exec_cmd_base.copy()
         if app_name == "cl_gmem_2banks":
             exec_cmd.append("-x")
+        elif app_name in ["3d-rendering", "digit-recognition", "optical-flow", "spam-filter"]:
+            exec_cmd.append("-f")
         # virtual bitstream (see below), so the program just gets some dummy bitstream path
         exec_cmd.append("dummy-bitstream")
         # arg can be empty

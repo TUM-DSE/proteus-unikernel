@@ -1,4 +1,0 @@
-3d-rendering, -f dummy.xclbin
-digit-recognition, -f dummy.xclbin
-optical-flow, -f dummy.xclbin -p sintel_alley -o outputs.flo
-spam-filter, -f dummy.xclbin -p data/

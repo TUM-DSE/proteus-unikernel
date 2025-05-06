@@ -58,6 +58,8 @@ for cnt in range(repeat):
         # prepare exec command, gmem_2banks requires -x before the bitstream
         if app_name == "cl_gmem_2banks":
             exec_cmd = [f"./{app_name}", "-x", bitstream]
+        elif app_name in ["3d-rendering", "digit-recognition", "optical-flow", "spam-filter"]:
+            exec_cmd = [f"./{app_name}", "-f", bitstream, "-t", fpga]
         else:
             exec_cmd = [f"./{app_name}", bitstream]
         # arg can be empty

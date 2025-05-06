@@ -1,0 +1,4 @@
+3d-rendering,
+digit-recognition,
+optical-flow,-p,datasets/sintel_alley,-o,outputs.flo
+spam-filter,-p,data
