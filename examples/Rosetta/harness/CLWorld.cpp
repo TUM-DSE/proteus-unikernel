@@ -8,6 +8,7 @@
 
 #include "CLWorld.h"
 #include "memdisk/diskio.h" // for disk I/O in unikernel
+#include <chrono>
 
 namespace rosetta
 {
@@ -50,8 +51,13 @@ namespace rosetta
     return this->program;
   }
 
+  cl_command_queue CLWorld::getCmdQueue()
+  {
+    return this->cmd_queue;
+  }
+
   // insert a new memory object
-  int CLWorld::addMemObj(CLMemObj &new_mem_obj)
+  int CLWorld::addMemObj(CLMemObj &new_mem_obj, uint64_t &time)
   {
     int err;
 
@@ -76,14 +82,22 @@ namespace rosetta
     // write the buffer onto the device if needed
     if ((new_mem_obj.flags != CL_MEM_WRITE_ONLY) && (new_mem_obj.mem_data != nullptr))
     {
+      cl_event event;
+      uint64_t time_start;
+      uint64_t time_end;
+
       err = clEnqueueWriteBuffer(cmd_queue, buf, true, 0, new_mem_obj.elt_size * new_mem_obj.length, 
-                                 new_mem_obj.mem_data, 0, NULL, NULL);
+                                 new_mem_obj.mem_data, 0, NULL, &event);
       if (err != CL_SUCCESS)
       {
         printf("Error writing buffer %d onto the device!\n", mem_objs.size()-1);
         printf("Error Code %d\n", err);
         exit(EXIT_FAILURE);
       }
+      
+      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+      clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+      time += time_end - time_start;
     }
 
     printf("Done!\n");
@@ -114,19 +128,27 @@ namespace rosetta
     return EXIT_SUCCESS;
   }
    
-  int CLWorld::readMemObj(int mem_idx)
+  int CLWorld::readMemObj(int mem_idx, uint64_t &time)
   {
     printf("Reading mem object %d into host buffers ... ", mem_idx);
 
+    cl_event event;
+    uint64_t time_start;
+    uint64_t time_end;
+
     int err = clEnqueueReadBuffer(cmd_queue, cl_mem_buffers[mem_idx], true, 0,
                                   mem_objs[mem_idx].elt_size * mem_objs[mem_idx].length, 
-				  mem_objs[mem_idx].mem_data, 0, NULL, NULL);
+				  mem_objs[mem_idx].mem_data, 0, NULL, &event);
     if (err != CL_SUCCESS)
     {
       printf("Error reading kernel buffer %d!\n", mem_idx);
       printf("Error code %d\n", err);
       exit(EXIT_FAILURE);
     }
+
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
+    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
+    time += time_end - time_start;
 
     printf("Done!\n");
 
@@ -216,7 +238,7 @@ namespace rosetta
    
   // run all kernels
   // return error code
-  int CLWorld::runKernels(bool flush)
+  int CLWorld::runKernels(uint64_t &time, bool flush)
   {
     printf("Start kernel execution ... ");
 
@@ -225,6 +247,9 @@ namespace rosetta
     // wait for previous write buffer tasks to finish
     printf("Waiting for queue... \n");
     clFinish(cmd_queue);
+
+    // OpenCL profiling doesn't seem to work here in Proteus, use CPU timer instead
+    auto time_start = std::chrono::high_resolution_clock::now();
 
     // enqueue all the kernels
     // temporarily we assume kernels won't have any dependency between them
@@ -237,14 +262,18 @@ namespace rosetta
       if (err != CL_SUCCESS)
       {
         printf("Error enqueuing kernel %d!\n", i);
-	printf("Error Code %d\n", err);
-	exit(EXIT_FAILURE);
+	      printf("Error Code %d\n", err);
+	      exit(EXIT_FAILURE);
       }
     }
 
     // wait for them to finish
     printf("Waiting for kernels ... \n");
     clFinish(cmd_queue);
+
+    auto time_end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration<double>(time_end - time_start);
+    time += std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
 
     // remove all of them from the vector
     // so that this function can be called multiple times
@@ -335,8 +364,9 @@ namespace rosetta
       exit(EXIT_FAILURE);
     }
     this->cmd_queue = clCreateCommandQueue(this->context, this->device_id, 
-                                           CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE,
-					   &err);
+                                           CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE
+                                           | CL_QUEUE_PROFILING_ENABLE,
+					                                 &err);
     if (!(this->cmd_queue))
     {
       printf("Error: Failed to create a command queue!\n");

@@ -43,6 +43,8 @@ namespace rosetta
       // get the binary program 
       cl_program getProgram();
 
+      cl_command_queue getCmdQueue();
+
       // insert a compute program 
       int addProgram(std::string filename);
 
@@ -50,13 +52,13 @@ namespace rosetta
       int addKernel(CLKernel &new_kernel);
 
       // insert a memory object
-      int addMemObj(CLMemObj &new_mem_obj);
+      int addMemObj(CLMemObj &new_mem_obj, uint64_t &time);
 
       // update a memory object (write new value)
       int updateMemObj(int mem_id);
 
       // read a memory object
-      int readMemObj(int mem_id);
+      int readMemObj(int mem_id, uint64_t &time);
 
       // set memory kernel argument
       int setMemKernelArg(int kernel_id, int pos, int mem_id);
@@ -81,7 +83,7 @@ namespace rosetta
       }
 
       // run kernels
-      int runKernels(bool flush = false);
+      int runKernels(uint64_t &time, bool flush = false);
 
       // clean up
       void releaseWorld();

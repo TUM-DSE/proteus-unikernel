@@ -15,6 +15,9 @@
 #include <string>
 #include <time.h>
 #include <sys/time.h>
+#include <chrono>
+
+#define OCL
 
 #ifdef OCL
   // harness headers
@@ -67,6 +70,11 @@ int main(int argc, char ** argv)
     // create space for input and output
     bit32* input  = new bit32[3 * NUM_3D_TRI];
     bit32* output = new bit32[NUM_FB];
+
+    // times in ns
+    uint64_t nstime_data_to_fpga = 0;
+    uint64_t nstime_kernel = 0;
+    uint64_t nstime_data_to_host = 0;
   
     // pack input data for better performance
     for ( int i = 0; i < NUM_3D_TRI; i ++)
@@ -97,13 +105,18 @@ int main(int argc, char ** argv)
     CLMemObj input_mem ( (void*)input,  sizeof(bit32), 3 * NUM_3D_TRI, CL_MEM_READ_ONLY);
     CLMemObj output_mem( (void*)output, sizeof(bit32), NUM_FB,         CL_MEM_WRITE_ONLY);
   
+    auto q = rendering_world.getCmdQueue();
+    clFinish(q);
+
     // start timer
     gettimeofday(&start, 0);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
   
     // add them to the world
     // added in sequence, each of them can be referenced by an index
-    rendering_world.addMemObj(input_mem);
-    rendering_world.addMemObj(output_mem);
+    rendering_world.addMemObj(input_mem, nstime_data_to_fpga);
+    rendering_world.addMemObj(output_mem, nstime_data_to_fpga);
   
     // set work size
     int global_size[3] = {1, 1, 1};
@@ -119,10 +132,16 @@ int main(int argc, char ** argv)
     rendering_world.setMemKernelArg(0, 1, 1);
   
     // run!
-    rendering_world.runKernels();
+    rendering_world.runKernels(nstime_kernel);
   
     // read the data back
-    rendering_world.readMemObj(1);
+    rendering_world.readMemObj(1, nstime_data_to_host);
+
+    clFinish(q);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration<double>(end_time - start_time);
+    auto nstime_cpu = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
     
     // end timer
     gettimeofday(&end, 0);
@@ -164,6 +183,21 @@ int main(int argc, char ** argv)
     rendering_sw(triangle_3ds, output);
     gettimeofday(&end, 0);
   #endif 
+
+  auto input_size = 3 * NUM_3D_TRI * sizeof(bit32);
+  auto output_size = NUM_FB * sizeof(bit32);
+
+  std::cout << "app_name,kernel_input_data_size,kernel_output_data_size,iterations,time_cpu,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
+            << "3d_rendering,"
+            << std::dec
+            << input_size << ","
+            << output_size << ","
+            << 1 << ","
+            << std::setprecision(std::numeric_limits<double>::digits10)
+            << nstime_cpu / (double)1'000'000'000 << ","
+            << nstime_data_to_fpga / (double)1'000'000'000 << ","
+            << nstime_kernel / (double)1'000'000'000 << ","
+            << nstime_data_to_host / (double)1'000'000'000 << "\n";
  
   // check results
   printf("Checking results:\n");
