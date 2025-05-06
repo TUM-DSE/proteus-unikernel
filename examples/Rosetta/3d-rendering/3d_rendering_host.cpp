@@ -126,7 +126,7 @@ int main(int argc, char ** argv)
     rendering_world.setMemKernelArg(0, 0, 0);
     rendering_world.setMemKernelArg(0, 1, 1);
     
-    const int iterations = 10;
+    const int iterations = 13687;
 
     auto q = rendering_world.getCmdQueue();
     clFinish(q);

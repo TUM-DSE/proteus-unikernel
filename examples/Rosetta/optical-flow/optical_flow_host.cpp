@@ -154,7 +154,7 @@ int main(int argc, char ** argv)
     oflow_world.setMemKernelArg(0, 0, 0);
     oflow_world.setMemKernelArg(0, 1, 1);
 
-    const int iterations = 10;
+    const int iterations = 146;
 
     auto q = oflow_world.getCmdQueue();
     clFinish(q);
