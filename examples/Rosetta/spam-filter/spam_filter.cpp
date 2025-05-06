@@ -174,20 +174,15 @@ int main(int argc, char *argv[])
                         sizeof(VectorFeatureType),
                         NUM_FEATURES / F_VECTOR_SIZE, 
                         CL_MEM_READ_WRITE);
-
-    auto q = spam_filter_world.getCmdQueue();
-    clFinish(q);
   
     // start timer
     gettimeofday(&start, 0);
-
-    auto start_time = std::chrono::high_resolution_clock::now();
   
     // add them to the world
     // added in sequence, each of them can be referenced by an index
-    spam_filter_world.addMemObj(data_mem, nstime_data_to_fpga);
-    spam_filter_world.addMemObj(label_mem, nstime_data_to_fpga);
-    spam_filter_world.addMemObj(param_mem, nstime_data_to_fpga);
+    spam_filter_world.addMemObj(data_mem);
+    spam_filter_world.addMemObj(label_mem);
+    spam_filter_world.addMemObj(param_mem);
   
     // set work size
     int global_size[3] = {1, 1, 1};
@@ -203,14 +198,24 @@ int main(int argc, char *argv[])
     spam_filter_world.setMemKernelArg(0, 0, 0);
     spam_filter_world.setMemKernelArg(0, 1, 1);
     spam_filter_world.setMemKernelArg(0, 2, 2);
-  
-    // run!
-    spam_filter_world.runKernels(nstime_kernel);
-  
-    // read the param vector back
-    spam_filter_world.readMemObj(2, nstime_data_to_host);
 
+    const int iterations = 10;
+
+    auto q = spam_filter_world.getCmdQueue();
     clFinish(q);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
+  
+    for (int i = 0; i < iterations; i++) {
+      spam_filter_world.updateMemObj(0, nstime_data_to_fpga);
+      spam_filter_world.updateMemObj(1, nstime_data_to_fpga);
+      // run!
+      spam_filter_world.runKernels(nstime_kernel);
+    
+      // read the param vector back
+      spam_filter_world.readMemObj(2, nstime_data_to_host);
+
+    }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration<double>(end_time - start_time);
@@ -281,7 +286,7 @@ int main(int argc, char *argv[])
             << std::dec
             << input_size << ","
             << output_size << ","
-            << 1 << ","
+            << iterations << ","
             << std::setprecision(std::numeric_limits<double>::digits10)
             << nstime_cpu / (double)1'000'000'000 << ","
             << nstime_data_to_fpga / (double)1'000'000'000 << ","
