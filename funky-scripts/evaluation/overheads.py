@@ -39,12 +39,14 @@ script_dir = os.getcwd()
 
 os.mkdir(out_dir)
 
-benchmark_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
+unikernel_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
     "init_transfer,transfer,finish,total\n"
+worker_init_header = "worker_init[s],fpga_reconf[s],load_fpga[s]\n"
+
 out_csv_header = "setting,fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
     "kernel_alloc_stddev,kernel_setarg,kernel_setarg_stddev,kernel_enqueue,kernel_enqueue_stddev," \
     "buf_alloc,buf_alloc_stddev,init_transfer,init_transfer_stddev,transfer,transfer_stddev," \
-    "finish,finish_stddev,total,total_stddev"
+    "finish,finish_stddev,total,total_stddev,worker_init,worker_init_stddev"
 out_csv = open(f"{out_dir}/overheads.csv", 'a')
 csv_writer = csv.writer(out_csv)
 csv_writer.writerow(out_csv_header.split(','))
@@ -74,29 +76,44 @@ for setting in settings:
         for _ in range(reps):
             # Program a different bitstream between runs
             subprocess.run(dummy_bitstream_exec_cmd, stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
+                           stderr=subprocess.DEVNULL)
             print(f"[{datetime.datetime.now()}]", ' '.join(str(s) for s in exec_cmd))
             subprocess.run(exec_cmd, stdout=log, stderr=log)
 
         os.chdir(script_dir)
         log.close()
 
-        # Parse data from log
+        # Parse unikernel data from log
         log = open(log_filename, 'r')
-        log_data = [[] for i in range(len(benchmark_csv_header.split(',')))]
+        uni_log_data = [[] for i in range(len(unikernel_csv_header.split(',')))]
         out_data = [setting, fpga, reps]
         lines = log.readlines()
 
         for i in range(len(lines)):
-            if lines[i] == benchmark_csv_header:
+            if lines[i] == unikernel_csv_header:
                 for j, num in enumerate(lines[i + 1].split(',')):
-                    log_data[j].append(float(num))
+                    uni_log_data[j].append(float(num))
 
-        for i in range(len(benchmark_csv_header.split(','))):
-            out_data.append(avg(log_data[i]))
+        for i in range(len(unikernel_csv_header.split(','))):
+            out_data.append(avg(uni_log_data[i]))
             # No stddev for buf_size at i == 0
             if i > 0:
-                out_data.append(stddev(log_data[i]))
+                out_data.append(stddev(uni_log_data[i]))
+
+        # Parse monitor data from log
+        mon_log_data = [[] for i in range(1)]
+
+        if setting == "proteus":
+            for i in range(len(lines)):
+                if lines[i] == worker_init_header:
+                    # Monitor output in seconds
+                    mon_log_data[0].append(float(lines[i + 1].split(",")[0]) * 1000)
+        else:
+            mon_log_data[0] = [0]
+
+        for i in range(len(mon_log_data)):
+            out_data.append(avg(mon_log_data[i]))
+            out_data.append(stddev(mon_log_data[i]))
 
         csv_writer.writerow(out_data)
         log.close()
