@@ -42,11 +42,13 @@ os.mkdir(out_dir)
 unikernel_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
     "init_transfer,transfer,finish,total\n"
 worker_init_header = "worker_init[s],fpga_reconf[s],load_fpga[s]\n"
+boot_time_line = "time elapsed before launching vCPU"
 
 out_csv_header = "setting,fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
     "kernel_alloc_stddev,kernel_setarg,kernel_setarg_stddev,kernel_enqueue,kernel_enqueue_stddev," \
     "buf_alloc,buf_alloc_stddev,init_transfer,init_transfer_stddev,transfer,transfer_stddev," \
-    "finish,finish_stddev,total,total_stddev,worker_init,worker_init_stddev"
+    "finish,finish_stddev,total,total_stddev,worker_init,worker_init_stddev,unikernel_boot," \
+    "unikernel_boot_stddev"
 out_csv = open(f"{out_dir}/overheads.csv", 'a')
 csv_writer = csv.writer(out_csv)
 csv_writer.writerow(out_csv_header.split(','))
@@ -101,15 +103,18 @@ for setting in settings:
                 out_data.append(stddev(uni_log_data[i]))
 
         # Parse monitor data from log
-        mon_log_data = [[] for i in range(1)]
+        mon_log_data = [[] for i in range(2)]
 
         if setting == "proteus":
+            # Monitor output in seconds
             for i in range(len(lines)):
                 if lines[i] == worker_init_header:
-                    # Monitor output in seconds
                     mon_log_data[0].append(float(lines[i + 1].split(",")[0]) * 1000)
+                elif lines[i].startswith(boot_time_line):
+                    mon_log_data[1].append(float(lines[i].split(":")[1].split(" ")[1]) * 1000)
         else:
-            mon_log_data[0] = [0]
+            mon_log_data[0]=[0]
+            mon_log_data[1]=[0]
 
         for i in range(len(mon_log_data)):
             out_data.append(avg(mon_log_data[i]))
