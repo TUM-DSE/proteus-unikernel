@@ -118,6 +118,8 @@ namespace rosetta
         exit(EXIT_FAILURE);
       }
 
+      clFinish(cmd_queue);
+
       clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
       clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
       time += time_end - time_start;
@@ -145,6 +147,8 @@ namespace rosetta
       printf("Error code %d\n", err);
       exit(EXIT_FAILURE);
     }
+
+    clFinish(cmd_queue);
 
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_START, sizeof(time_start), &time_start, NULL);
     clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(time_end), &time_end, NULL);
