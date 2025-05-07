@@ -114,7 +114,7 @@ int main(int argc, char ** argv)
     digit_rec_world.setMemKernelArg(0, 1, 1);
     digit_rec_world.setMemKernelArg(0, 2, 2);
 
-    const int iterations = 819;
+    const int iterations = 16;
 
     auto q = digit_rec_world.getCmdQueue();
     clFinish(q);
