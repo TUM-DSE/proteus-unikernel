@@ -122,8 +122,8 @@ int main(int argc, char ** argv)
     auto start_time = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < iterations; i++) {
-      digit_rec_world.updateMemObj(0, nstime_data_to_host);
-      digit_rec_world.updateMemObj(1, nstime_data_to_host);
+      digit_rec_world.updateMemObj(0, nstime_data_to_fpga);
+      digit_rec_world.updateMemObj(1, nstime_data_to_fpga);
 
       // run!
       digit_rec_world.runKernels(nstime_kernel);
