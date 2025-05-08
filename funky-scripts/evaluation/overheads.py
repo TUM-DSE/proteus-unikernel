@@ -34,21 +34,25 @@ bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_helloworld"
 dummy_bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_burst_rw"
 timestamp = datetime.datetime.now()
 out_dir = "time_overheads_" + timestamp.strftime("%m%d%Y_%H%M%S")
-print("Output directory:", out_dir)
 script_dir = os.getcwd()
+
+print("Output directory:", out_dir)
+print("Note: a dummy bitstream is programmed to the FPGA before each measurement")
+print("to properly measure the bitstream programming time for multiple executions")
 
 os.mkdir(out_dir)
 
 unikernel_csv_header = "buf_size,program_bs,kernel_alloc,kernel_setarg,kernel_enqueue,buf_alloc," \
-    "init_transfer,transfer,finish,total\n"
+    "init_transfer,transfer,finish,total,data_to_fpga_time_ocl,kernel_time_ocl,data_to_host_time_ocl\n"
 worker_init_header = "worker_init[s],fpga_reconf[s],load_fpga[s]\n"
 boot_time_line = "time elapsed before launching vCPU"
 
 out_csv_header = "setting,fpga,runs,buf_size,program_bs,program_bs_stddev,kernel_alloc," \
     "kernel_alloc_stddev,kernel_setarg,kernel_setarg_stddev,kernel_enqueue,kernel_enqueue_stddev," \
     "buf_alloc,buf_alloc_stddev,init_transfer,init_transfer_stddev,transfer,transfer_stddev," \
-    "finish,finish_stddev,total,total_stddev,worker_init,worker_init_stddev,unikernel_boot," \
-    "unikernel_boot_stddev"
+    "finish,finish_stddev,total,total_stddev,data_to_fpga_time_ocl,data_to_fpga_time_ocl_stddev," \
+    "kernel_time_ocl,kernel_time_ocl_stddev,data_to_host_time_ocl,data_to_host_time_ocl_stddev," \
+    "worker_init,worker_init_stddev,unikernel_boot,unikernel_boot_stddev"
 out_csv = open(f"{out_dir}/overheads.csv", 'a')
 csv_writer = csv.writer(out_csv)
 csv_writer.writerow(out_csv_header.split(','))
