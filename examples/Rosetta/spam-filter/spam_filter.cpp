@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
     spam_filter_world.setMemKernelArg(0, 1, 1);
     spam_filter_world.setMemKernelArg(0, 2, 2);
 
-    const int iterations = 56;
+    const int iterations = 560;
 
     auto q = spam_filter_world.getCmdQueue();
     clFinish(q);
