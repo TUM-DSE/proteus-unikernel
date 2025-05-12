@@ -85,12 +85,12 @@ fpgas = ["u280-fast", "u280-ddr-fast", "u280-ddr-opt-fast"]
 app = "cl_wide_mem_rw_strm_oversub"
 # First run is ignored, just to have the bitstream already programmed for subsequent runs
 args = {
-    "buf_sizes": [1, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
-                  2048, 2048, 2048, 2048, 2048, 2048, 2048],
-    "mem_limits": [10, 1000000000, 4096, 2048, 1024, 512, 256, 128, 64,
-                   4096, 2048, 1024, 512, 256, 128, 64],
-    "flags": ["", "", "", "", "", "", "", "", "",
-              "-o", "-o", "-o", "-o", "-o", "-o", "-o"]
+    "buf_sizes": [1, 2048, 2048, 2048, 2048, 2048,
+                  2048, 2048, 2048, 2048, 2048],
+    "mem_limits": [10, 1000000000, 4096, 2048, 1024, 512,
+                   1000000000, 4096, 2048, 1024, 512],
+    "flags": ["", "", "", "", "", "",
+              "-o", "-o", "-o", "-o", "-o",]
 }
 app_dir = "/home/felix/Projects/vitis-accel-examples/ocl_kernels"
 print(f"Application: {app_dir}/{app}")
@@ -115,8 +115,8 @@ for fpga in fpgas:
     print(f"{fpga}:")
 
     for i in range(len(args["buf_sizes"])):
-        # Optimized DDR version always uses -o, run warmup run 0, skip run 1 - 8
-        if fpga == "u280-ddr-opt-fast" and i > 0 and i < 9:
+        # Optimized DDR version always uses -o, run warmup run 0, skip run 1 - 5
+        if fpga == "u280-ddr-opt-fast" and i > 0 and i < 6:
             continue
 
         buf_size = args["buf_sizes"][i]
