@@ -7,6 +7,7 @@ import sys
 import statistics as stat
 import subprocess
 import csv
+import time
 
 
 def avg(nums):
@@ -20,7 +21,7 @@ def stddev(nums):
     return stat.stdev(nums)
 
 
-def parse_times(config, reps, buf_size, mem_limit, log_filename, csv_writer):
+def parse_times(config, times_total, log_filename, csv_writer):
     # Add detailed timing data from applications' stdout and write results to csv.
     # Each application prints the header followed by the data in the next line.
     detailed_times_header = "app_name,iterations,buf_size,chunk_size,num_chunks,time_loop\n"
@@ -28,7 +29,7 @@ def parse_times(config, reps, buf_size, mem_limit, log_filename, csv_writer):
     log = open(log_filename, 'r')
     lines = log.readlines()
 
-    out_data = [config, reps, buf_size, mem_limit]
+    out_data = [config, len(times_total)]
 
     for i in range(len(lines)):
         if lines[i] == detailed_times_header:
@@ -36,37 +37,30 @@ def parse_times(config, reps, buf_size, mem_limit, log_filename, csv_writer):
 
     if not detailed_times:
         print(f"Failed to find detailed time measurements in {log_filename}")
-        for _ in range(11):
+        for _ in range(8):
             out_data.append(float("NaN"))
     else:
         values = detailed_times[0].split(",")
-        num_chunks = values[1]
-        out_data.append(num_chunks)
-        chunk_size = values[2]
+        iterations = values[1]
+        buf_size = values[2]
+        chunk_size = values[3]
+        num_chunks = values[4]
+        out_data.append(iterations)
+        out_data.append(buf_size)
         out_data.append(chunk_size)
-        input_data_size = values[3]
-        out_data.append(input_data_size)
+        out_data.append(num_chunks)
 
-        times_cpu = []
-        times_to_fpga = []
-        times_kernel = []
-        times_to_host = []
+        times_loop = []
 
         for line in detailed_times:
             values = line.split(",")
-            times_cpu.append(float(values[6]))
-            times_to_fpga.append(float(values[7]))
-            times_kernel.append(float(values[8]))
-            times_to_host.append(float(values[9]))
+            times_loop.append(float(values[5]))
 
-        out_data.append(avg(times_cpu))
-        out_data.append(stddev(times_cpu))
-        out_data.append(avg(times_to_fpga))
-        out_data.append(stddev(times_to_fpga))
-        out_data.append(avg(times_kernel))
-        out_data.append(stddev(times_kernel))
-        out_data.append(avg(times_to_host))
-        out_data.append(stddev(times_to_host))
+        # TODO: total, total stddev
+        out_data.append(avg(times_total))
+        out_data.append(stddev(times_total))
+        out_data.append(avg(times_loop))
+        out_data.append(stddev(times_loop))
 
     csv_writer.writerow(out_data)
     log.close()
@@ -85,6 +79,8 @@ app_dir = "/home/felix/Projects/vitis-accel-examples/ocl_kernels"
 # no overlapping & no opt, no overlapping & opt, overlapping & opt
 args = ["-c 8", "-c 8 -o", "-c 1 -o"]
 
+clk = time.CLOCK_MONOTONIC
+
 date_time = datetime.datetime.now()
 out_dir = "time_mem_" + date_time.strftime("%m%d%Y_%H%M%S")
 print("Output directory:", out_dir)
@@ -100,13 +96,14 @@ for app in apps:
         bitstream = f"/share/felix/bitstreams/vitis-accel-examples/{app[:-10]}/{fpga}/bitstream"
         out_csv = open(f"{out_dir}/{fpga}.csv", 'a')
         csv_writer = csv.writer(out_csv)
-        csv_writer.writerow(["app_name", "runs", "iterations", "buf_size", "chunk_size", "num_chunks", "time_total", "time_total_stddev", "time_loop", "time_loop_stddev"])
+        if app == apps[0]:
+            csv_writer.writerow(["app_name", "runs", "iterations", "buf_size", "chunk_size", "num_chunks", "time_total", "time_total_stddev", "time_loop", "time_loop_stddev"])
 
-        print(f"{fpga}:")
+        print(f"{app} {fpga}:")
 
         for arg in args:
             arg_name = arg.replace(" ", "_")
-            config = f"{app}-{fpga}-{arg_name}"
+            config = f"{app}-{fpga}{arg_name}"
             log_filename = f"{out_dir}/{config}.log"
             log = open(f"{log_filename}", 'a')
             os.chdir(f"{app_dir}/{app}")
@@ -115,17 +112,25 @@ for app in apps:
             for a in arg.split():
                 exec_cmd.append(a)
 
+            times_total = []
+
             for _ in range(reps):
                 # Program a dummy bitstream to include bitstream programming time in measurements
                 dummy_bs = "/share/felix/bitstreams/vitis-accel-examples/cl_helloworld/u280-fast/bitstream"
                 subprocess.run([f"./{app}", dummy_bs, "0"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                print(f"[{datetime.datetime.now()}]", ' '.join(str(s) for s in exec_cmd))
+                print(f"[{datetime.datetime.now()}]", ' '.join(str(s) for s in exec_cmd), end="", flush=True)
+
+                t1  = time.clock_gettime(clk)
                 subprocess.run(exec_cmd, stdout=log, stderr=log)
+                t2  = time.clock_gettime(clk)
+                time_total = t2 - t1
+                times_total.append(time_total)
+                print(f": {time_total:.2f} s")
 
             log.close()
             os.chdir(script_dir)
 
-            #parse_times(config, reps, buf_size, mem_limit, log_filename, csv_writer)
+            parse_times(config, times_total, log_filename, csv_writer)
 
         out_csv.close()
