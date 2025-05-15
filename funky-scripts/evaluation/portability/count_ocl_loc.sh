@@ -18,11 +18,11 @@ vitis_common_files=("bitmap/bitmap.h" "bitmap/bitmap.cpp" "cmdparser/cmdlinepars
 rosetta_dir=$(realpath "$script_dir/../../../examples/Rosetta")
 
 include_pattern='cl::|\.setArg|\.finish|\.getProfilingInfo|\.enqueueMigrateMemObjects'
-include_pattern+='|\..enqueueTask|clFinish|clSetKernelArg|clCreateKernel|clReleaseKernel'
+include_pattern+='|\.enqueueTask|clFinish|clSetKernelArg|clCreateKernel|clReleaseKernel'
 include_pattern+='|clCreateBuffer|clEnqueueWriteBuffer|clGetEventProfilingInfo|clEnqueueReadBuffer'
-include_pattern+='clCreateProgramWithBinary|clEnqueueNDRangeKernel|clGetPlatformIDs|clGetDeviceIDs'
-include_pattern+='clGetDeviceInfo|clCreateContext|clCreateCommandQueue|clReleaseMemObject'
-include_pattern+='clReleaseProgram|clReleaseCommandQueue|clReleaseContext'
+include_pattern+='|clCreateProgramWithBinary|clEnqueueNDRangeKernel|clGetPlatformIDs|clGetDeviceIDs'
+include_pattern+='|clGetDeviceInfo|clCreateContext|clCreateCommandQueue|clReleaseMemObject'
+include_pattern+='|clReleaseProgram|clReleaseCommandQueue|clReleaseContext'
 exclude_pattern='xcl::'
 
 echo "app,ocl_loc"
@@ -42,13 +42,21 @@ done
 echo "vitis_common_lib,$sum"
 
 # Rosetta
+# Count the abstracted OpenCL APIs for the individual rosetta apps too
+ros_include_pattern="$include_pattern|CLWorld|\.addProgram|CLKernel|\.getContext|\.getProgram"
+ros_include_pattern+='|\.getDevice|CLMemObj|\.addMemObj|\.set_global|\.set_local|\.addKernel'
+ros_include_pattern+='|\.setMemKernelArg|\.getCmdQueue|\.updateMemObj|\.runKernels|\.readMemObj'
+ros_include_pattern+='|\.releaseWorld'
+
 echo -n "3d-rendering,"
-grep -E "$include_pattern" "$rosetta_dir"/3d-rendering/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
+grep -E "$ros_include_pattern" "$rosetta_dir"/3d-rendering/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
 echo -n "digit-recognition,"
-grep -E "$include_pattern" "$rosetta_dir"/digit-recognition/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
+grep -E "$ros_include_pattern" "$rosetta_dir"/digit-recognition/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
 echo -n "optical-flow,"
-grep -E "$include_pattern" "$rosetta_dir"/optical-flow/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
+grep -E "$ros_include_pattern" "$rosetta_dir"/optical-flow/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
 echo -n "spam-filter,"
-grep -E "$include_pattern" "$rosetta_dir"/spam-filter/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
+grep -E "$ros_include_pattern" "$rosetta_dir"/spam-filter/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
+
+# Only count the normal OpenCL API for common lib that defines the abstractions
 echo -n "rosetta_common_lib,"
 grep -E "$include_pattern" "$rosetta_dir"/harness/{*.h,*.cpp} | grep -Ev "$exclude_pattern" -c || true
