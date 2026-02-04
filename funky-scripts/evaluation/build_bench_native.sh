@@ -16,7 +16,7 @@ build_benchmark() {
     fi
 
     echo "build ${arg_apps[$i]}..."
-    cd $build_dir
+    cd "$build_dir"
 
     make host &> /dev/null || echo "building ${arg_apps[$i]} failed" &
   done
@@ -26,6 +26,6 @@ build_benchmark() {
   done
 }
 
-build_benchmark /home/felix/Projects/vitis-accel-examples/ocl_kernels VITIS_EXAMPLES_APPS
-build_benchmark /home/felix/Projects/vitis-accel-examples/ocl_kernels BENCHMARK_APPS
-build_benchmark /home/felix/Projects/funky/funky-rosetta ROSETTA_APPS
+build_benchmark "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels VITIS_EXAMPLES_APPS
+build_benchmark "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels BENCHMARK_APPS
+build_benchmark "$PROTEUS_DIR"/funky-rosetta ROSETTA_APPS
