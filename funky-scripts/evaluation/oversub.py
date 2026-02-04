@@ -92,7 +92,8 @@ args = {
     "flags": ["", "", "", "", "", "",
               "-o", "-o", "-o", "-o", "-o",]
 }
-app_dir = "/home/felix/Projects/vitis-accel-examples/ocl_kernels"
+proteus_dir = os.environ["PROTEUS_DIR"]
+app_dir = f"{proteus_dir}/vitis-accel-examples/ocl_kernels"
 print(f"Application: {app_dir}/{app}")
 
 bitstream_dir = f"/share/felix/bitstreams/vitis-accel-examples/{app}"

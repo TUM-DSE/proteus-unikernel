@@ -27,8 +27,9 @@ if len(sys.argv) != 2:
 reps = int(sys.argv[1])
 fpgas = ["u50-fast", "u280-fast", "u280-ddr-fast"]
 settings = ["proteus", "native"]
-app_dirs = {"proteus": "/home/felix/Projects/proteus/funky-unikernel/examples/benchmarks/oh_funkycl",
-            "native": "/home/felix/Projects/vitis-accel-examples/ocl_kernels/oh_funkycl"}
+proteus_dir = os.environ["PROTEUS_DIR"]
+app_dirs = {"proteus": f"{proteus_dir}/funky-unikernel/examples/benchmarks/oh_funkycl",
+            "native": f"{proteus_dir}/vitis-accel-examples/ocl_kernels/oh_funkycl"}
 
 bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_helloworld"
 dummy_bitstream_dir = "/share/felix/bitstreams/vitis-accel-examples/cl_burst_rw"

@@ -75,7 +75,8 @@ reps = int(sys.argv[1])
 fpgas = ["u280-300-multic", "u280-ddr-300-multic"]
 mem_flags = ["0", "1"]
 apps = ["cl_wide_mem_rw_2x_pipelined", "cl_wide_mem_rw_4x_pipelined"]
-app_dir = "/home/felix/Projects/vitis-accel-examples/ocl_kernels"
+proteus_dir = os.environ["PROTEUS_DIR"]
+app_dir = f"{proteus_dir}/vitis-accel-examples/ocl_kernels"
 # no overlapping & no opt, no overlapping & opt, overlapping & opt
 args = ["-c 8", "-c 8 -o", "-c 1 -o"]
 
