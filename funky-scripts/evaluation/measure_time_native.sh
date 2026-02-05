@@ -68,6 +68,11 @@ for fpga in "${@:2}"; do
     exit 1
   fi
 
+  # We expect the executable to have the same name as the directory
+  for d in 3d-rendering digit-recognition optical-flow spam-filter; do
+    ln -sf "$PROTEUS_DIR/funky-rosetta/$d"/*_host.exe "$PROTEUS_DIR/funky-rosetta/$d/$d"
+  done
+
   echo ["$(date +%T)"] "$fpga":
   measure_time "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels "$repeat" "vitis_applist_native.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
   measure_time "$PROTEUS_DIR"/funky-rosetta "$repeat" "rosetta_applist_native.csv" "rosetta" /share/felix/bitstreams/rosetta "$model" "$speed"
