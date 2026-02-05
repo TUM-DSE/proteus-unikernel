@@ -11,10 +11,10 @@ BITSTREAM=/tmp/bitstream_0.ukvm
 function usage {
   cat <<EOF
 
-Usage: 
+Usage:
   $(basename ${0}) [<options>]
 
-Options: 
+Options:
   -h                    print help
 
   -g                    run the unikernel in debug mode (gdb)
@@ -25,10 +25,10 @@ Options:
 
   -o                    enable out-of-order execution for the OpenCL commmand queue
 
-  -b <build_dir>        set path to dir including binary 
+  -b <build_dir>        set path to dir including binary
                         (default: ${BUILD_DIR})
 
-  -u <ukvm-bin>         set path to ukvm-bin 
+  -u <ukvm-bin>         set path to ukvm-bin
                         (default: ${UKVM_BIN})
 
   -t <fpga>             FPGA type (arria10, u50, or u280)
@@ -36,16 +36,16 @@ Options:
   -i <bitstream>        Bitstream for programming FPGA
                         (default: ${BITSTREAM})
 
-  -n <network device>   set tap device 
+  -n <network device>   set tap device
                         (default: ${TAP_IF})
 
-  -s <socket name>      set socket file name 
+  -s <socket name>      set socket file name
                         (default: ${SOCKET_IF})
 
   -f <migfile name>     set migration file name
                         (default: ${MIG_FILE})
 
-  -a <arguments...>     set arguments for the app 
+  -a <arguments...>     set arguments for the app
 
 EOF
 }
@@ -109,7 +109,7 @@ if [ -n "${USER_FPGA}" ]; then
 fi
 
 if [ -n "${USER_BITSTREAM}" ]; then
-  ln -sf "$(realpath "$USER_BITSTREAM")" ${BITSTREAM}
+  ln -sf "$(realpath "$USER_BITSTREAM")" ${BITSTREAM} || exit 1
   echo "INFO: ${USER_BITSTREAM} is used as the bitstream."
 else
   echo "INFO: ${BITSTREAM} is used as the bitstream"
@@ -186,7 +186,7 @@ if "${GDB_FLAG}" ; then
   echo "Usage: run --mem=4096 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}"
   echo "Press Enter to start gdb..."
   read Wait
-  gdb -tui ${UKVM_BIN} 
-else 
+  gdb -tui ${UKVM_BIN}
+else
   ${UKVM_BIN} --mem=4096 --disk=${APP_BIN} --net=${TAP_IF} --fpga=${FPGA} ${MON_OPT} ${LOAD_OPT} ${OOO_OPT} ${APP_BIN} ${USER_ARGS}
 fi
