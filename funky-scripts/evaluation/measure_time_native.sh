@@ -74,6 +74,11 @@ for fpga in "${@:2}"; do
   done
 
   echo ["$(date +%T)"] "$fpga":
-  measure_time "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels "$repeat" "vitis_applist_native.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
-  measure_time "$PROTEUS_DIR"/funky-rosetta "$repeat" "rosetta_applist_native.csv" "rosetta" /share/felix/bitstreams/rosetta "$model" "$speed"
+
+  if [ $model == "arria10" ]; then
+    measure_time "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels "$repeat" "vitis_applist_native_intel.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
+  else
+    measure_time "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels "$repeat" "vitis_applist_native_all.csv" "vitis" /share/felix/bitstreams/vitis-accel-examples "$model" "$speed"
+    measure_time "$PROTEUS_DIR"/funky-rosetta "$repeat" "rosetta_applist_native.csv" "rosetta" /share/felix/bitstreams/rosetta "$model" "$speed"
+  fi
 done
