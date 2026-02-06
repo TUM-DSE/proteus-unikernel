@@ -65,4 +65,5 @@ mig_file*
 # Evaluation
 loc_*/
 time_*/
+funky-scripts/evaluation/state_management/*_oh_*
 
