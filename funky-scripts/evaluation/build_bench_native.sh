@@ -26,6 +26,9 @@ build_benchmark() {
   done
 }
 
+extra_vitis_apps=(cl_gmem_2banks_2x_pipelined cl_gmem_2banks_4x_pipelined)
+
 build_benchmark "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels VITIS_EXAMPLES_APPS
 build_benchmark "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels BENCHMARK_APPS
+build_benchmark "$PROTEUS_DIR"/vitis-accel-examples/ocl_kernels extra_vitis_apps
 build_benchmark "$PROTEUS_DIR"/funky-rosetta ROSETTA_APPS
