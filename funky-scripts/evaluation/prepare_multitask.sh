@@ -13,7 +13,7 @@ for branch in $branches; do
   mkdir -p "$sched_bin_dir/$branch"
   git switch "$branch"
   make
-  cp primary daemon "$sched_bin_dir/$branch"
+  cp primary daemon deploy_script.sh "$sched_bin_dir/$branch"
 done
 
 git switch proteus
