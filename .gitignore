@@ -66,4 +66,6 @@ mig_file*
 loc_*/
 time_*/
 funky-scripts/evaluation/state_management/*_oh_*
+funky-scripts/evaluation/frequencies.csv
+funky-scripts/evaluation/portability/ocl-loc.csv
 
