@@ -32,7 +32,7 @@ if (WITH_SOLO5)
 ExternalProject_Add(solo5_repo
 	PREFIX precompiled
 	BUILD_IN_SOURCE 1
-  GIT_REPOSITORY git@github.com:TUM-DSE/funky-monitor.git
+  GIT_REPOSITORY https://github.com/TUM-DSE/proteus-monitor.git
   GIT_TAG proteus # branch name or commit hash
 
 	CONFIGURE_COMMAND CC=gcc CXX=g++ ./configure.sh
