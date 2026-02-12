@@ -13,7 +13,7 @@ function usage {
   cat <<EOF
 
 Usage:
-  $(basename ${0}) <bench_type> <repeat> 
+  $(basename ${0}) <bench_type> <repeat>
 
   <bench_type> sync_oh, fpga_state_oh, vm_state_oh
 
@@ -69,13 +69,13 @@ if [ -z ${REPEAT} ]; then
 fi
 
 ### make ukvm-bin executable
-set_ukvm_permission 
+set_ukvm_permission
 
 ### create dir where the results are saved
 RESULTS_DIR="${SCRIPT_DIR}/${BENCH_TYPE}_$DATE"
 mkdir -p ${RESULTS_DIR}
 
-FPGAS="u50-fast u280-fast u280-ddr-fast"
+FPGAS=$PROTEUS_FPGAS
 
 for fpga in $FPGAS; do
   fpga_model=${fpga%%-*}
@@ -92,5 +92,5 @@ for fpga in $FPGAS; do
   echo "[$fpga]"
 
   ### run benchmark
-  run_benchmark ${MICROBENCHMARKS_DIR}/${bench_name} ${SCRIPT_DIR}/${py_script} ${REPEAT} ${RESULTS_DIR} "${BENCH_TYPE}.csv" ${fpga} 
+  run_benchmark ${MICROBENCHMARKS_DIR}/${bench_name} ${SCRIPT_DIR}/${py_script} ${REPEAT} ${RESULTS_DIR} "${BENCH_TYPE}.csv" ${fpga}
 done

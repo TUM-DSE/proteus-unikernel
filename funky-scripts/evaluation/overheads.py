@@ -25,7 +25,8 @@ if len(sys.argv) != 2:
     exit(1)
 
 reps = int(sys.argv[1])
-fpgas = ["u50-fast", "u280-fast", "u280-ddr-fast"]
+fpgas = os.getenv("PROTEUS_FPGAS", "u50-fast u280-fast u280-ddr-fast")
+fpgas = fpgas.split(" ")
 settings = ["proteus", "native"]
 proteus_dir = os.environ["PROTEUS_DIR"]
 app_dirs = {"proteus": f"{proteus_dir}/funky-unikernel/examples/benchmarks/oh_funkycl",

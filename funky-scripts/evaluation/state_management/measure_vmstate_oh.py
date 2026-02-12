@@ -27,7 +27,7 @@ def update_bitstream_link(new_fpga):
 async def async_issue_state_cmds(socket_path, snapshot_file, log_filename, rep):
     save_fpga_cmd = f"echo savevm {snapshot_file} | socat -u - unix-connect:{socket_path}"
 
-    # Wait for the line that starts with 'wait for migration' 
+    # Wait for the line that starts with 'wait for migration'
     # to appear in the log before sending the save command
     log = open(log_filename, "r")
     log_line = ""
@@ -67,7 +67,8 @@ async def main():
     src_fpga = sys.argv[4]
     exec_cmd_base = sys.argv[5:]
 
-    dst_fpgas = ["u50-fast", "u280-fast", "u280-ddr-fast"]
+    dst_fpgas = os.getenv("PROTEUS_FPGAS", "u50-fast u280-fast u280-ddr-fast")
+    dst_fpgas = dst_fpgas.split(" ")
 
     signal_size_list = [1000] # MB (1024*1024 Bytes)
     # signal_size_list = [1, 50] # MB (1024*1024 Bytes)
@@ -79,7 +80,7 @@ async def main():
     for item in exec_cmd_base:
         if item.startswith("--mon="): # Case-insensitive check
             socket = item[6:]
-    
+
     for dst_fpga in dst_fpgas:
         ### VM save
         update_bitstream_link(src_fpga)
@@ -88,7 +89,7 @@ async def main():
             snapshot_file = f"mig_file_{signal_size}mb"
             log_savevm_filename = f"{result_dir}/savevm-signal-{signal_size}mb-{src_fpga}-to-{dst_fpga}.log"
             log_savevm = open(log_savevm_filename, 'a')
-        
+
             # prepare exec command
             exec_cmd = exec_cmd_base.copy()
             exec_cmd.append(f"fir.xclbin {signal_size}")
@@ -97,11 +98,11 @@ async def main():
             if os.path.exists(snapshot_file):
                 os.remove(snapshot_file)
                 print(f"The snapshot {snapshot_file} is deleted.")
-        
+
             # repeat execution
             for cnt in range(repeat):
                 # spawn an async thread to issue savevm command
-                socket_task = asyncio.create_task(async_issue_state_cmds(socket, snapshot_file, log_savevm_filename, cnt)) 
+                socket_task = asyncio.create_task(async_issue_state_cmds(socket, snapshot_file, log_savevm_filename, cnt))
 
                 # run benchmark
                 print(signal_size, end=", ")
@@ -119,9 +120,9 @@ async def main():
                     if os.path.exists(snapshot_file):
                         os.remove(snapshot_file)
                         print(f"The snapshot {snapshot_file} is deleted.")
-                else: 
+                else:
                     print(f"keep the last snapshot {snapshot_file} for VM load operations.")
-        
+
         ### VM load
         update_bitstream_link(dst_fpga)
         for row in enumerate(signal_size_list):
@@ -129,7 +130,7 @@ async def main():
             snapshot_file = f"mig_file_{signal_size}mb"
             log_loadvm_filename = f"{result_dir}/loadvm-signal-{signal_size}mb-{src_fpga}-to-{dst_fpga}.log"
             log_loadvm = open(log_loadvm_filename, 'a')
-        
+
             # prepare exec command
             exec_cmd = exec_cmd_base.copy()
             # change destination FPGA
@@ -144,7 +145,7 @@ async def main():
 
             # repeat execution
             for cnt in range(repeat):
-                # clear page cache before the execution 
+                # clear page cache before the execution
                 clear_cache_task = asyncio.create_task(clear_page_cache())
                 await clear_cache_task
 
@@ -156,19 +157,19 @@ async def main():
                 await ukvm_task.wait()
                 t2  = time.clock_gettime(clk)
                 print(t2-t1, end=", \n")
-    
+
     ### Save results
     dict_results = dict()
 
     # write a header to the csv file
-    csv_header = ["signal_size[MB]", "src_fpga", "dst_fpga", "saved_page_size[Bytes]", "save_vm[s]", "stddev", "load_vm[s]", "stddev", 
-            "save_fpga[s]", "stddev", "load_fpga[s]", "stddev", "sync_fpga[s]", "stddev", "save_fpga_state[s]", "stddev", 
+    csv_header = ["signal_size[MB]", "src_fpga", "dst_fpga", "saved_page_size[Bytes]", "save_vm[s]", "stddev", "load_vm[s]", "stddev",
+            "save_fpga[s]", "stddev", "load_fpga[s]", "stddev", "sync_fpga[s]", "stddev", "save_fpga_state[s]", "stddev",
             "worker_init[s]", "stddev", "fpga_reconf[s]", "stddev", "load_fpga_state[s]", "stddev", "loop_num"]
     writer = csv.writer(out_csv)
     # Only write header if file is empty
     if out_csv.tell() == 0:
         writer.writerow(csv_header)
-    
+
     # Add detailed timing data from applications' stdout and write results to csv.
     # Each application prints the header followed by the data in the next line.
     savefpga_detailed_header = "sync_fpga[s],sync_fpga_mem_only[s],save_fpga[s]\n"
@@ -177,12 +178,12 @@ async def main():
     # loadfpga_header = "load_fpga()[s]\n"
     savevm_detailed_header = "saved page size[Bytes],savefpga()[s],savevm()[s]\n"
     loadvm_detailed_header = "loaded page size[Bytes],loadvm (page-only)[s],loadvm()[s]\n"
-    
+
     for dst_fpga in dst_fpgas:
         # add each line
         for row in enumerate(signal_size_list):
             signal_size = row[1]
-        
+
             savevm_detailed = []
             loadvm_detailed = []
             savefpga_detailed = []
@@ -195,14 +196,14 @@ async def main():
             log_loadvm = open(log_loadvm_filename, 'r')
             lines_savevm = log_savevm.readlines()
             lines_loadvm = log_loadvm.readlines()
-        
+
             # add a list for each data size to the dict
             dict_results.update({signal_size: list()})
             times = dict_results[signal_size].copy();
 
             times.append(src_fpga)
             times.append(dst_fpga)
-        
+
             for i in range(len(lines_savevm)):
                 if lines_savevm[i] == savefpga_detailed_header:
                     savefpga_detailed.append(lines_savevm[i+1])
@@ -218,7 +219,7 @@ async def main():
                     loadvm_detailed.append(lines_loadvm[i+1])
                 # elif lines_loadvm[i] == loadfpga_header:
                 #     loadfpga.append(lines_loadvm[i+1])
-        
+
             if not savevm_detailed_header:
                 print(f"Failed to find detailed time measurements in {log_savevm_filename}")
                 for _ in range(len(csv_header)):
@@ -228,8 +229,8 @@ async def main():
                 values = savevm_detailed[0].split(",")
                 times.append(values[0].strip())
                 # times.append(float(values[0].strip())/float(1024*1024)) # convert Bytes to MB
-                
-                # calculate avg and stddev for every item 
+
+                # calculate avg and stddev for every item
                 times_savevm = []
                 times_loadvm = []
                 times_savefpga = []
@@ -274,7 +275,7 @@ async def main():
                     times_fpga_reconf.append(float(values[1]))
                     times_loadfpga_state.append(float(values[2]))
                     times_loadfpga.append(float(values[0])+float(values[2]))
-        
+
                 # add numbers to the line
                 # times.append(signal_size)
                 times.append(avg(times_savevm))
@@ -298,7 +299,7 @@ async def main():
                 times.append(avg(times_loadfpga_state))
                 times.append(stddev(times_loadfpga_state))
                 times.append(repeat)
-        
+
             # write values to csv
             times.insert(0, signal_size)
             writer.writerow(times)
