@@ -34,5 +34,6 @@ make -j "$(nproc)"
 cp ukvm/ukvm-bin "$sched_bin_dir"/ukvm-bin-patched
 make clean
 git restore ukvm/
+rm /tmp/ukvm.patch
 
 popd
