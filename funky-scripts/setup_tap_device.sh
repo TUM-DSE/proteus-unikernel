@@ -24,4 +24,4 @@ if ! ip link show "$dev" &>/dev/null; then
   sudo ip addr add 10.0.2.1/24 dev "$dev"
 fi
 
-sudo rm /tmp/bitstream_*.ukvm
+sudo rm -f /tmp/bitstream_*.ukvm
