@@ -37,3 +37,17 @@ git restore ukvm/
 rm /tmp/ukvm.patch
 
 popd
+
+# Make sure the bitstreams expected by the scheduler are in the right places in /tmp
+if [ ! -f /tmp/rosetta_50 ]; then
+  cp "$BITSTREAM_DIR/rosetta/spam-filter/u50-fast/SgdLR.hw.xclbin" /tmp/rosetta_50
+fi
+if [ ! -f /tmp/vitis_50 ]; then
+  cp "$BITSTREAM_DIR/vitis-accel-examples/cl_helloworld/u50-fast/vector_addition.xclbin" /tmp/vitis_50
+fi
+if [ ! -f /tmp/rosetta_280 ]; then
+  cp "$BITSTREAM_DIR/rosetta/spam-filter/u280-fast/SgdLR.hw.xclbin" /tmp/rosetta_280
+fi
+if [ ! -f /tmp/vitis_280 ]; then
+  cp "$BITSTREAM_DIR/vitis-accel-examples/cl_helloworld/u280-fast/vector_addition.xclbin" /tmp/vitis_280
+fi
